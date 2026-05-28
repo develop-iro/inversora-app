@@ -1,42 +1,34 @@
-import '@/global.css';
-
 import { Platform } from 'react-native';
 
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
-} as const;
+import { FontFamily, Layout } from '@/shared/theme/tokens';
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export { palette } from '@/shared/theme/palette';
+export type { PaletteColor } from '@/shared/theme/palette';
+export { Colors, semanticColors } from '@/shared/theme/colors';
+export type { ThemeColor, ThemeMode } from '@/shared/theme/colors';
+export {
+  FontFamily,
+  Gradients,
+  Layout,
+  Radius,
+  Shadows,
+  Spacing,
+  Typography,
+} from '@/shared/theme/tokens';
 
+/** @deprecated Use `FontFamily` from tokens. */
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
+    sans: FontFamily.display,
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+    mono: FontFamily.mono,
   },
   default: {
-    sans: 'normal',
+    sans: FontFamily.display,
     serif: 'serif',
     rounded: 'normal',
-    mono: 'monospace',
+    mono: FontFamily.mono,
   },
   web: {
     sans: 'var(--font-display)',
@@ -46,15 +38,5 @@ export const Fonts = Platform.select({
   },
 });
 
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
-
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+export const BottomTabInset = Layout.bottomTabInset;
+export const MaxContentWidth = Layout.maxContentWidth;

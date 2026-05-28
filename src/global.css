@@ -1,9 +1,19 @@
 :root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
+  /* Invesora brand — keep in sync with src/shared/theme/palette.ts */
+  --color-primary-teal: #00bfa6;
+  --color-deep-ocean: #0b2e36;
+  --color-soft-teal-background: #eaf8f6;
+  --color-mint-accent: #b8f2e6;
+  --color-lime-accent: #d7ff64;
+  --color-neutral-background: #f8faf9;
+  --color-text-primary: #111827;
+  --color-warning-soft: #facc15;
+  --color-danger-soft: #fb7185;
+
+  --font-display: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-accent: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono,
+    Courier New, monospace;
   --font-serif: Georgia, 'Times New Roman', serif;
+  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
 }
