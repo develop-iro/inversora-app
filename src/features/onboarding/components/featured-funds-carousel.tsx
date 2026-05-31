@@ -25,7 +25,9 @@ type FeaturedFundsCarouselProps = {
 
 const AUTOPLAY_MS = 6000;
 const ARROW_HIDE_BREAKPOINT = 1024;
-const ARROW_HIDE_SMALL_BREAKPOINT = 390;
+const MOBILE_CAROUSEL_BREAKPOINT = 768;
+const MOBILE_CARD_WIDTH_RATIO = 0.86;
+const STATIC_GRID_BREAKPOINT = 1024;
 
 export function FeaturedFundsCarousel({
   funds,
@@ -59,9 +61,27 @@ export function FeaturedFundsCarousel({
       ),
     [windowWidth],
   );
+  const useStaticGrid = windowWidth >= STATIC_GRID_BREAKPOINT;
+  const useMobilePreviewCarousel =
+    !useStaticGrid && windowWidth < MOBILE_CAROUSEL_BREAKPOINT;
+  const viewportWidth = slideWidth > 0 ? slideWidth : fallbackWidth;
+  const mobileCardWidth = Math.min(
+    Math.max(0, viewportWidth - Spacing.sm),
+    Math.max(240, Math.round(windowWidth * MOBILE_CARD_WIDTH_RATIO)),
+  );
+  const cardWidth = useMobilePreviewCarousel
+    ? mobileCardWidth
+    : viewportWidth;
+  const cardGap = useMobilePreviewCarousel ? Spacing.md : 0;
+  const effectiveItemInterval = useMobilePreviewCarousel
+    ? cardWidth + cardGap
+    : viewportWidth;
+  const carouselEndPadding = useMobilePreviewCarousel
+    ? Math.max(0, viewportWidth - cardWidth)
+    : 0;
   const showNavArrows =
     funds.length > 1 &&
-    windowWidth > ARROW_HIDE_SMALL_BREAKPOINT &&
+    !useMobilePreviewCarousel &&
     !(Platform.OS === "web" && windowWidth >= ARROW_HIDE_BREAKPOINT);
 
   const arrowGutter = useMemo(() => {
@@ -73,8 +93,6 @@ export function FeaturedFundsCarousel({
     }
     return 40;
   }, [showNavArrows, windowWidth]);
-
-  const effectiveSlideWidth = slideWidth > 0 ? slideWidth : fallbackWidth;
 
   useEffect(() => {
     currentIndexRef.current = currentIndex;
@@ -143,7 +161,12 @@ export function FeaturedFundsCarousel({
   }, []);
 
   useEffect(() => {
-    if (isReduceMotionEnabled || funds.length <= 1 || isInteractionPaused) {
+    if (
+      useStaticGrid ||
+      isReduceMotionEnabled ||
+      funds.length <= 1 ||
+      isInteractionPaused
+    ) {
       return;
     }
 
@@ -167,10 +190,11 @@ export function FeaturedFundsCarousel({
     isInteractionPaused,
     isReduceMotionEnabled,
     syncToIndex,
+    useStaticGrid,
   ]);
 
   useEffect(() => {
-    if (dotProgress.length === 0) {
+    if (useStaticGrid || dotProgress.length === 0) {
       return;
     }
 
@@ -190,16 +214,16 @@ export function FeaturedFundsCarousel({
         }),
       ),
     ).start();
-  }, [currentIndex, dotProgress, isReduceMotionEnabled]);
+  }, [currentIndex, dotProgress, isReduceMotionEnabled, useStaticGrid]);
 
   const syncIndexFromOffset = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (effectiveSlideWidth <= 0 || funds.length === 0) {
+      if (effectiveItemInterval <= 0 || funds.length === 0) {
         return;
       }
 
       const rawIndex = Math.round(
-        event.nativeEvent.contentOffset.x / effectiveSlideWidth,
+        event.nativeEvent.contentOffset.x / effectiveItemInterval,
       );
       const boundedIndex = Math.max(0, Math.min(rawIndex, funds.length - 1));
       if (boundedIndex !== currentIndexRef.current) {
@@ -209,17 +233,36 @@ export function FeaturedFundsCarousel({
         deadlineRef.current = Date.now() + AUTOPLAY_MS;
       }
     },
-    [effectiveSlideWidth, funds.length],
+    [effectiveItemInterval, funds.length],
   );
 
   const handleScrollToIndexFailed = useCallback(() => {
     requestAnimationFrame(() => {
       listRef.current?.scrollToOffset({
-        offset: currentIndex * effectiveSlideWidth,
+        offset: currentIndex * effectiveItemInterval,
         animated: false,
       });
     });
-  }, [currentIndex, effectiveSlideWidth]);
+  }, [currentIndex, effectiveItemInterval]);
+
+  if (useStaticGrid) {
+    return (
+      <View style={[styles.wrapper, styles.staticWrapper]}>
+        <View style={styles.staticGrid}>
+          {funds.map((item) => (
+            <FundCard
+              fund={item}
+              key={item.id}
+              onPress={() => {
+                onFundPress(item);
+              }}
+              style={styles.staticCard}
+            />
+          ))}
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -269,7 +312,13 @@ export function FeaturedFundsCarousel({
             ref={listRef}
             data={funds}
             horizontal
-            pagingEnabled
+            pagingEnabled={!useMobilePreviewCarousel}
+            snapToInterval={
+              useMobilePreviewCarousel ? effectiveItemInterval : undefined
+            }
+            snapToAlignment="start"
+            decelerationRate={useMobilePreviewCarousel ? "fast" : "normal"}
+            disableIntervalMomentum={useMobilePreviewCarousel}
             showsHorizontalScrollIndicator={false}
             onScrollBeginDrag={pauseAutoplay}
             onScroll={syncIndexFromOffset}
@@ -278,16 +327,22 @@ export function FeaturedFundsCarousel({
             onScrollToIndexFailed={handleScrollToIndexFailed}
             scrollEventThrottle={16}
             getItemLayout={(_, index) => ({
-              length: effectiveSlideWidth,
-              offset: effectiveSlideWidth * index,
+              length: effectiveItemInterval,
+              offset: effectiveItemInterval * index,
               index,
             })}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
+            renderItem={({ item, index }) => (
               <View
                 style={[
                   styles.slide,
-                  { width: effectiveSlideWidth },
+                  {
+                    marginRight:
+                      useMobilePreviewCarousel && index < funds.length - 1
+                        ? cardGap
+                        : 0,
+                    width: cardWidth,
+                  },
                   showNavArrows ? { paddingHorizontal: arrowGutter } : null,
                 ]}
               >
@@ -303,6 +358,11 @@ export function FeaturedFundsCarousel({
                 />
               </View>
             )}
+            contentContainerStyle={
+              useMobilePreviewCarousel
+                ? { paddingRight: carouselEndPadding }
+                : null
+            }
             style={styles.list}
           />
         </View>
@@ -384,6 +444,19 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.lg,
     gap: Spacing.md,
+  },
+  staticWrapper: {
+    paddingBottom: Spacing.xl,
+  },
+  staticGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
+  },
+  staticCard: {
+    flexBasis: "48%",
+    flexGrow: 1,
+    minWidth: 300,
   },
   trackRow: {
     flexDirection: "row",

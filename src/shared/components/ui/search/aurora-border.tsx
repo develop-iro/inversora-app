@@ -64,6 +64,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Radius.field + 2,
     overflow: "hidden",
+    shadowColor: "rgba(11, 46, 54, 0.45)",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 3,
   },
   auraLayer: {
     ...StyleSheet.absoluteFill,
@@ -76,6 +81,6 @@ const styles = StyleSheet.create({
   content: {
     borderRadius: Radius.field,
     margin: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
   },
 });

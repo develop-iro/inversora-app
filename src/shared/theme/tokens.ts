@@ -149,6 +149,6 @@ export const Gradients = {
 
 export const Layout = {
   screenPaddingHorizontal: Spacing.lg,
-  maxContentWidth: 800,
+  maxContentWidth: 760,
   bottomTabInset: Platform.select({ ios: 50, android: 80 }) ?? 0,
 } as const;

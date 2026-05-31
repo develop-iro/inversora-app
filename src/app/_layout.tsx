@@ -5,20 +5,23 @@ import { useFonts } from "expo-font";
 import { DefaultTheme, Tabs, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { Platform, StatusBar } from "react-native";
+import { Platform, StatusBar, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { semanticColors } from "@/shared/theme/colors";
-import { Typography } from "@/shared/theme/theme";
+import { HeaderLogo } from "@/shared/components/brand/header-logo";
+import { FloatingTabBar } from "@/shared/components/navigation/floating-tab-bar";
 
 SplashScreen.preventAutoHideAsync();
-
-const colors = semanticColors.light;
 
 export default function TabLayout() {
   const [fontsLoaded] = useFonts({
     DMSans_400Regular,
     DMSans_700Bold,
   });
+  const insets = useSafeAreaInsets();
+
+  const safeBottomInset =
+    Platform.OS === "ios" ? Math.min(Math.max(insets.bottom, 8), 28) : 0;
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -35,25 +38,60 @@ export default function TabLayout() {
       <StatusBar barStyle="dark-content" />
       <Tabs
         screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: colors.tabActive,
-          tabBarInactiveTintColor: colors.tabInactive,
-          tabBarLabelStyle: Typography.tab,
-          tabBarStyle: {
-            backgroundColor: colors.surface,
-            borderTopColor: colors.border,
-            ...(Platform.OS === "web"
-              ? {
-                  maxWidth: 480,
-                  width: "100%",
-                  alignSelf: "center",
-                }
-              : null),
+          headerShown: true,
+          headerTitle: () => <HeaderLogo />,
+          headerTitleAlign: "center",
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: "#FFFFFF",
+            borderBottomColor: "rgba(11, 46, 54, 0.06)",
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            height: 60,
+          },
+          headerTitleContainerStyle: {
+            minWidth: 230,
+            alignItems: "center",
           },
         }}
+        tabBar={(props) => (
+          <FloatingTabBar {...props} bottomInset={safeBottomInset} />
+        )}
       >
-        <Tabs.Screen name="index" options={{ title: "Inicio" }} />
-        <Tabs.Screen name="funds" options={{ title: "Fondos" }} />
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Inicio",
+            tabBarAccessibilityLabel: "Ir a Inicio",
+          }}
+        />
+        <Tabs.Screen
+          name="funds"
+          options={{
+            title: "Fondos",
+            tabBarAccessibilityLabel: "Explorar fondos",
+          }}
+        />
+        <Tabs.Screen
+          name="favorites"
+          options={{
+            title: "Favoritos",
+            tabBarAccessibilityLabel: "Ver favoritos",
+          }}
+        />
+        <Tabs.Screen
+          name="compare"
+          options={{
+            title: "Comparar",
+            tabBarAccessibilityLabel: "Comparar fondos",
+          }}
+        />
+        <Tabs.Screen
+          name="calculator"
+          options={{
+            title: "Calcular",
+            tabBarAccessibilityLabel: "Abrir calculadora",
+          }}
+        />
         <Tabs.Screen name="explore" options={{ href: null }} />
       </Tabs>
     </ThemeProvider>

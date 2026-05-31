@@ -7,11 +7,16 @@ import type { RiskLevel } from "@/features/funds/models/fund";
 import { FEATURED_FUNDS_MOCK } from "@/features/funds/mocks/featured-funds-mock";
 import { FeaturedFundsCarousel } from "@/features/onboarding/components/featured-funds-carousel";
 import { HomeHero } from "@/features/onboarding/components/home-hero";
+import {
+  FLOATING_TAB_BAR_BOTTOM_GAP,
+  FLOATING_TAB_BAR_CONTENT_GAP,
+  FLOATING_TAB_BAR_HEIGHT,
+} from "@/shared/components/navigation/floating-tab-bar";
 import { ThemedText } from "@/shared/components/themed-text";
 import { Badge, SearchField } from "@/shared/components/ui";
 import { useMobileLayout } from "@/shared/hooks/use-mobile-layout";
 import { useTheme } from "@/shared/hooks/use-theme";
-import { BottomTabInset, Layout, Radius, Spacing } from "@/shared/theme/theme";
+import { Layout, Radius, Spacing } from "@/shared/theme/theme";
 
 type RankingFund = {
   rank: number;
@@ -71,6 +76,12 @@ const RANKING_FUNDS: RankingFund[] = [
   },
 ];
 
+const SEARCH_SUGGESTIONS = [
+  "¿Qué quieres conseguir?",
+  "Quiero invertir a largo plazo",
+  "Ayúdame a comparar fondos tranquilos",
+] as const;
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -78,7 +89,7 @@ export default function HomeScreen() {
   const { contentWidth } = useMobileLayout();
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.background }]}> 
+    <View style={[styles.screen, { backgroundColor: theme.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -86,29 +97,22 @@ export default function HomeScreen() {
           {
             width: contentWidth,
             maxWidth: contentWidth,
-            paddingBottom: BottomTabInset + Spacing.xl + insets.bottom,
+            paddingBottom:
+              FLOATING_TAB_BAR_HEIGHT +
+              FLOATING_TAB_BAR_BOTTOM_GAP +
+              FLOATING_TAB_BAR_CONTENT_GAP +
+              insets.bottom,
           },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View
-          style={[
-            styles.navBar,
-            { paddingTop: insets.top, backgroundColor: theme.surface },
-          ]}
-        >
-          <ThemedText type="navTitle" style={styles.navTitle}>
-            Invesora
-          </ThemedText>
-        </View>
-
         <HomeHero
           onInvestPress={() => {
             router.push("/explore");
           }}
         />
 
-        <View style={[styles.contentPanel, { backgroundColor: theme.surface }]}> 
+        <View style={[styles.contentPanel, { backgroundColor: theme.surface }]}>
           <View style={styles.featuredHeader}>
             <ThemedText type="sectionTitle" style={styles.featuredHeaderTitle}>
               Fondos destacados
@@ -130,8 +134,22 @@ export default function HomeScreen() {
             }}
           />
 
-          <View style={styles.searchWrapper}>
-            <SearchField />
+          <View style={styles.searchSection}>
+            <View style={styles.searchBlock}>
+              <ThemedText
+                type="metaLabel"
+                themeColor="deepOcean"
+                style={styles.searchLabel}
+              >
+                Pregunta o busca
+              </ThemedText>
+              <SearchField
+                accessibilityLabel="Pregunta o busca fondos, categorías u objetivos"
+                containerStyle={styles.searchFieldInner}
+                placeholder="¿Qué quieres conseguir?"
+                suggestions={[...SEARCH_SUGGESTIONS]}
+              />
+            </View>
           </View>
 
           <View style={styles.rankingSection}>
@@ -297,7 +315,9 @@ export default function HomeScreen() {
                 color={theme.primary}
               />
             </Pressable>
+          </View>
 
+          <View style={styles.soraSection}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="No sabes por dónde empezar, abrir guía de Sora"
@@ -307,7 +327,10 @@ export default function HomeScreen() {
               }}
               style={({ pressed }) => [
                 styles.soraCard,
-                { backgroundColor: theme.backgroundSoft, borderColor: theme.border },
+                {
+                  backgroundColor: "rgba(234, 248, 246, 0.66)",
+                  borderColor: "rgba(0, 191, 166, 0.16)",
+                },
                 pressed && styles.soraCardPressed,
               ]}
             >
@@ -315,7 +338,7 @@ export default function HomeScreen() {
                 <View
                   style={[
                     styles.soraIconWrap,
-                    { backgroundColor: "rgba(0, 191, 166, 0.18)" },
+                    { backgroundColor: "rgba(0, 191, 166, 0.14)" },
                   ]}
                 >
                   <MaterialCommunityIcons
@@ -346,22 +369,33 @@ export default function HomeScreen() {
                 />
               </View>
             </Pressable>
+          </View>
 
+          <View style={styles.disclaimerSection}>
             <View
               accessibilityRole="summary"
               accessibilityLabel="Información educativa. Invesora no ofrece asesoramiento financiero personalizado. La información mostrada es educativa y orientativa."
               style={[
                 styles.disclaimerCard,
-                { backgroundColor: theme.backgroundSoft, borderColor: theme.border },
+                {
+                  backgroundColor: "rgba(234, 248, 246, 0.28)",
+                  borderColor: "rgba(11, 46, 54, 0.04)",
+                },
               ]}
             >
               <View style={styles.disclaimerHeader}>
                 <MaterialCommunityIcons
                   name="information-outline"
-                  size={16}
-                  color={theme.deepOcean}
+                  size={14}
+                  color="rgba(11, 46, 54, 0.58)"
                 />
-                <ThemedText type="bodyBold">Información educativa</ThemedText>
+                <ThemedText
+                  type="caption"
+                  themeColor="textSecondary"
+                  style={styles.disclaimerTitle}
+                >
+                  Información educativa
+                </ThemedText>
               </View>
               <ThemedText
                 type="caption"
@@ -392,22 +426,13 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignSelf: "center",
   },
-  navBar: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingBottom: Spacing.sm,
-    minHeight: 44,
-  },
-  navTitle: {
-    textAlign: "center",
-  },
   contentPanel: {
     alignSelf: "stretch",
     paddingBottom: Spacing.xl,
   },
   featuredHeader: {
     paddingTop: Spacing["2xl"],
-    paddingBottom: Spacing.md,
+    paddingBottom: Spacing.sm,
     paddingHorizontal: Layout.screenPaddingHorizontal,
     gap: Spacing.sm,
   },
@@ -418,14 +443,27 @@ const styles = StyleSheet.create({
     maxWidth: 620,
     lineHeight: 22,
   },
-  searchWrapper: {
+  searchSection: {
+    alignItems: "center",
     paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingVertical: Spacing.md,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing["2xl"],
+  },
+  searchBlock: {
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: 600,
+    gap: Spacing.md,
+  },
+  searchLabel: {
+    letterSpacing: 0.96,
+  },
+  searchFieldInner: {
+    minHeight: 60,
   },
   rankingSection: {
     paddingHorizontal: Layout.screenPaddingHorizontal,
     gap: Spacing.md,
-    paddingBottom: Spacing.md,
   },
   rankingSubtitle: {
     lineHeight: 20,
@@ -535,8 +573,11 @@ const styles = StyleSheet.create({
   rankingCtaLabel: {
     lineHeight: 20,
   },
+  soraSection: {
+    paddingTop: Spacing.xl + Spacing.xs,
+    paddingHorizontal: Layout.screenPaddingHorizontal,
+  },
   soraCard: {
-    marginTop: Spacing.xs,
     borderWidth: 1,
     borderRadius: Radius.card,
     paddingHorizontal: Spacing.md,
@@ -570,12 +611,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.xs,
   },
+  disclaimerSection: {
+    paddingTop: Spacing.lg,
+    paddingHorizontal: Layout.screenPaddingHorizontal,
+  },
   disclaimerCard: {
-    marginTop: Spacing.xs,
     borderWidth: 1,
     borderRadius: Radius.card,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     gap: Spacing.xs,
   },
   disclaimerHeader: {
@@ -583,8 +627,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.xs,
   },
+  disclaimerTitle: {
+    color: "rgba(11, 46, 54, 0.68)",
+    fontSize: 12,
+    lineHeight: 17,
+  },
   disclaimerBody: {
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 17,
   },
 });
 

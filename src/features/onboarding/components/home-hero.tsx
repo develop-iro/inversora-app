@@ -5,6 +5,7 @@ import {
     Easing,
     ImageBackground,
     StyleSheet,
+    useWindowDimensions,
     View,
 } from "react-native";
 
@@ -14,13 +15,19 @@ import { Layout, Shadows, Spacing } from "@/shared/theme/theme";
 
 const heroBackground = require("@/assets/images/background-hero.png");
 
-const HERO_HEIGHT = 472;
+const HERO_MOBILE_HEIGHT = 460;
+const HERO_WIDE_HEIGHT = 436;
+const WIDE_HERO_BREAKPOINT = 768;
 
 export type HomeHeroProps = {
   onInvestPress?: () => void;
 };
 
 export function HomeHero({ onInvestPress }: HomeHeroProps) {
+  const { width } = useWindowDimensions();
+  const isWideLayout = width >= WIDE_HERO_BREAKPOINT;
+  const heroHeight = isWideLayout ? HERO_WIDE_HEIGHT : HERO_MOBILE_HEIGHT;
+
   // Ken Burns: la imagen arranca ligeramente ampliada y se contrae suavemente.
   // useState con lazy initializer: crea el Animated.Value una sola vez y devuelve
   // una referencia estable, sin acceder a .current durante el render (React Compiler).
@@ -82,17 +89,20 @@ export function HomeHero({ onInvestPress }: HomeHeroProps) {
   });
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { height: heroHeight }]}>
       {/*
        * Animated.View aplica la escala del Ken Burns al contenedor completo.
        * overflow: 'hidden' en el wrapper asegura que el exceso de imagen no se vea.
        */}
       <Animated.View
-        style={[styles.imageContainer, { transform: [{ scale: bgScale }] }]}
+        style={[
+          styles.imageContainer,
+          { height: heroHeight, transform: [{ scale: bgScale }] },
+        ]}
       >
         <ImageBackground
           source={heroBackground}
-          style={styles.image}
+          style={[styles.image, { height: heroHeight }]}
           resizeMode="cover"
           accessibilityRole="image"
           accessibilityLabel="Ilustración de crecimiento financiero con tonos verde azulado"
@@ -118,7 +128,7 @@ export function HomeHero({ onInvestPress }: HomeHeroProps) {
               "rgba(11,46,54,0.94)",
             ]}
             locations={[0.0, 0.65, 1]}
-            style={styles.gradient}
+            style={[styles.gradient, isWideLayout && styles.gradientWide]}
           >
             <View style={styles.content}>
               <Animated.View style={makeEntrance(eyebrowAnim, 10)}>
@@ -161,16 +171,13 @@ export function HomeHero({ onInvestPress }: HomeHeroProps) {
 const styles = StyleSheet.create({
   wrapper: {
     width: "100%",
-    height: HERO_HEIGHT,
     overflow: "hidden",
   },
   imageContainer: {
     width: "100%",
-    height: HERO_HEIGHT,
   },
   image: {
     width: "100%",
-    height: HERO_HEIGHT,
     justifyContent: "flex-end",
   },
   baseScrim: {
@@ -183,6 +190,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Layout.screenPaddingHorizontal,
     paddingBottom: Spacing["3xl"],
     paddingTop: Spacing.xl,
+  },
+  gradientWide: {
+    paddingBottom: Spacing["2xl"],
   },
   content: {
     gap: Spacing.lg,
