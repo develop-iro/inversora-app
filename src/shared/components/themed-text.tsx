@@ -1,73 +1,72 @@
-import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
+import { StyleSheet, Text, type TextProps } from "react-native";
 
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Fonts, ThemeColor } from '@/shared/theme/theme';
+import { useTheme } from "@/shared/hooks/use-theme";
+import { FontFamily, Typography, type ThemeColor } from "@/shared/theme/theme";
+
+export type ThemedTextType =
+  | "default"
+  | "title"
+  | "hero"
+  | "sectionTitle"
+  | "navTitle"
+  | "small"
+  | "metaLabel"
+  | "smallBold"
+  | "caption"
+  | "chip"
+  | "cardTitle"
+  | "bodyBold"
+  | "subtitle"
+  | "link"
+  | "linkPrimary"
+  | "code";
 
 export type ThemedTextProps = TextProps & {
-  type?: 'default' | 'title' | 'small' | 'smallBold' | 'subtitle' | 'link' | 'linkPrimary' | 'code';
+  type?: ThemedTextType;
   themeColor?: ThemeColor;
 };
 
-export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
+const typeStyles = StyleSheet.create({
+  hero: Typography.hero,
+  sectionTitle: Typography.sectionTitle,
+  navTitle: Typography.navTitle,
+  default: Typography.body,
+  title: Typography.hero,
+  subtitle: Typography.sectionTitle,
+  small: Typography.caption,
+  metaLabel: Typography.metaLabel,
+  smallBold: Typography.bodyBold,
+  caption: Typography.caption,
+  bodyBold: Typography.bodyBold,
+  cardTitle: Typography.cardTitle,
+  chip: Typography.chip,
+  link: Typography.caption,
+  linkPrimary: Typography.caption,
+  code: {
+    fontFamily: FontFamily.mono,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
+  },
+});
+
+export function ThemedText({
+  style,
+  type = "default",
+  themeColor,
+  ...rest
+}: ThemedTextProps) {
   const theme = useTheme();
 
   return (
     <Text
       style={[
-        { color: theme[themeColor ?? 'text'] },
-        type === 'default' && styles.default,
-        type === 'title' && styles.title,
-        type === 'small' && styles.small,
-        type === 'smallBold' && styles.smallBold,
-        type === 'subtitle' && styles.subtitle,
-        type === 'link' && styles.link,
-        type === 'linkPrimary' && styles.linkPrimary,
-        type === 'code' && styles.code,
+        { color: theme[themeColor ?? "text"] },
+        typeStyles[type],
+        type === "linkPrimary" && { color: theme.primary },
         style,
       ]}
       {...rest}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  small: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 500,
-  },
-  smallBold: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 700,
-  },
-  default: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: 500,
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: 600,
-    lineHeight: 52,
-  },
-  subtitle: {
-    fontSize: 32,
-    lineHeight: 44,
-    fontWeight: 600,
-  },
-  link: {
-    lineHeight: 30,
-    fontSize: 14,
-  },
-  linkPrimary: {
-    lineHeight: 30,
-    fontSize: 14,
-    color: '#3c87f7',
-  },
-  code: {
-    fontFamily: Fonts.mono,
-    fontWeight: Platform.select({ android: 700 }) ?? 500,
-    fontSize: 12,
-  },
-});

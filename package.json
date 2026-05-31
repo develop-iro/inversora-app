@@ -3,13 +3,20 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@expo-google-fonts/dm-sans": "^0.4.2",
+    "@expo-google-fonts/nunito": "^0.4.2",
+    "@expo/vector-icons": "^15.1.1",
     "expo": "~56.0.4",
+    "expo-font": "^56.0.5",
+    "expo-linear-gradient": "~56.0.4",
     "expo-router": "~56.2.6",
     "expo-splash-screen": "~56.0.10",
+    "expo-status-bar": "~56.0.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
     "react-native-gesture-handler": "~2.31.1",
+    "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
     "react-native-web": "~0.21.0",
@@ -17,6 +24,9 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~56.0.4",
+    "eslint-plugin-react-native": "^5.0.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -24,7 +34,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "lint:fix": "expo lint --fix",
+    "typecheck": "tsc --noEmit",
+    "quality": "npm run typecheck && npm run lint"
   },
   "private": true
 }

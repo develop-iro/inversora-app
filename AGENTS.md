@@ -103,6 +103,15 @@ Target routes:
 - `/calculator`
 - `/legal`
 
+## Agent Working Rules
+
+- Use the project docs in `README.md` and the available scripts in `package.json` as the primary source of truth.
+- Verification step for changes: run `npm run lint` before considering work complete.
+- There are no dedicated test scripts in this repository yet, so prefer lint + manual Expo verification for validation.
+- Keep `src/app` thin. Add screens and feature logic under `src/features/*`, and place reusable UI/theme/helpers under `src/shared/*` or `src/core/*`.
+- Do not introduce broker flows, account management, real portfolio actions, or personalized financial advice into the MVP.
+- If a change touches Expo, React Native, routing, or native config, consult the exact Expo SDK 56 docs first instead of relying on older assumptions.
+
 ## AI And Finance Rules
 
 The Invesora Assistant:
