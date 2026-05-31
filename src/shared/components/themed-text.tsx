@@ -1,24 +1,25 @@
-import { StyleSheet, Text, type TextProps } from 'react-native';
+import { StyleSheet, Text, type TextProps } from "react-native";
 
-import { useTheme } from '@/shared/hooks/use-theme';
-import { FontFamily, Typography, type ThemeColor } from '@/shared/theme/theme';
+import { useTheme } from "@/shared/hooks/use-theme";
+import { FontFamily, Typography, type ThemeColor } from "@/shared/theme/theme";
 
 export type ThemedTextType =
-  | 'default'
-  | 'title'
-  | 'hero'
-  | 'sectionTitle'
-  | 'navTitle'
-  | 'small'
-  | 'smallBold'
-  | 'caption'
-  | 'chip'
-  | 'cardTitle'
-  | 'bodyBold'
-  | 'subtitle'
-  | 'link'
-  | 'linkPrimary'
-  | 'code';
+  | "default"
+  | "title"
+  | "hero"
+  | "sectionTitle"
+  | "navTitle"
+  | "small"
+  | "metaLabel"
+  | "smallBold"
+  | "caption"
+  | "chip"
+  | "cardTitle"
+  | "bodyBold"
+  | "subtitle"
+  | "link"
+  | "linkPrimary"
+  | "code";
 
 export type ThemedTextProps = TextProps & {
   type?: ThemedTextType;
@@ -33,6 +34,7 @@ const typeStyles = StyleSheet.create({
   title: Typography.hero,
   subtitle: Typography.sectionTitle,
   small: Typography.caption,
+  metaLabel: Typography.metaLabel,
   smallBold: Typography.bodyBold,
   caption: Typography.caption,
   bodyBold: Typography.bodyBold,
@@ -44,19 +46,24 @@ const typeStyles = StyleSheet.create({
     fontFamily: FontFamily.mono,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
 
-export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
+export function ThemedText({
+  style,
+  type = "default",
+  themeColor,
+  ...rest
+}: ThemedTextProps) {
   const theme = useTheme();
 
   return (
     <Text
       style={[
-        { color: theme[themeColor ?? 'text'] },
+        { color: theme[themeColor ?? "text"] },
         typeStyles[type],
-        type === 'linkPrimary' && { color: theme.primary },
+        type === "linkPrimary" && { color: theme.primary },
         style,
       ]}
       {...rest}

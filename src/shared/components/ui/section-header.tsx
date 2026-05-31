@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
-import { StyleSheet, View, type ViewProps } from 'react-native';
+import type { ReactNode } from "react";
+import { StyleSheet, View, type ViewProps } from "react-native";
 
-import { ThemedText } from '@/shared/components/themed-text';
-import { Spacing } from '@/shared/theme/theme';
+import { ThemedText } from "@/shared/components/themed-text";
+import { Spacing } from "@/shared/theme/theme";
 
 export type SectionHeaderProps = ViewProps & {
   title: string;
@@ -10,7 +10,12 @@ export type SectionHeaderProps = ViewProps & {
 };
 
 /** Figma: Table Title Emphasized — título de sección con padding horizontal. */
-export function SectionHeader({ title, action, style, ...viewProps }: SectionHeaderProps) {
+export function SectionHeader({
+  title,
+  action,
+  style,
+  ...viewProps
+}: SectionHeaderProps) {
   return (
     <View style={[styles.container, style]} {...viewProps}>
       <ThemedText type="sectionTitle" style={styles.title}>
@@ -23,13 +28,13 @@ export function SectionHeader({ title, action, style, ...viewProps }: SectionHea
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xs,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    paddingTop: Spacing["2xl"],
+    paddingBottom: Spacing.sm,
     paddingHorizontal: Spacing.lg,
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
   },
   title: {
     flex: 1,

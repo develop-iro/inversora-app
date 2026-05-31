@@ -1,35 +1,48 @@
-import { Platform, type TextStyle, type ViewStyle } from 'react-native';
+import { Platform, type TextStyle, type ViewStyle } from "react-native";
 
-import { palette } from '@/shared/theme/palette';
+import { palette } from "@/shared/theme/palette";
 
 /**
  * Figma: DM Sans (UI) + Nunito (compact labels / chips).
  * Native faces are registered in `src/app/_layout.tsx` via expo-font.
  */
 export const FontFamily = {
-  display: Platform.select({ web: 'var(--font-display)', default: 'DMSans_400Regular' }),
-  displayBold: Platform.select({ web: 'var(--font-display)', default: 'DMSans_700Bold' }),
-  accent: Platform.select({ web: 'var(--font-accent)', default: 'Nunito_400Regular' }),
-  accentBold: Platform.select({ web: 'var(--font-accent)', default: 'Nunito_800ExtraBold' }),
+  display: Platform.select({
+    web: "var(--font-display)",
+    default: "DMSans_400Regular",
+  }),
+  displayBold: Platform.select({
+    web: "var(--font-display)",
+    default: "DMSans_700Bold",
+  }),
+  // Alias conservados por compatibilidad: el sistema usa una sola familia (DM Sans).
+  accent: Platform.select({
+    web: "var(--font-accent)",
+    default: "DMSans_400Regular",
+  }),
+  accentBold: Platform.select({
+    web: "var(--font-accent)",
+    default: "DMSans_700Bold",
+  }),
   mono: Platform.select({
-    ios: 'ui-monospace',
-    default: 'monospace',
-    web: 'var(--font-mono)',
+    ios: "ui-monospace",
+    default: "monospace",
+    web: "var(--font-mono)",
   }),
 } as const;
 
 export const Typography = {
   hero: {
     fontFamily: FontFamily.displayBold,
-    fontSize: 48,
-    lineHeight: 48,
-    letterSpacing: -0.96,
+    fontSize: 56,
+    lineHeight: 58,
+    letterSpacing: -1.1,
   },
   sectionTitle: {
     fontFamily: FontFamily.displayBold,
-    fontSize: 22,
-    lineHeight: 29,
-    letterSpacing: -0.22,
+    fontSize: 20,
+    lineHeight: 25,
+    letterSpacing: -0.2,
   },
   navTitle: {
     fontFamily: FontFamily.displayBold,
@@ -38,13 +51,13 @@ export const Typography = {
   },
   body: {
     fontFamily: FontFamily.display,
-    fontSize: 17,
-    lineHeight: 23,
+    fontSize: 16,
+    lineHeight: 24,
   },
   bodyBold: {
     fontFamily: FontFamily.displayBold,
     fontSize: 17,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   button: {
     fontFamily: FontFamily.displayBold,
@@ -54,17 +67,26 @@ export const Typography = {
   caption: {
     fontFamily: FontFamily.display,
     fontSize: 13,
-    lineHeight: 17,
+    lineHeight: 19,
+  },
+  metaLabel: {
+    fontFamily: FontFamily.displayBold,
+    fontSize: 11,
+    lineHeight: 15,
+    letterSpacing: 0.88,
+    textTransform: "uppercase",
   },
   chip: {
-    fontFamily: FontFamily.accentBold,
-    fontSize: 13,
-    lineHeight: 18,
+    fontFamily: FontFamily.displayBold,
+    fontSize: 16,
+    lineHeight: 21,
+    letterSpacing: -0.16,
   },
   cardTitle: {
-    fontFamily: FontFamily.accentBold,
-    fontSize: 15,
-    lineHeight: 20,
+    fontFamily: FontFamily.displayBold,
+    fontSize: 24,
+    lineHeight: 30,
+    letterSpacing: -0.36,
   },
   tab: {
     fontFamily: FontFamily.displayBold,
@@ -80,8 +102,8 @@ export const Spacing = {
   md: 12,
   lg: 16,
   xl: 24,
-  '2xl': 32,
-  '3xl': 40,
+  "2xl": 32,
+  "3xl": 40,
   /** @deprecated Use named scale (xs, sm, lg, …). */
   one: 4,
   /** @deprecated Use named scale. */
@@ -114,7 +136,7 @@ export const Shadows = {
     elevation: 3,
   },
   heroText: {
-    textShadowColor: 'rgba(0, 0, 0, 0.08)',
+    textShadowColor: "rgba(0, 0, 0, 0.08)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },

@@ -1,80 +1,84 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useRouter } from "expo-router";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { HomeHero } from '@/features/onboarding/components/home-hero';
-import { FundCardIcon } from '@/features/onboarding/components/fund-card-icon';
-import { ThemedText } from '@/shared/components/themed-text';
-import {
-  Badge,
-  InvestmentCard,
-  MediaCard,
-  SearchField,
-  SectionHeader,
-} from '@/shared/components/ui';
-import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { BottomTabInset, Layout, Spacing } from '@/shared/theme/theme';
+import type { RiskLevel } from "@/features/funds/models/fund";
+import { FEATURED_FUNDS_MOCK } from "@/features/funds/mocks/featured-funds-mock";
+import { FeaturedFundsCarousel } from "@/features/onboarding/components/featured-funds-carousel";
+import { HomeHero } from "@/features/onboarding/components/home-hero";
+import { ThemedText } from "@/shared/components/themed-text";
+import { Badge, SearchField } from "@/shared/components/ui";
+import { useMobileLayout } from "@/shared/hooks/use-mobile-layout";
+import { useTheme } from "@/shared/hooks/use-theme";
+import { BottomTabInset, Layout, Radius, Spacing } from "@/shared/theme/theme";
 
-const FEATURED_FUNDS = [
-  { id: 'savings', title: 'Ahorros', subtitle: '$0.00', icon: '↗' },
-  {
-    id: 'eafe',
-    title: 'iShares MSCI EAFE',
-    subtitle: 'Comisión anual: 0.32%',
-    icon: '+',
-  },
-  {
-    id: 'fidelity',
-    title: 'Fidelity ZERO Total Market',
-    subtitle: 'Comisión anual: 0.00%',
-    icon: '↓',
-  },
-  {
-    id: 'schwab',
-    title: 'Schwab U.S. Large-Cap',
-    subtitle: 'Comisión anual: 0.03%',
-    icon: '+',
-  },
-] as const;
+type RankingFund = {
+  rank: number;
+  name: string;
+  category: string;
+  isin: string;
+  score: number;
+  risk: RiskLevel;
+  annualFee: number;
+};
 
-const RECENT_FUNDS = [
+const RANKING_FUNDS: RankingFund[] = [
   {
-    id: 'blue',
-    title: 'Fondo Azul Estable',
-    subtitle: 'ISIN: ES9876543210',
-    placeholderColor: '#B8F2E6',
+    rank: 1,
+    name: "MSCI World Index Core",
+    category: "Renta Variable Global",
+    isin: "IE00B4L5Y983",
+    score: 86,
+    risk: "medium",
+    annualFee: 0.12,
   },
   {
-    id: 'mixed',
-    title: 'Fondo Mixto Conservador',
-    subtitle: 'ISIN: ES1122334455',
-    placeholderColor: '#EAF8F6',
+    rank: 2,
+    name: "S&P 500 Acc",
+    category: "Renta Variable USA",
+    isin: "IE00B5BMR087",
+    score: 84,
+    risk: "medium",
+    annualFee: 0.07,
   },
   {
-    id: 'yellow',
-    title: 'Fondo Amarillo Innovador',
-    subtitle: 'ISIN: ES1928374650',
-    placeholderColor: '#D7FF64',
+    rank: 3,
+    name: "Europe Quality ESG",
+    category: "Renta Variable Europa",
+    isin: "IE00B1YZSC51",
+    score: 81,
+    risk: "medium",
+    annualFee: 0.18,
   },
-] as const;
-
-const FUND_BADGES = [
-  '1 año',
-  'Riesgo: Bajo',
-  '5 años',
-  'Más información',
-  'Gastos: 0.5%',
-  'Gestora: Invesora',
-  'Categoría: Mixto',
-] as const;
+  {
+    rank: 4,
+    name: "Global Balanced Index",
+    category: "Mixto Moderado",
+    isin: "ES0123456789",
+    score: 79,
+    risk: "low",
+    annualFee: 0.21,
+  },
+  {
+    rank: 5,
+    name: "Global Bond Index",
+    category: "Renta Fija Global",
+    isin: "IE00B3F81R35",
+    score: 76,
+    risk: "low",
+    annualFee: 0.1,
+  },
+];
 
 export default function HomeScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const { contentWidth, featuredCardWidth } = useMobileLayout();
+  const { contentWidth } = useMobileLayout();
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.background }]}>
+    <View style={[styles.screen, { backgroundColor: theme.background }]}> 
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -85,72 +89,290 @@ export default function HomeScreen() {
             paddingBottom: BottomTabInset + Spacing.xl + insets.bottom,
           },
         ]}
-        showsVerticalScrollIndicator={false}>
-        <View style={[styles.navBar, { paddingTop: insets.top, backgroundColor: theme.surface }]}>
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={[
+            styles.navBar,
+            { paddingTop: insets.top, backgroundColor: theme.surface },
+          ]}
+        >
           <ThemedText type="navTitle" style={styles.navTitle}>
             Invesora
           </ThemedText>
         </View>
 
-        <HomeHero />
+        <HomeHero
+          onInvestPress={() => {
+            router.push("/explore");
+          }}
+        />
 
-        <View style={[styles.contentPanel, { backgroundColor: theme.surface }]}>
-          <SectionHeader title="Fondos destacados" />
-
-          <View style={styles.featuredGrid}>
-            {FEATURED_FUNDS.map((fund) => (
-              <InvestmentCard
-                key={fund.id}
-                style={{ width: featuredCardWidth }}
-                icon={<FundCardIcon symbol={fund.icon} />}
-                title={fund.title}
-                subtitle={fund.subtitle}
-              />
-            ))}
+        <View style={[styles.contentPanel, { backgroundColor: theme.surface }]}> 
+          <View style={styles.featuredHeader}>
+            <ThemedText type="sectionTitle" style={styles.featuredHeaderTitle}>
+              Fondos destacados
+            </ThemedText>
+            <ThemedText
+              type="caption"
+              themeColor="textSecondary"
+              style={styles.featuredHeaderSummary}
+            >
+              Una selección rápida para entender en segundos por qué cada fondo
+              puede aportar valor.
+            </ThemedText>
           </View>
+
+          <FeaturedFundsCarousel
+            funds={FEATURED_FUNDS_MOCK.filter((fund) => fund.isFeatured)}
+            onFundPress={() => {
+              router.push("/funds");
+            }}
+          />
 
           <View style={styles.searchWrapper}>
-            <SearchField
-              placeholder="Buscar fondos"
-              leadingIcon={
-                <Text style={[styles.searchIcon, { color: theme.textSecondary }]}>⌕</Text>
-              }
-            />
+            <SearchField />
           </View>
 
-          <SectionHeader title="Recién vistos" />
+          <View style={styles.rankingSection}>
+            <ThemedText type="sectionTitle">Ranking Invesora</ThemedText>
+            <ThemedText
+              type="caption"
+              themeColor="textSecondary"
+              style={styles.rankingSubtitle}
+            >
+              Descubre los fondos mejor puntuados según el Score Invesora.
+            </ThemedText>
 
-          <ScrollView
-            horizontal
-            nestedScrollEnabled
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.carouselContent}
-            style={styles.carousel}>
-            {RECENT_FUNDS.map((fund) => (
-              <MediaCard
-                key={fund.id}
-                title={fund.title}
-                subtitle={fund.subtitle}
-                imageHeight={173}
-                style={styles.carouselCard}
-                imageSlot={
-                  <View
-                    style={[styles.mediaPlaceholder, { backgroundColor: fund.placeholderColor }]}
-                  />
-                }
+            <View style={styles.rankingList}>
+              {RANKING_FUNDS.slice(0, 3).map((fund) => {
+                const isTopRank = fund.rank === 1;
+                const riskLabel = getRiskLabel(fund.risk);
+
+                return (
+                  <Pressable
+                    key={fund.rank}
+                    accessibilityRole="button"
+                    accessibilityLabel={buildRankingA11yLabel(fund)}
+                    accessibilityHint="Abre la ficha resumida del fondo"
+                    onPress={() => {
+                      router.push("/funds");
+                    }}
+                    style={({ pressed }) => [
+                      styles.rankingRow,
+                      {
+                        backgroundColor: isTopRank
+                          ? theme.backgroundSoft
+                          : theme.surface,
+                        borderColor: isTopRank
+                          ? "rgba(0, 191, 166, 0.35)"
+                          : theme.border,
+                      },
+                      pressed && styles.rankingRowPressed,
+                    ]}
+                  >
+                    <View style={styles.rankingMainContent}>
+                      <View style={styles.rankingMainRow}>
+                        <View style={styles.rankAndInfoBlock}>
+                          <View
+                            style={[
+                              styles.rankIndicator,
+                              isTopRank
+                                ? {
+                                    backgroundColor: "rgba(19, 78, 94, 0.92)",
+                                    borderColor: "rgba(0, 191, 166, 0.22)",
+                                  }
+                                : {
+                                    backgroundColor: theme.surfaceMuted,
+                                    borderColor: theme.border,
+                                  },
+                            ]}
+                          >
+                            <ThemedText
+                              type={isTopRank ? "chip" : "metaLabel"}
+                              style={{
+                                color: isTopRank
+                                  ? theme.textOnDark
+                                  : theme.textSecondary,
+                                letterSpacing: isTopRank ? -0.3 : 0.88,
+                              }}
+                            >
+                              #{fund.rank}
+                            </ThemedText>
+                          </View>
+
+                          <View style={styles.rankingTextBlock}>
+                            {isTopRank ? (
+                              <View
+                                style={[
+                                  styles.topFundBadge,
+                                  { backgroundColor: theme.accentMint },
+                                ]}
+                              >
+                                <ThemedText
+                                  type="caption"
+                                  style={styles.topFundBadgeLabel}
+                                >
+                                  Top fondo
+                                </ThemedText>
+                              </View>
+                            ) : null}
+
+                            <ThemedText type="bodyBold" numberOfLines={1}>
+                              {fund.name}
+                            </ThemedText>
+                            <ThemedText
+                              type="caption"
+                              themeColor="textSecondary"
+                              numberOfLines={1}
+                            >
+                              {fund.category}
+                            </ThemedText>
+                            <ThemedText
+                              type="caption"
+                              themeColor="textSecondary"
+                              numberOfLines={1}
+                              style={styles.isinText}
+                            >
+                              ISIN {fund.isin}
+                            </ThemedText>
+                          </View>
+                        </View>
+
+                        <View style={styles.scoreBlock}>
+                          <ThemedText type="metaLabel" themeColor="textSecondary">
+                            Score Invesora
+                          </ThemedText>
+                          <ThemedText type="chip" style={styles.scoreValue}>
+                            {fund.score}/100
+                          </ThemedText>
+                        </View>
+                      </View>
+
+                      <View style={styles.rankingMetaRow}>
+                        <View style={styles.rankingMetaLeft}>
+                          <Badge
+                            label={`Riesgo ${riskLabel.toLowerCase()}`}
+                            variant={getRiskBadgeVariant(fund.risk)}
+                          />
+                          <ThemedText
+                            type="caption"
+                            themeColor="textSecondary"
+                            style={styles.annualFeeText}
+                          >
+                            Comisión anual {fund.annualFee.toFixed(2)}%
+                          </ThemedText>
+                        </View>
+                        <MaterialCommunityIcons
+                          name="chevron-right"
+                          size={18}
+                          color={theme.textSecondary}
+                        />
+                      </View>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Ver ranking completo"
+              accessibilityHint="Navega al listado completo de fondos"
+              onPress={() => {
+                router.push("/funds");
+              }}
+              style={({ pressed }) => [
+                styles.rankingCta,
+                { borderColor: theme.border },
+                pressed && styles.rankingCtaPressed,
+              ]}
+            >
+              <ThemedText type="linkPrimary" style={styles.rankingCtaLabel}>
+                Ver ranking completo
+              </ThemedText>
+              <MaterialCommunityIcons
+                name="arrow-right"
+                size={16}
+                color={theme.primary}
               />
-            ))}
-          </ScrollView>
+            </Pressable>
 
-          <View style={styles.badgesSection}>
-            {FUND_BADGES.map((label) => (
-              <Badge key={label} label={label} variant="soft" />
-            ))}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="No sabes por dónde empezar, abrir guía de Sora"
+              accessibilityHint="Inicia una guía breve antes de comparar fondos"
+              onPress={() => {
+                router.push("/explore");
+              }}
+              style={({ pressed }) => [
+                styles.soraCard,
+                { backgroundColor: theme.backgroundSoft, borderColor: theme.border },
+                pressed && styles.soraCardPressed,
+              ]}
+            >
+              <View style={styles.soraHeader}>
+                <View
+                  style={[
+                    styles.soraIconWrap,
+                    { backgroundColor: "rgba(0, 191, 166, 0.18)" },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name="compass-outline"
+                    size={14}
+                    color={theme.deepOcean}
+                  />
+                </View>
+                <ThemedText type="bodyBold" style={styles.soraTitle}>
+                  ¿No sabes por dónde empezar?
+                </ThemedText>
+              </View>
+
+              <ThemedText
+                type="caption"
+                themeColor="textSecondary"
+                style={styles.soraBody}
+              >
+                Sora puede ayudarte a entender tu perfil antes de comparar fondos.
+              </ThemedText>
+
+              <View style={styles.soraCtaRow}>
+                <ThemedText type="linkPrimary">Empezar guía</ThemedText>
+                <MaterialCommunityIcons
+                  name="arrow-right"
+                  size={14}
+                  color={theme.primary}
+                />
+              </View>
+            </Pressable>
+
+            <View
+              accessibilityRole="summary"
+              accessibilityLabel="Información educativa. Invesora no ofrece asesoramiento financiero personalizado. La información mostrada es educativa y orientativa."
+              style={[
+                styles.disclaimerCard,
+                { backgroundColor: theme.backgroundSoft, borderColor: theme.border },
+              ]}
+            >
+              <View style={styles.disclaimerHeader}>
+                <MaterialCommunityIcons
+                  name="information-outline"
+                  size={16}
+                  color={theme.deepOcean}
+                />
+                <ThemedText type="bodyBold">Información educativa</ThemedText>
+              </View>
+              <ThemedText
+                type="caption"
+                themeColor="textSecondary"
+                style={styles.disclaimerBody}
+              >
+                Invesora no ofrece asesoramiento financiero personalizado. La
+                información mostrada es educativa y orientativa.
+              </ThemedText>
+            </View>
           </View>
-
-          <ThemedText type="sectionTitle" style={styles.fundDescriptionTitle}>
-            Descripción del fondo
-          </ThemedText>
         </View>
       </ScrollView>
     </View>
@@ -160,72 +382,237 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   scroll: {
     flex: 1,
-    width: '100%',
+    width: "100%",
   },
   scrollContent: {
     flexGrow: 1,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   navBar: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingBottom: Spacing.sm,
     minHeight: 44,
   },
   navTitle: {
-    textAlign: 'center',
+    textAlign: "center",
   },
   contentPanel: {
-    alignSelf: 'stretch',
-    paddingBottom: Spacing.lg,
+    alignSelf: "stretch",
+    paddingBottom: Spacing.xl,
   },
-  featuredGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    columnGap: Spacing.lg,
-    rowGap: Spacing.lg,
+  featuredHeader: {
+    paddingTop: Spacing["2xl"],
+    paddingBottom: Spacing.md,
     paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  featuredHeaderTitle: {
+    letterSpacing: -0.2,
+  },
+  featuredHeaderSummary: {
+    maxWidth: 620,
+    lineHeight: 22,
   },
   searchWrapper: {
     paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
   },
-  searchIcon: {
+  rankingSection: {
+    paddingHorizontal: Layout.screenPaddingHorizontal,
+    gap: Spacing.md,
+    paddingBottom: Spacing.md,
+  },
+  rankingSubtitle: {
+    lineHeight: 20,
+    maxWidth: 620,
+  },
+  rankingList: {
+    gap: Spacing.sm,
+    paddingTop: Spacing.half,
+  },
+  rankingRow: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    minHeight: 96,
+  },
+  rankingRowPressed: {
+    opacity: 0.92,
+  },
+  rankingMainContent: {
+    gap: Spacing.xs,
+  },
+  rankingMainRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.sm,
+  },
+  rankAndInfoBlock: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.sm,
+  },
+  rankIndicator: {
+    minWidth: 37,
+    minHeight: 37,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.sm,
+    marginTop: 2,
+  },
+  rankingTextBlock: {
+    flex: 1,
+    gap: 3,
+  },
+  topFundBadge: {
+    alignSelf: "flex-start",
+    borderRadius: Radius.chip,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    marginBottom: 1,
+  },
+  topFundBadgeLabel: {
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  isinText: {
+    fontSize: 11,
+    lineHeight: 14,
+    opacity: 0.62,
+  },
+  scoreBlock: {
+    alignItems: "flex-end",
+    gap: 2,
+    minWidth: 88,
+  },
+  scoreValue: {
+    letterSpacing: -0.3,
     fontSize: 18,
+    lineHeight: 24,
+  },
+  rankingMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.md,
+  },
+  rankingMetaLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    flex: 1,
+  },
+  annualFeeText: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  rankingCta: {
+    marginTop: Spacing.xs,
+    alignSelf: "flex-start",
+    minHeight: 44,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  rankingCtaPressed: {
+    opacity: 0.85,
+  },
+  rankingCtaLabel: {
+    lineHeight: 20,
+  },
+  soraCard: {
+    marginTop: Spacing.xs,
+    borderWidth: 1,
+    borderRadius: Radius.card,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    gap: Spacing.xs,
+  },
+  soraCardPressed: {
+    opacity: 0.88,
+  },
+  soraHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  soraIconWrap: {
+    width: 24,
+    height: 24,
+    borderRadius: Radius.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  soraTitle: {
+    flex: 1,
+  },
+  soraBody: {
     lineHeight: 18,
   },
-  carousel: {
-    flexGrow: 0,
+  soraCtaRow: {
+    minHeight: 32,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
   },
-  carouselContent: {
-    gap: Spacing.sm,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingBottom: Spacing.sm,
+  disclaimerCard: {
+    marginTop: Spacing.xs,
+    borderWidth: 1,
+    borderRadius: Radius.card,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    gap: Spacing.xs,
   },
-  carouselCard: {
-    flexShrink: 0,
+  disclaimerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
   },
-  mediaPlaceholder: {
-    flex: 1,
-    width: '100%',
-  },
-  badgesSection: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingTop: Spacing.sm,
-    alignItems: 'flex-start',
-  },
-  fundDescriptionTitle: {
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
+  disclaimerBody: {
+    lineHeight: 19,
   },
 });
+
+function getRiskLabel(risk: RiskLevel) {
+  switch (risk) {
+    case "low":
+      return "Bajo";
+    case "high":
+      return "Alto";
+    case "medium":
+    default:
+      return "Medio";
+  }
+}
+
+function getRiskBadgeVariant(risk: RiskLevel) {
+  switch (risk) {
+    case "low":
+      return "mint" as const;
+    case "high":
+      return "danger" as const;
+    case "medium":
+    default:
+      return "warning" as const;
+  }
+}
+
+function buildRankingA11yLabel(fund: RankingFund) {
+  const riskLabel = getRiskLabel(fund.risk).toLowerCase();
+  return `Ranking ${fund.rank}, ${fund.name}, Score Invesora ${fund.score} sobre 100, riesgo ${riskLabel}, comisión anual ${fund.annualFee.toFixed(2)} por ciento.`;
+}

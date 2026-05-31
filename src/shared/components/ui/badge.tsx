@@ -1,20 +1,20 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type PressableProps,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+    type PressableProps,
+    type StyleProp,
+    type ViewStyle,
+} from "react-native";
 
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing, Typography } from '@/shared/theme/theme';
+import { useTheme } from "@/shared/hooks/use-theme";
+import { Radius, Spacing, Typography } from "@/shared/theme/theme";
 
-export type BadgeVariant = 'soft' | 'muted' | 'warning' | 'danger' | 'mint';
+export type BadgeVariant = "soft" | "muted" | "warning" | "danger" | "mint";
 
-export type BadgeProps = Omit<PressableProps, 'children' | 'style'> & {
+export type BadgeProps = Omit<PressableProps, "children" | "style"> & {
   label: string;
   variant?: BadgeVariant;
   icon?: ReactNode;
@@ -23,7 +23,7 @@ export type BadgeProps = Omit<PressableProps, 'children' | 'style'> & {
 
 export function Badge({
   label,
-  variant = 'soft',
+  variant = "soft",
   icon,
   style,
   disabled,
@@ -55,7 +55,8 @@ export function Badge({
           disabled && styles.disabled,
           style,
         ]}
-        {...pressableProps}>
+        {...pressableProps}
+      >
         {content}
       </Pressable>
     );
@@ -64,23 +65,27 @@ export function Badge({
   return (
     <View
       accessibilityRole="text"
-      style={[styles.base, containerStyle, disabled && styles.disabled, style]}>
+      style={[styles.base, containerStyle, disabled && styles.disabled, style]}
+    >
       {content}
     </View>
   );
 }
 
-function getVariantContainer(variant: BadgeVariant, theme: ReturnType<typeof useTheme>) {
+function getVariantContainer(
+  variant: BadgeVariant,
+  theme: ReturnType<typeof useTheme>,
+) {
   switch (variant) {
-    case 'muted':
+    case "muted":
       return { backgroundColor: theme.surfaceMuted };
-    case 'warning':
+    case "warning":
       return { backgroundColor: theme.warning };
-    case 'danger':
+    case "danger":
       return { backgroundColor: theme.danger };
-    case 'mint':
+    case "mint":
       return { backgroundColor: theme.accentMint };
-    case 'soft':
+    case "soft":
     default:
       return { backgroundColor: theme.backgroundSoft };
   }
@@ -88,9 +93,9 @@ function getVariantContainer(variant: BadgeVariant, theme: ReturnType<typeof use
 
 const styles = StyleSheet.create({
   base: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
     gap: Spacing.xs,
     minHeight: 28,
     paddingHorizontal: Spacing.md,
@@ -98,13 +103,13 @@ const styles = StyleSheet.create({
     borderRadius: Radius.chip,
   },
   label: {
-    ...Typography.chip,
+    ...Typography.metaLabel,
   },
   icon: {
     width: 16,
     height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   pressed: {
     opacity: 0.88,
