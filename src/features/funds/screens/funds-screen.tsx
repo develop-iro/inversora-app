@@ -1,90 +1,156 @@
-import { Platform, ScrollView, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { CatalogFund } from '@/core/domain/catalog';
+import {
+  DEFAULT_CATALOG_FILTERS,
+  FundCatalogFiltersBar,
+  toServiceFilters,
+  type FundCatalogFiltersState,
+} from '@/features/funds/components/fund-catalog-filters';
+import { FundListRow } from '@/features/funds/components/fund-list-row';
+import { getFunds } from '@/features/funds/services/get-funds';
+import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { ThemedText } from '@/shared/components/themed-text';
-import { ThemedView } from '@/shared/components/themed-view';
+import { SearchField } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/shared/theme/theme';
+import { routes } from '@/shared/navigation/routes';
+import { BottomTabInset, Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
+
+const SEARCH_SUGGESTIONS = [
+  'Buscar por nombre o ISIN',
+  'Renta variable global',
+  'Fondos para empezar',
+] as const;
 
 export default function FundsScreen() {
-  const safeAreaInsets = useSafeAreaInsets();
-  const insets = {
-    ...safeAreaInsets,
-    top: 0,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
-  };
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const [filters, setFilters] = useState<FundCatalogFiltersState>(DEFAULT_CATALOG_FILTERS);
+  const [funds, setFunds] = useState<CatalogFund[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const contentPlatformStyle = Platform.select({
-    android: {
-      paddingTop: Spacing.six,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      paddingBottom: insets.bottom,
-    },
-    web: {
-      paddingTop: Spacing.six,
-      paddingBottom: Spacing.four,
-    },
-  });
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      const results = await getFunds(toServiceFilters(filters));
+      if (!cancelled) {
+        setFunds(results);
+        setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [filters]);
+
+  const handleQueryChange = useCallback((query: string) => {
+    setIsLoading(true);
+    setFilters((current) => ({ ...current, query }));
+  }, []);
+
+  const handleFiltersChange = useCallback((next: FundCatalogFiltersState) => {
+    setIsLoading(true);
+    setFilters(next);
+  }, []);
 
   return (
     <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Index Funds</ThemedText>
-          <ThemedText style={styles.centerText} themeColor="textSecondary">
-            Catalog and objective rankings for comparing fees, risk, tracking error, and historical
-            consistency.
+      style={[styles.screen, { backgroundColor: theme.background }]}
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingBottom: insets.bottom + BottomTabInset + Spacing.xl,
+        },
+      ]}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.inner}>
+        <View style={styles.header}>
+          <ThemedText type="sectionTitle">Catálogo de fondos</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">
+            Explora fondos indexados con filtros básicos y rankings objetivos. Los
+            resultados son educativos, no recomendaciones personalizadas.
           </ThemedText>
-        </ThemedView>
+        </View>
 
-        <ThemedView style={styles.sectionsWrapper}>
-          <ThemedView type="backgroundElement" style={styles.infoPanel}>
-            <ThemedText type="smallBold">Next Functional Block</ThemedText>
-            <ThemedText type="small">
-              This screen will host ISIN search, basic filters, category rankings, and data-quality
-              states.
+        <SearchField
+          accessibilityLabel="Buscar fondos por nombre, ISIN o categoría"
+          placeholder="Buscar por nombre o ISIN"
+          value={filters.query}
+          onChangeText={handleQueryChange}
+          suggestions={[...SEARCH_SUGGESTIONS]}
+          containerStyle={styles.search}
+        />
+
+        <FundCatalogFiltersBar value={filters} onChange={handleFiltersChange} />
+
+        {isLoading ? (
+          <ActivityIndicator style={styles.loader} color={theme.primary} />
+        ) : funds.length === 0 ? (
+          <View style={styles.empty}>
+            <ThemedText type="bodyBold">Sin resultados</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Prueba a ampliar los filtros o cambia el texto de búsqueda.
             </ThemedText>
-          </ThemedView>
-        </ThemedView>
-      </ThemedView>
+          </View>
+        ) : (
+          <View style={styles.list}>
+            <ThemedText type="metaLabel" themeColor="textSecondary">
+              {funds.length} fondo{funds.length === 1 ? '' : 's'}
+            </ThemedText>
+            {funds.map((fund) => (
+              <FundListRow
+                key={fund.isin}
+                fund={fund}
+                onPress={() => router.push(routes.fundDetail(fund.isin))}
+              />
+            ))}
+          </View>
+        )}
+
+        <LegalNotice
+          body="Guardar o comparar fondos no implica una recomendación de inversión. Revisa siempre comisiones, riesgo y horizonte temporal."
+        />
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  screen: {
     flex: 1,
   },
-  contentContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  container: {
-    maxWidth: MaxContentWidth,
-    flexGrow: 1,
-  },
-  titleContainer: {
-    gap: Spacing.three,
+  content: {
     alignItems: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.six,
+    paddingTop: Spacing.lg,
   },
-  centerText: {
-    textAlign: 'center',
+  inner: {
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    paddingHorizontal: Layout.screenPaddingHorizontal,
+    gap: Spacing.lg,
   },
-  sectionsWrapper: {
-    gap: Spacing.five,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
+  header: {
+    gap: Spacing.sm,
   },
-  infoPanel: {
-    gap: Spacing.two,
-    padding: Spacing.four,
-    borderRadius: Spacing.three,
+  search: {
+    minHeight: 56,
+  },
+  loader: {
+    marginVertical: Spacing.xl,
+  },
+  empty: {
+    gap: Spacing.xs,
+    paddingVertical: Spacing.xl,
+  },
+  list: {
+    gap: Spacing.md,
   },
 });

@@ -4,6 +4,8 @@ Invesora is an Expo / React Native app that helps beginner investors understand 
 
 The MVP does not execute investments and does not replace a financial advisor. Its goal is to help beginner users understand the basics, compare index funds with better context, and read clear explanations about rankings, fees, risk, and historical performance.
 
+**Project documentation:** see [docs/README.md](./docs/README.md) for product rules, user stories index, scoring spec, and architecture map.
+
 ## Product Principle
 
 **Educate first, compare later.**
@@ -23,7 +25,7 @@ Included:
 - Invesora Assistant explanations.
 - Search by name, ISIN, or category.
 - Basic filters for fee, risk, category, and historical performance.
-- Basic fund comparison.
+- Basic fund comparison (up to two funds).
 - Compound-interest calculator with educational scenarios.
 - Local favorites stored on the device/browser.
 - Visible legal notices and risk messages.
@@ -101,15 +103,9 @@ Key rules:
 
 ## Scoring And Data
 
-Rankings must be deterministic and explainable. AI can explain results, but the scoring engine must rely on objective criteria such as:
+Rankings must be deterministic and explainable. AI can explain results, but the scoring engine must rely on objective criteria.
 
-- TER and fee efficiency.
-- Tracking error.
-- Assets under management.
-- Fund age.
-- Historical consistency.
-- Benchmark and category.
-- Data-quality validations.
+For the MVP product spec (weights, labels, benchmark grouping, and data-quality rules), see [docs/product/scoring.md](./docs/product/scoring.md).
 
 Financial data must show its update date and warnings when it is incomplete, stale, or not comparable.
 

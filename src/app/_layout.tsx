@@ -92,7 +92,6 @@ export default function TabLayout() {
             tabBarAccessibilityLabel: "Abrir calculadora",
           }}
         />
-        <Tabs.Screen name="explore" options={{ href: null }} />
       </Tabs>
     </ThemeProvider>
   );

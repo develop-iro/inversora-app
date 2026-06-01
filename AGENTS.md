@@ -105,7 +105,7 @@ Target routes:
 
 ## Agent Working Rules
 
-- Use the project docs in `README.md` and the available scripts in `package.json` as the primary source of truth.
+- Use `docs/README.md` for product and architecture docs; `README.md` and `package.json` for quick onboarding and scripts.
 - Verification step for changes: run `npm run lint` before considering work complete.
 - There are no dedicated test scripts in this repository yet, so prefer lint + manual Expo verification for validation.
 - Keep `src/app` thin. Add screens and feature logic under `src/features/*`, and place reusable UI/theme/helpers under `src/shared/*` or `src/core/*`.
