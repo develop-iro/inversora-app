@@ -1,4 +1,4 @@
-import type { FeaturedFund } from "@/features/funds/models/fund";
+import type { FeaturedFund } from '@/core/domain/fund';
 
 export const FEATURED_FUNDS_MOCK: FeaturedFund[] = [
   {

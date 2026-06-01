@@ -1,0 +1,11 @@
+import type { Href } from 'expo-router';
+
+/** Helpers for expo-router typed routes (funds stack). */
+export const routes = {
+  fundsCatalog: '/funds' as Href,
+  fundDetail: (isin: string): Href =>
+    ({
+      pathname: '/funds/[isin]',
+      params: { isin },
+    }) as Href,
+};

@@ -17,6 +17,9 @@ import { Badge, Card, ScorePill } from "@/shared/components/ui";
 import { useTheme } from "@/shared/hooks/use-theme";
 import { Radius, Spacing } from "@/shared/theme/theme";
 
+/** Reserved height for title (2 lines) + category + benefit (2 lines) + gaps. */
+const HEADER_BLOCK_MIN_HEIGHT = 30 * 2 + 19 + 19 * 2 + Spacing.sm * 2;
+
 export type FundCardProps = {
   fund: FeaturedFund;
   style?: StyleProp<ViewStyle>;
@@ -36,7 +39,7 @@ export function FundCard({
   const { width } = useWindowDimensions();
   const [scaleAnim] = useState(() => new Animated.Value(1));
   const [hovered, setHovered] = useState(false);
-  const isCompact = width < 360;
+  const isNarrow = width < 360;
 
   const animateTo = useCallback(
     (toValue: number, duration: number) => {
@@ -89,7 +92,9 @@ export function FundCard({
   }, [animateTo, hovered, onInteractionEnd]);
 
   return (
-    <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>
+    <Animated.View
+      style={[{ transform: [{ scale: scaleAnim }] }, styles.fill, style]}
+    >
       <Card
         onPress={onPress}
         onHoverIn={handleHoverIn}
@@ -109,11 +114,17 @@ export function FundCard({
       >
         <View style={[styles.toneBar, { backgroundColor: theme.primary }]} />
 
-        <View
-          style={[styles.topMeta, isCompact ? styles.topMetaCompact : null]}
-        >
-          <Badge label={fund.badge} variant="mint" />
-          <Badge label={`Actualizado ${fund.quarterTag}`} variant="muted" />
+        <View style={styles.topMeta}>
+          <Badge
+            label={fund.badge}
+            variant="mint"
+            style={styles.topMetaBadge}
+          />
+          <Badge
+            label={`Actualizado ${fund.quarterTag}`}
+            variant="muted"
+            style={styles.topMetaBadge}
+          />
         </View>
 
         <View style={styles.header}>
@@ -130,7 +141,8 @@ export function FundCard({
           <ThemedText
             type="caption"
             themeColor="textSecondary"
-            numberOfLines={isCompact ? 3 : 2}
+            numberOfLines={2}
+            style={isNarrow ? styles.benefitNarrow : undefined}
           >
             {fund.benefitSummary}
           </ThemedText>
@@ -235,8 +247,13 @@ function getDiversificationLabel(
 }
 
 const styles = StyleSheet.create({
+  fill: {
+    flexGrow: 1,
+    alignSelf: "stretch",
+  },
   card: {
-    minHeight: 240,
+    flex: 1,
+    minHeight: 420,
     borderWidth: 1,
     borderRadius: Radius.card,
   },
@@ -246,6 +263,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   content: {
+    flex: 1,
+    flexDirection: "column",
     gap: Spacing.md,
     paddingTop: Spacing.lg,
   },
@@ -256,16 +275,23 @@ const styles = StyleSheet.create({
   },
   topMeta: {
     flexDirection: "row",
-    justifyContent: "space-between",
     gap: Spacing.sm,
     alignItems: "center",
-    flexWrap: "wrap",
+    minHeight: 28,
   },
-  topMetaCompact: {
-    justifyContent: "flex-start",
+  topMetaBadge: {
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    alignSelf: "stretch",
   },
   header: {
     gap: Spacing.sm,
+    minHeight: HEADER_BLOCK_MIN_HEIGHT,
+  },
+  benefitNarrow: {
+    fontSize: 12,
+    lineHeight: 17,
   },
   metricsRow: {
     flexDirection: "row",
@@ -297,6 +323,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
     gap: Spacing.sm,
+    marginTop: "auto",
+    paddingTop: Spacing.xs,
   },
   more: {
     letterSpacing: 0.8,

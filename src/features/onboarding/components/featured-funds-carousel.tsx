@@ -451,12 +451,14 @@ const styles = StyleSheet.create({
   staticGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    alignItems: "stretch",
     gap: Spacing.md,
   },
   staticCard: {
     flexBasis: "48%",
     flexGrow: 1,
     minWidth: 300,
+    alignSelf: "stretch",
   },
   trackRow: {
     flexDirection: "row",
@@ -474,9 +476,11 @@ const styles = StyleSheet.create({
   },
   slide: {
     paddingHorizontal: 0,
+    alignSelf: "stretch",
   },
   card: {
     width: "100%",
+    flex: 1,
   },
   indicators: {
     flexDirection: "row",

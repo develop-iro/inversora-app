@@ -1,10 +1,12 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { RiskLevel } from "@/features/funds/models/fund";
+import type { RankedFund } from "@/core/scoring/types";
 import { FEATURED_FUNDS_MOCK } from "@/features/funds/mocks/featured-funds-mock";
+import { getRankings } from "@/features/funds/services/get-rankings";
 import { FeaturedFundsCarousel } from "@/features/onboarding/components/featured-funds-carousel";
 import { HomeHero } from "@/features/onboarding/components/home-hero";
 import {
@@ -16,65 +18,13 @@ import { ThemedText } from "@/shared/components/themed-text";
 import { Badge, SearchField } from "@/shared/components/ui";
 import { useMobileLayout } from "@/shared/hooks/use-mobile-layout";
 import { useTheme } from "@/shared/hooks/use-theme";
+import { routes } from "@/shared/navigation/routes";
 import { Layout, Radius, Spacing } from "@/shared/theme/theme";
-
-type RankingFund = {
-  rank: number;
-  name: string;
-  category: string;
-  isin: string;
-  score: number;
-  risk: RiskLevel;
-  annualFee: number;
-};
-
-const RANKING_FUNDS: RankingFund[] = [
-  {
-    rank: 1,
-    name: "MSCI World Index Core",
-    category: "Renta Variable Global",
-    isin: "IE00B4L5Y983",
-    score: 86,
-    risk: "medium",
-    annualFee: 0.12,
-  },
-  {
-    rank: 2,
-    name: "S&P 500 Acc",
-    category: "Renta Variable USA",
-    isin: "IE00B5BMR087",
-    score: 84,
-    risk: "medium",
-    annualFee: 0.07,
-  },
-  {
-    rank: 3,
-    name: "Europe Quality ESG",
-    category: "Renta Variable Europa",
-    isin: "IE00B1YZSC51",
-    score: 81,
-    risk: "medium",
-    annualFee: 0.18,
-  },
-  {
-    rank: 4,
-    name: "Global Balanced Index",
-    category: "Mixto Moderado",
-    isin: "ES0123456789",
-    score: 79,
-    risk: "low",
-    annualFee: 0.21,
-  },
-  {
-    rank: 5,
-    name: "Global Bond Index",
-    category: "Renta Fija Global",
-    isin: "IE00B3F81R35",
-    score: 76,
-    risk: "low",
-    annualFee: 0.1,
-  },
-];
+import {
+  buildRankingA11yLabel,
+  getRiskBadgeVariant,
+  getRiskLabel,
+} from "@/shared/utils/fund-risk";
 
 const SEARCH_SUGGESTIONS = [
   "¿Qué quieres conseguir?",
@@ -87,6 +37,21 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { contentWidth } = useMobileLayout();
+  const [rankingFunds, setRankingFunds] = useState<RankedFund[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getRankings({ limit: 3 }).then((funds) => {
+      if (!cancelled) {
+        setRankingFunds(funds);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
@@ -108,7 +73,7 @@ export default function HomeScreen() {
       >
         <HomeHero
           onInvestPress={() => {
-            router.push("/explore");
+            router.push(routes.fundsCatalog);
           }}
         />
 
@@ -129,8 +94,8 @@ export default function HomeScreen() {
 
           <FeaturedFundsCarousel
             funds={FEATURED_FUNDS_MOCK.filter((fund) => fund.isFeatured)}
-            onFundPress={() => {
-              router.push("/funds");
+            onFundPress={(fund) => {
+              router.push(routes.fundDetail(fund.isin));
             }}
           />
 
@@ -163,9 +128,9 @@ export default function HomeScreen() {
             </ThemedText>
 
             <View style={styles.rankingList}>
-              {RANKING_FUNDS.slice(0, 3).map((fund) => {
+              {rankingFunds.map((fund) => {
                 const isTopRank = fund.rank === 1;
-                const riskLabel = getRiskLabel(fund.risk);
+                const riskLabel = getRiskLabel(fund.riskLevel);
 
                 return (
                   <Pressable
@@ -174,7 +139,7 @@ export default function HomeScreen() {
                     accessibilityLabel={buildRankingA11yLabel(fund)}
                     accessibilityHint="Abre la ficha resumida del fondo"
                     onPress={() => {
-                      router.push("/funds");
+                      router.push(routes.fundDetail(fund.isin));
                     }}
                     style={({ pressed }) => [
                       styles.rankingRow,
@@ -244,7 +209,7 @@ export default function HomeScreen() {
                               themeColor="textSecondary"
                               numberOfLines={1}
                             >
-                              {fund.category}
+                              {fund.categoryLabel}
                             </ThemedText>
                             <ThemedText
                               type="caption"
@@ -271,14 +236,14 @@ export default function HomeScreen() {
                         <View style={styles.rankingMetaLeft}>
                           <Badge
                             label={`Riesgo ${riskLabel.toLowerCase()}`}
-                            variant={getRiskBadgeVariant(fund.risk)}
+                            variant={getRiskBadgeVariant(fund.riskLevel)}
                           />
                           <ThemedText
                             type="caption"
                             themeColor="textSecondary"
                             style={styles.annualFeeText}
                           >
-                            Comisión anual {fund.annualFee.toFixed(2)}%
+                            Comisión anual {fund.terPercent.toFixed(2)}%
                           </ThemedText>
                         </View>
                         <MaterialCommunityIcons
@@ -298,7 +263,7 @@ export default function HomeScreen() {
               accessibilityLabel="Ver ranking completo"
               accessibilityHint="Navega al listado completo de fondos"
               onPress={() => {
-                router.push("/funds");
+                router.push(routes.fundsCatalog);
               }}
               style={({ pressed }) => [
                 styles.rankingCta,
@@ -323,7 +288,7 @@ export default function HomeScreen() {
               accessibilityLabel="No sabes por dónde empezar, abrir guía de Sora"
               accessibilityHint="Inicia una guía breve antes de comparar fondos"
               onPress={() => {
-                router.push("/explore");
+                router.push(routes.fundsCatalog);
               }}
               style={({ pressed }) => [
                 styles.soraCard,
@@ -637,32 +602,3 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 });
-
-function getRiskLabel(risk: RiskLevel) {
-  switch (risk) {
-    case "low":
-      return "Bajo";
-    case "high":
-      return "Alto";
-    case "medium":
-    default:
-      return "Medio";
-  }
-}
-
-function getRiskBadgeVariant(risk: RiskLevel) {
-  switch (risk) {
-    case "low":
-      return "mint" as const;
-    case "high":
-      return "danger" as const;
-    case "medium":
-    default:
-      return "warning" as const;
-  }
-}
-
-function buildRankingA11yLabel(fund: RankingFund) {
-  const riskLabel = getRiskLabel(fund.risk).toLowerCase();
-  return `Ranking ${fund.rank}, ${fund.name}, Score Invesora ${fund.score} sobre 100, riesgo ${riskLabel}, comisión anual ${fund.annualFee.toFixed(2)} por ciento.`;
-}
