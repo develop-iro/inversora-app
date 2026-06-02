@@ -2,6 +2,7 @@ import type { CatalogFund } from '@/core/domain/catalog';
 import type { RiskLevel } from '@/core/domain/fund';
 
 import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
+import { filterCatalogVisible } from '@/features/funds/utils/catalog-visibility';
 import { getRankings } from '@/features/funds/services/get-rankings';
 
 export type FundCatalogFilters = {
@@ -84,7 +85,8 @@ async function withRankingMetadata(funds: CatalogFund[]): Promise<CatalogFund[]>
 
 /** Returns catalog funds with optional filters, sorted by Inversora score. */
 export async function getFunds(filters?: FundCatalogFilters): Promise<CatalogFund[]> {
-  const enriched = await withRankingMetadata([...CATALOG_FUNDS_MOCK]);
+  const visible = filterCatalogVisible(CATALOG_FUNDS_MOCK);
+  const enriched = await withRankingMetadata([...visible]);
   const filtered = applyFilters(enriched, filters);
 
   return filtered.sort((a, b) => b.inversoraScore - a.inversoraScore);
