@@ -15,30 +15,37 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { FundDetail } from '@/core/domain/catalog';
 import type { FundPerformanceTimeframe } from '@/core/domain/fund-market';
-import { SCORING_CRITERIA_VERSION } from '@/core/scoring/criteria';
+import { FundDataQualityBanner } from '@/features/funds/components/detail/fund-data-quality-banner';
+import { FundDetailDistributorsSection } from '@/features/funds/components/detail/fund-detail-distributors-section';
+import { FundDetailExposureSection } from '@/features/funds/components/detail/fund-detail-exposure-section';
+import { FundDetailInformationSection } from '@/features/funds/components/detail/fund-detail-information-section';
+import { FundDetailRatiosSection } from '@/features/funds/components/detail/fund-detail-ratios-section';
+import { FundDetailReturnsSection } from '@/features/funds/components/detail/fund-detail-returns-section';
+import { FundDetailHeroIsin } from '@/features/funds/components/detail/fund-detail-hero-isin';
+import { FundDetailScoreSection } from '@/features/funds/components/detail/fund-detail-score-section';
+import { FundDetailSheetFreshness } from '@/features/funds/components/detail/fund-detail-sheet-freshness';
 import { FavoriteToggleButton } from '@/features/funds/components/favorite-toggle-button';
 import { FundMetricsGrid } from '@/features/funds/components/fund-metrics-grid';
 import { FundPerformanceChart } from '@/features/funds/components/fund-performance-chart';
-import { FundScoreBreakdown } from '@/features/funds/components/fund-score-breakdown';
 import { TimeframeSegmentedControl } from '@/features/funds/components/timeframe-segmented-control';
 import { useFavorite } from '@/features/funds/hooks/use-favorite';
 import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
 import {
   buildPerformanceA11yLabel,
   formatPerformanceChange,
+  getIllustrativeNavBase,
   getPerformanceChangePercent,
   getPerformancePeriodLabel,
 } from '@/features/funds/utils/fund-performance';
-import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { ThemedText } from '@/shared/components/themed-text';
-import { Button, InfoHint } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui';
 import { routes } from '@/shared/navigation/routes';
+import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { getDiversificationLabel } from '@/shared/utils/fund-diversification';
-import { getEfficiencyLabel } from '@/shared/utils/fund-efficiency';
 import { getRiskLabel } from '@/shared/utils/fund-risk';
-import { Layout, MaxContentWidth, Radius, Spacing } from '@/shared/theme/theme';
+import { Layout, Spacing } from '@/shared/theme/theme';
 
 const DETAIL_HEADER_HEIGHT = 60;
 
@@ -51,6 +58,7 @@ function FundDetailScreenChrome({ children, bodyStyle }: FundDetailScreenChromeP
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const { contentWidth } = useMobileLayout();
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background, paddingTop: insets.top }]}>
@@ -63,18 +71,28 @@ function FundDetailScreenChrome({ children, bodyStyle }: FundDetailScreenChromeP
           },
         ]}
       >
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Volver"
-          onPress={() => router.back()}
-          style={styles.navButton}
+        <View
+          style={[
+            styles.screenHeaderInner,
+            {
+              width: contentWidth,
+              maxWidth: contentWidth,
+            },
+          ]}
         >
-          <MaterialCommunityIcons name="arrow-left" size={22} color={theme.deepOcean} />
-        </Pressable>
-        <ThemedText type="navTitle" style={styles.navTitle}>
-          Detalle del fondo
-        </ThemedText>
-        <View style={styles.navSpacer} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+            onPress={() => router.back()}
+            style={styles.navButton}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.deepOcean} />
+          </Pressable>
+          <ThemedText type="navTitle" style={styles.navTitle}>
+            Detalle del fondo
+          </ThemedText>
+          <View style={styles.navSpacer} />
+        </View>
       </View>
       <View style={[styles.body, bodyStyle]}>{children}</View>
     </View>
@@ -87,6 +105,7 @@ export default function FundDetailScreen() {
   const { isin } = useLocalSearchParams<{ isin: string }>();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const { contentWidth } = useMobileLayout();
 
   useLayoutEffect(() => {
     const tabNavigation = navigation.getParent();
@@ -103,8 +122,7 @@ export default function FundDetailScreen() {
   const [detail, setDetail] = useState<FundDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
-  const [timeframe, setTimeframe] = useState<FundPerformanceTimeframe>('1d');
+  const [timeframe, setTimeframe] = useState<FundPerformanceTimeframe>('3y');
 
   const resolvedIsin = typeof isin === 'string' ? isin : '';
   const { isFavorite, isLoading: isFavoriteLoading, toggle } = useFavorite(resolvedIsin);
@@ -161,7 +179,7 @@ export default function FundDetailScreen() {
       return [];
     }
 
-    const { fund, inversoraScore, market } = detail;
+    const { fund, market } = detail;
     const stabilityHint =
       market.stabilityChangePercent != null
         ? `${market.stabilityChangePercent > 0 ? '+' : ''}${market.stabilityChangePercent.toFixed(2)}%`
@@ -172,11 +190,6 @@ export default function FundDetailScreen() {
         id: 'risk',
         label: 'Riesgo orientativo',
         value: getRiskLabel(fund.riskLevel),
-      },
-      {
-        id: 'efficiency',
-        label: 'Índice de eficiencia',
-        value: (inversoraScore / 10).toFixed(1),
       },
       {
         id: 'fee',
@@ -193,11 +206,6 @@ export default function FundDetailScreen() {
         label: 'Estabilidad',
         value: market.stabilityLabel,
         hint: stabilityHint,
-      },
-      {
-        id: 'score',
-        label: FUND_GLOSSARY.inversoraScore.term,
-        value: `${inversoraScore}/100`,
       },
     ];
   }, [detail]);
@@ -232,7 +240,6 @@ export default function FundDetailScreen() {
   }
 
   const { fund } = detail;
-  const efficiencyLabel = getEfficiencyLabel(detail.inversoraScore);
 
   return (
     <FundDetailScreenChrome>
@@ -246,27 +253,40 @@ export default function FundDetailScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.inner}>
+        <View
+          style={[
+            styles.inner,
+            {
+              width: contentWidth,
+              maxWidth: contentWidth,
+            },
+          ]}
+        >
           <View style={styles.hero}>
           {detail.rank != null ? (
             <ThemedText type="metaLabel" themeColor="deepOcean">
               Ranking #{detail.rank}
             </ThemedText>
           ) : null}
-          <View style={styles.titleRow}>
-            <ThemedText type="hero" style={styles.fundName} numberOfLines={3}>
-              {fund.name}
-            </ThemedText>
-            <FavoriteToggleButton
-              isin={fund.isin}
-              isFavorite={isFavorite}
-              isLoading={isFavoriteLoading}
-              onToggle={toggle}
-            />
+          <View style={styles.heroMain}>
+            <View style={styles.titleBlock}>
+              <ThemedText type="cardTitle" style={styles.fundName} numberOfLines={3}>
+                {fund.name}
+              </ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary">
+                {fund.categoryLabel}
+              </ThemedText>
+              <FundDetailHeroIsin isin={fund.isin} />
+            </View>
+            <View style={styles.favoriteSlot}>
+              <FavoriteToggleButton
+                isin={fund.isin}
+                isFavorite={isFavorite}
+                isLoading={isFavoriteLoading}
+                onToggle={toggle}
+              />
+            </View>
           </View>
-          <ThemedText type="caption" themeColor="textSecondary">
-            {fund.categoryLabel}
-          </ThemedText>
 
           {performanceSeries ? (
             <View style={styles.performanceRow}>
@@ -287,24 +307,15 @@ export default function FundDetailScreen() {
           ) : null}
         </View>
 
-        <TimeframeSegmentedControl value={timeframe} onChange={setTimeframe} />
+        <FundDetailSheetFreshness asOf={detail.profile.asOf} />
 
-        {performanceSeries ? (
-          <FundPerformanceChart
-            points={performanceSeries.points}
-            accessibilityLabel={chartA11yLabel}
-          />
-        ) : null}
+        <FundDetailScoreSection
+          score={detail.inversoraScore}
+          breakdown={detail.scoredBreakdown}
+          fund={fund}
+        />
 
-        <ThemedText type="caption" themeColor="textSecondary">
-          {performanceSeries?.sourceLabel}. Actualizado{' '}
-          {performanceSeries?.asOf.slice(0, 10) ?? fund.periodEnd}. El rendimiento pasado no
-          garantiza resultados futuros.
-        </ThemedText>
-
-        <FundMetricsGrid title="Métricas clave" metrics={keyMetrics} />
-
-        <FundMetricsGrid title="Región y reparto" metrics={regionMetrics} />
+        <FundDataQualityBanner status={detail.scoringStatus} />
 
         <View style={styles.actionsRow}>
           <Button
@@ -324,56 +335,34 @@ export default function FundDetailScreen() {
           />
         </View>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ expanded: showTechnicalDetails }}
-          accessibilityLabel="Mostrar o ocultar detalles técnicos"
-          onPress={() => setShowTechnicalDetails((current) => !current)}
-          style={[styles.expandRow, { borderColor: theme.border, backgroundColor: theme.surface }]}
-        >
-          <ThemedText type="bodyBold">
-            {showTechnicalDetails ? 'Ocultar detalles técnicos' : 'Ver detalles técnicos'}
-          </ThemedText>
-          <MaterialCommunityIcons
-            name={showTechnicalDetails ? 'chevron-up' : 'chevron-down'}
-            size={20}
-            color={theme.textSecondary}
-          />
-        </Pressable>
+        <TimeframeSegmentedControl value={timeframe} onChange={setTimeframe} />
 
-        {showTechnicalDetails ? (
-          <View
-            style={[
-              styles.technicalCard,
-              { backgroundColor: theme.surface, borderColor: theme.border },
-            ]}
-          >
-            <View style={styles.technicalBlock}>
-              <InfoHint
-                surface="detail"
-                term={FUND_GLOSSARY.isin.term}
-                explanation={FUND_GLOSSARY.isin.explanation}
-              />
-              <ThemedText type="caption" themeColor="textSecondary">
-                {fund.isin}
-              </ThemedText>
-            </View>
-            <ThemedText type="caption" themeColor="textSecondary">
-              Etiqueta de eficiencia: {efficiencyLabel}
-            </ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              Datos de scoring {fund.quarterTag} ({fund.periodStart} – {fund.periodEnd})
-            </ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              {fund.featuredReason}
-            </ThemedText>
-            <ThemedText type="metaLabel" themeColor="textSecondary">
-              Modelo: {SCORING_CRITERIA_VERSION}
-            </ThemedText>
-            <ThemedText type="bodyBold">Desglose del Score Inversora</ThemedText>
-            <FundScoreBreakdown breakdown={detail.scoredBreakdown} />
-          </View>
+        {performanceSeries ? (
+          <FundPerformanceChart
+            points={performanceSeries.points}
+            navBase={getIllustrativeNavBase(fund.isin)}
+            accessibilityLabel={chartA11yLabel}
+          />
         ) : null}
+
+        <ThemedText type="caption" themeColor="textSecondary">
+          {performanceSeries?.sourceLabel}. Valores liquidativos ilustrativos en EUR. El rendimiento
+          pasado no garantiza resultados futuros.
+        </ThemedText>
+
+        <FundDetailInformationSection profile={detail.profile} />
+
+        <FundDetailReturnsSection profile={detail.profile} fundName={fund.name} />
+
+        <FundMetricsGrid title="Métricas clave" metrics={keyMetrics} />
+
+        <FundMetricsGrid title="Región y reparto (resumen)" metrics={regionMetrics} />
+
+        <FundDetailRatiosSection profile={detail.profile} fundName={fund.name} />
+
+        <FundDetailExposureSection profile={detail.profile} />
+
+        <FundDetailDistributorsSection profile={detail.profile} />
 
         <LegalNotice
           title="Aviso legal"
@@ -396,18 +385,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   screenHeader: {
+    alignItems: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  screenHeaderInner: {
     flexDirection: 'row',
     alignItems: 'center',
     height: DETAIL_HEADER_HEIGHT,
     paddingHorizontal: Layout.screenPaddingHorizontal,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    alignSelf: 'center',
   },
   content: {
     alignItems: 'center',
   },
   inner: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
     paddingHorizontal: Layout.screenPaddingHorizontal,
     gap: Spacing.lg,
   },
@@ -437,15 +429,22 @@ const styles = StyleSheet.create({
   hero: {
     gap: Spacing.xs,
   },
-  titleRow: {
+  heroMain: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.sm,
   },
-  fundName: {
+  titleBlock: {
     flex: 1,
     minWidth: 0,
-    letterSpacing: -0.4,
+    gap: Spacing.xs,
+  },
+  favoriteSlot: {
+    flexShrink: 0,
+    marginTop: 2,
+  },
+  fundName: {
+    letterSpacing: -0.36,
   },
   performanceRow: {
     flexDirection: 'row',
@@ -459,24 +458,5 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-  },
-  expandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    minHeight: 52,
-  },
-  technicalCard: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    padding: Spacing.md,
-    gap: Spacing.sm,
-  },
-  technicalBlock: {
-    gap: Spacing.xs,
   },
 });

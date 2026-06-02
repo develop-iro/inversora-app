@@ -31,10 +31,10 @@ Estado detallado por módulo: [mvp-feature-map.md](../architecture/mvp-feature-m
 | HU-06 | Búsqueda predictiva / sugerencias | Media | 🟡 |
 | HU-07 | Filtros básicos | Alta | ⬜ |
 | HU-08 | Ordenación (score, comisión, histórico) | Media | ⬜ |
-| HU-09 | Ficha de fondo | Alta | ⬜ |
-| HU-10 | Desglose del score | Alta | ⬜ |
-| HU-11 | Explicación sencilla del fondo | Alta | ⬜ |
-| HU-12 | Advertencias de datos en ficha | Alta | ⬜ |
+| HU-09 | Ficha de fondo | Alta | 🟡 |
+| HU-10 | Desglose del score | Alta | ✅ |
+| HU-11 | Explicación sencilla del fondo | Alta | 🟡 |
+| HU-12 | Advertencias de datos en ficha | Alta | 🟡 |
 
 ## EP-03 — Scoring y rankings
 

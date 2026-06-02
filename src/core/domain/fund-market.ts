@@ -1,5 +1,5 @@
 /** Historical NAV / index points for educational charts (not live trading data). */
-export type FundPerformanceTimeframe = '1d' | '1w' | '1m';
+export type FundPerformanceTimeframe = 'ytd' | '1y' | '3y' | '5y' | 'max';
 
 export type FundPerformancePoint = {
   /** ISO date (YYYY-MM-DD). */

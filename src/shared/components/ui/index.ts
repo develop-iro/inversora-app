@@ -36,4 +36,23 @@ export {
     SectionHeader,
     type SectionHeaderProps
 } from "@/shared/components/ui/section-header";
+export {
+    SegmentTabs,
+    type SegmentTabOption,
+    type SegmentTabsProps
+} from "@/shared/components/ui/segment-tabs";
+export {
+    KeyValueList,
+    type KeyValueListProps,
+    type KeyValueRow
+} from "@/shared/components/ui/key-value-list";
+export {
+    HorizontalBarChart,
+    type HorizontalBarChartProps,
+    type HorizontalBarDatum
+} from "@/shared/components/ui/horizontal-bar-chart";
+export {
+    AllocationBarList,
+    type AllocationBarListProps
+} from "@/shared/components/ui/allocation-bar-list";
 

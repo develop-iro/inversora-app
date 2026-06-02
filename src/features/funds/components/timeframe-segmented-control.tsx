@@ -1,15 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import type { FundPerformanceTimeframe } from '@/core/domain/fund-market';
+import { PERFORMANCE_TIMEFRAME_OPTIONS } from '@/features/funds/utils/fund-performance';
 import { ThemedText } from '@/shared/components/themed-text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
-
-const OPTIONS: { value: FundPerformanceTimeframe; label: string }[] = [
-  { value: '1d', label: '1D' },
-  { value: '1w', label: '1S' },
-  { value: '1m', label: '1M' },
-];
 
 export type TimeframeSegmentedControlProps = {
   value: FundPerformanceTimeframe;
@@ -23,12 +18,14 @@ export function TimeframeSegmentedControl({
   const theme = useTheme();
 
   return (
-    <View
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
       accessibilityRole="tablist"
       accessibilityLabel="Periodo del gráfico de evolución"
-      style={[styles.track, { backgroundColor: theme.surfaceMuted }]}
+      contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.surfaceMuted }]}
     >
-      {OPTIONS.map((option) => {
+      {PERFORMANCE_TIMEFRAME_OPTIONS.map((option) => {
         const selected = option.value === value;
 
         return (
@@ -61,26 +58,26 @@ export function TimeframeSegmentedControl({
           </Pressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  track: {
+  scrollContent: {
     flexDirection: 'row',
     borderRadius: Radius.pill,
     padding: 3,
     gap: 2,
   },
   segment: {
-    flex: 1,
     minHeight: 36,
+    minWidth: 52,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Radius.pill,
     borderWidth: 1,
     borderColor: 'transparent',
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: Spacing.md,
   },
   segmentSelected: {
     shadowColor: '#0B2E36',

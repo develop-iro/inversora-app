@@ -22,6 +22,11 @@ function pseudoRandom(seed: number, index: number): number {
   return x - Math.floor(x);
 }
 
+function countDaysInclusive(start: Date, end: Date): number {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.max(1, Math.floor((end.getTime() - start.getTime()) / msPerDay) + 1);
+}
+
 function buildDailySeries(isin: string, dayCount: number): FundPerformancePoint[] {
   const seed = seedFromIsin(isin);
   const points: FundPerformancePoint[] = [];
@@ -31,8 +36,8 @@ function buildDailySeries(isin: string, dayCount: number): FundPerformancePoint[
   for (let day = dayCount - 1; day >= 0; day -= 1) {
     const date = new Date(end);
     date.setUTCDate(end.getUTCDate() - day);
-    const drift = (pseudoRandom(seed, day) - 0.48) * 0.9;
-    level = Math.max(92, Math.min(108, level + drift));
+    const drift = (pseudoRandom(seed, day) - 0.47) * 0.55;
+    level = Math.max(88, Math.min(112, level + drift));
     points.push({
       date: date.toISOString().slice(0, 10),
       value: Number(level.toFixed(2)),
@@ -42,12 +47,21 @@ function buildDailySeries(isin: string, dayCount: number): FundPerformancePoint[
   return points;
 }
 
-function sliceSeries(
+function sliceFromDate(
   daily: FundPerformancePoint[],
-  take: number,
+  startDate: string,
   timeframe: FundPerformanceTimeframe,
 ): FundPerformanceSeries {
-  const points = daily.slice(-take);
+  const points = daily.filter((point) => point.date >= startDate);
+  return sliceSeries(points.length > 1 ? points : daily.slice(-30), timeframe);
+}
+
+function sliceSeries(
+  daily: FundPerformancePoint[],
+  timeframe: FundPerformanceTimeframe,
+  take?: number,
+): FundPerformanceSeries {
+  const points = take != null ? daily.slice(-take) : daily;
   const base = points[0]?.value ?? 100;
   const normalized = points.map((point) => ({
     date: point.date,
@@ -63,12 +77,25 @@ function sliceSeries(
 }
 
 function buildPerformance(isin: string): FundMarketSnapshot['performanceByTimeframe'] {
-  const daily = buildDailySeries(isin, 90);
+  const end = new Date('2026-03-31T12:00:00.000Z');
+  const maxStart = new Date(end);
+  maxStart.setUTCFullYear(end.getUTCFullYear() - 6);
+  const daily = buildDailySeries(isin, countDaysInclusive(maxStart, end));
+
+  const ytdStart = `${end.getUTCFullYear()}-01-01`;
+  const oneYearStart = new Date(end);
+  oneYearStart.setUTCFullYear(end.getUTCFullYear() - 1);
+  const threeYearStart = new Date(end);
+  threeYearStart.setUTCFullYear(end.getUTCFullYear() - 3);
+  const fiveYearStart = new Date(end);
+  fiveYearStart.setUTCFullYear(end.getUTCFullYear() - 5);
 
   return {
-    '1d': sliceSeries(daily, 2, '1d'),
-    '1w': sliceSeries(daily, 7, '1w'),
-    '1m': sliceSeries(daily, 30, '1m'),
+    ytd: sliceFromDate(daily, ytdStart, 'ytd'),
+    '1y': sliceFromDate(daily, oneYearStart.toISOString().slice(0, 10), '1y'),
+    '3y': sliceFromDate(daily, threeYearStart.toISOString().slice(0, 10), '3y'),
+    '5y': sliceFromDate(daily, fiveYearStart.toISOString().slice(0, 10), '5y'),
+    max: sliceSeries(daily, 'max'),
   };
 }
 
@@ -122,7 +149,7 @@ function stabilityFromSeries(series: FundPerformanceSeries): {
 
 export function getFundMarketSnapshotMock(isin: string): FundMarketSnapshot {
   const performanceByTimeframe = buildPerformance(isin);
-  const monthSeries = performanceByTimeframe['1m'];
+  const monthSeries = performanceByTimeframe['1y'];
   const stability = stabilityFromSeries(monthSeries);
 
   return {

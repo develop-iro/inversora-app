@@ -29,4 +29,54 @@ export const FUND_GLOSSARY = {
     explanation:
       'Total Expense Ratio: comisión total anual del fondo expresada en porcentaje.',
   },
+  benchmark: {
+    term: 'Benchmark',
+    explanation:
+      'Índice de referencia que el fondo intenta replicar. Sirve para comparar si el fondo sigue bien su objetivo de inversión.',
+  },
+  manager: {
+    term: 'Gestora',
+    explanation:
+      'Entidad que administra el fondo. En fondos indexados suele centrarse en replicar el índice con el menor coste posible.',
+  },
+  fundAum: {
+    term: 'Patrimonio',
+    explanation:
+      'Dinero total invertido en el fondo o en la clase concreta. Un tamaño razonable suele facilitar liquidez y estabilidad operativa.',
+  },
+  pastPerformance: {
+    term: 'Rentabilidad pasada',
+    explanation:
+      'Resultado histórico en un periodo concreto. No garantiza resultados futuros; ayuda a entender cómo se ha comportado el fondo.',
+  },
+  volatility: {
+    term: 'Volatilidad',
+    explanation:
+      'Mide cuánto oscila el valor del fondo. Una volatilidad más alta implica subidas y bajadas más pronunciadas.',
+  },
+  sharpeRatio: {
+    term: 'Ratio de Sharpe',
+    explanation:
+      'Relaciona la rentabilidad obtenida con la volatilidad asumida. Valores más altos suelen indicar mejor compensación por riesgo, dentro del mismo contexto.',
+  },
+  maxDrawdown: {
+    term: 'Máxima caída',
+    explanation:
+      'Mayor caída desde un pico hasta un valle en el periodo analizado. Ayuda a imaginar el peor episodio reciente.',
+  },
+  trackingError: {
+    term: 'Tracking error',
+    explanation:
+      'Desviación respecto al índice de referencia. En fondos indexados, un error bajo suele indicar mejor réplica del benchmark.',
+  },
+  sectorExposure: {
+    term: 'Exposición sectorial',
+    explanation:
+      'Reparto del fondo entre sectores económicos (tecnología, salud, etc.). Muestra en qué partes de la economía está invertido.',
+  },
+  fundAvailability: {
+    term: 'Disponibilidad en plataformas',
+    explanation:
+      'Entidades donde el fondo suele poder contratarse en España. La lista es orientativa: comisiones, clases y disponibilidad cambian. Inversora no recibe comisiones ni recomienda dónde invertir.',
+  },
 } as const;
