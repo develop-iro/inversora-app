@@ -6,12 +6,13 @@ import { getFundDetailProfileMock } from '@/features/funds/mocks/fund-detail-pro
 import { getFundMarketSnapshotMock } from '@/features/funds/mocks/fund-market-mock';
 import { RANKING_SOURCES_MOCK } from '@/features/funds/mocks/ranking-sources-mock';
 import { getRankings } from '@/features/funds/services/get-rankings';
+import { isCatalogVisible } from '@/features/funds/utils/catalog-visibility';
 
 export async function getFundByIsin(isin: string): Promise<FundDetail | null> {
   const normalizedIsin = isin.trim().toUpperCase();
   const fund = CATALOG_FUNDS_MOCK.find((entry) => entry.isin.toUpperCase() === normalizedIsin);
 
-  if (!fund) {
+  if (!fund || !isCatalogVisible(fund)) {
     return null;
   }
 

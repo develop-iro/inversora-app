@@ -2,7 +2,6 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { RiskLevel } from '@/core/domain/fund';
 import type { FundCatalogFilters } from '@/features/funds/services/get-funds';
-import { CATALOG_CATEGORIES } from '@/features/funds/mocks/catalog-funds-mock';
 import { ThemedText } from '@/shared/components/themed-text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
@@ -68,11 +67,6 @@ const SCORE_OPTIONS: { value: number | null; label: string }[] = [
 export function FundCatalogFiltersBar({ value, onChange }: FundCatalogFiltersBarProps) {
   const theme = useTheme();
 
-  const categoryOptions: ChipOption<string | 'all'>[] = [
-    { value: 'all', label: 'Categoría: todas' },
-    ...CATALOG_CATEGORIES.map((category) => ({ value: category, label: category })),
-  ];
-
   return (
     <View style={styles.wrapper}>
       <ScrollView
@@ -86,22 +80,6 @@ export function FundCatalogFiltersBar({ value, onChange }: FundCatalogFiltersBar
             label={option.label}
             selected={value.riskLevel === option.value}
             onPress={() => onChange({ ...value, riskLevel: option.value })}
-            theme={theme}
-          />
-        ))}
-      </ScrollView>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
-      >
-        {categoryOptions.map((option) => (
-          <FilterChip
-            key={option.value}
-            label={option.label}
-            selected={value.categoryLabel === option.value}
-            onPress={() => onChange({ ...value, categoryLabel: option.value })}
             theme={theme}
           />
         ))}

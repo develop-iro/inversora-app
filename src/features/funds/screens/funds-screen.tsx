@@ -1,20 +1,23 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { CatalogFund } from '@/core/domain/catalog';
+import { FundCatalogCategorySections } from '@/features/funds/components/fund-catalog-category-sections';
 import {
   DEFAULT_CATALOG_FILTERS,
   FundCatalogFiltersBar,
   toServiceFilters,
   type FundCatalogFiltersState,
 } from '@/features/funds/components/fund-catalog-filters';
-import { FundListRow } from '@/features/funds/components/fund-list-row';
+import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
+import { CATALOG_CATEGORIES } from '@/features/funds/mocks/catalog-funds-mock';
 import { getFunds } from '@/features/funds/services/get-funds';
+import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { ThemedText } from '@/shared/components/themed-text';
-import { SearchField } from '@/shared/components/ui';
+import { SearchField, SegmentTabs } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
 import { BottomTabInset, Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
@@ -25,6 +28,23 @@ const SEARCH_SUGGESTIONS = [
   'Fondos para empezar',
 ] as const;
 
+function hasActiveSecondaryFilters(filters: FundCatalogFiltersState): boolean {
+  return (
+    filters.riskLevel !== 'all' ||
+    filters.maxTerPercent != null ||
+    filters.minScore != null ||
+    filters.idealForBeginnersOnly
+  );
+}
+
+function shouldGroupByCategory(filters: FundCatalogFiltersState): boolean {
+  return (
+    filters.categoryLabel === 'all' &&
+    !filters.query.trim() &&
+    !hasActiveSecondaryFilters(filters)
+  );
+}
+
 export default function FundsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -32,6 +52,20 @@ export default function FundsScreen() {
   const [filters, setFilters] = useState<FundCatalogFiltersState>(DEFAULT_CATALOG_FILTERS);
   const [funds, setFunds] = useState<CatalogFund[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const categoryTabs = useMemo(
+    () => [
+      { value: 'all' as const, label: 'Todas' },
+      ...CATALOG_CATEGORIES.map((category) => ({
+        value: category,
+        label: category,
+      })),
+    ],
+    [],
+  );
+
+  const groupedFunds = useMemo(() => groupFundsByCategory(funds), [funds]);
+  const showGrouped = shouldGroupByCategory(filters);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,6 +92,18 @@ export default function FundsScreen() {
     setIsLoading(true);
     setFilters(next);
   }, []);
+
+  const handleCategoryChange = useCallback((categoryLabel: string | 'all') => {
+    setIsLoading(true);
+    setFilters((current) => ({ ...current, categoryLabel }));
+  }, []);
+
+  const handleFundPress = useCallback(
+    (fund: CatalogFund) => {
+      router.push(routes.fundDetail(fund.isin));
+    },
+    [router],
+  );
 
   return (
     <ScrollView
@@ -88,6 +134,13 @@ export default function FundsScreen() {
           suggestions={[...SEARCH_SUGGESTIONS]}
         />
 
+        <SegmentTabs
+          accessibilityLabel="Filtrar catálogo por categoría"
+          tabs={categoryTabs}
+          value={filters.categoryLabel}
+          onChange={handleCategoryChange}
+        />
+
         <FundCatalogFiltersBar value={filters} onChange={handleFiltersChange} />
 
         {isLoading ? (
@@ -100,17 +153,21 @@ export default function FundsScreen() {
             </ThemedText>
           </View>
         ) : (
-          <View style={styles.list}>
-            <ThemedText type="metaLabel" themeColor="textSecondary">
-              {funds.length} fondo{funds.length === 1 ? '' : 's'}
-            </ThemedText>
-            {funds.map((fund) => (
-              <FundListRow
-                key={fund.isin}
-                fund={fund}
-                onPress={() => router.push(routes.fundDetail(fund.isin))}
+          <View style={styles.results}>
+            {!showGrouped ? (
+              <ThemedText type="metaLabel" themeColor="textSecondary">
+                {funds.length} fondo{funds.length === 1 ? '' : 's'}
+              </ThemedText>
+            ) : null}
+
+            {showGrouped ? (
+              <FundCatalogCategorySections
+                groups={groupedFunds}
+                onFundPress={handleFundPress}
               />
-            ))}
+            ) : (
+              <FundCatalogGrid funds={funds} onFundPress={handleFundPress} />
+            )}
           </View>
         )}
 
@@ -146,7 +203,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
     paddingVertical: Spacing.xl,
   },
-  list: {
+  results: {
     gap: Spacing.md,
   },
 });
