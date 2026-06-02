@@ -50,7 +50,7 @@ function applyFilters(funds: CatalogFund[], filters?: FundCatalogFilters): Catal
       return false;
     }
 
-    if (filters.minScore != null && fund.invesoraScore < filters.minScore) {
+    if (filters.minScore != null && fund.inversoraScore < filters.minScore) {
       return false;
     }
 
@@ -75,17 +75,17 @@ async function withRankingMetadata(funds: CatalogFund[]): Promise<CatalogFund[]>
 
     return {
       ...fund,
-      invesoraScore: ranked.score,
+      inversoraScore: ranked.score,
       rank: ranked.rank,
       efficiencyScore: ranked.score,
     };
   });
 }
 
-/** Returns catalog funds with optional filters, sorted by Invesora score. */
+/** Returns catalog funds with optional filters, sorted by Inversora score. */
 export async function getFunds(filters?: FundCatalogFilters): Promise<CatalogFund[]> {
   const enriched = await withRankingMetadata([...CATALOG_FUNDS_MOCK]);
   const filtered = applyFilters(enriched, filters);
 
-  return filtered.sort((a, b) => b.invesoraScore - a.invesoraScore);
+  return filtered.sort((a, b) => b.inversoraScore - a.inversoraScore);
 }

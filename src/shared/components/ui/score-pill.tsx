@@ -6,32 +6,42 @@ import { Radius, Spacing } from "@/shared/theme/theme";
 
 export type ScorePillProps = {
   score: number;
+  /** En detalle el título de sección ya nombra el score; solo muestra la cifra. */
+  variant?: 'default' | 'compact';
 };
 
-export function ScorePill({ score }: ScorePillProps) {
+export function ScorePill({ score, variant = 'default' }: ScorePillProps) {
   const theme = useTheme();
+  const isCompact = variant === 'compact';
 
   return (
     <View
       accessibilityRole="text"
-      accessibilityLabel={`Score Invesora ${score} sobre 100`}
+      accessibilityLabel={`Score Inversora ${score} sobre 100`}
       style={[
         styles.wrapper,
+        isCompact && styles.wrapperCompact,
         {
           backgroundColor: theme.backgroundSoft,
           borderColor: theme.primary,
         },
       ]}
     >
-      <ThemedText
-        type="metaLabel"
-        style={[styles.label, { color: theme.textSecondary }]}
-      >
-        Score Invesora
-      </ThemedText>
+      {!isCompact ? (
+        <ThemedText
+          type="metaLabel"
+          style={[styles.label, { color: theme.textSecondary }]}
+        >
+          Score Inversora
+        </ThemedText>
+      ) : null}
       <ThemedText
         type="chip"
-        style={[styles.score, { color: theme.deepOcean }]}
+        style={[
+          styles.score,
+          isCompact && styles.scoreCompact,
+          { color: theme.deepOcean },
+        ]}
       >
         {score}/100
       </ThemedText>
@@ -48,6 +58,10 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
     alignSelf: "flex-start",
   },
+  wrapperCompact: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
   label: {
     letterSpacing: 1,
   },
@@ -55,5 +69,9 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 26,
     letterSpacing: -0.24,
+  },
+  scoreCompact: {
+    fontSize: 26,
+    lineHeight: 30,
   },
 });

@@ -1,6 +1,6 @@
-# Documentación de Invesora
+# Documentación de Inversora
 
-Índice de la documentación del repositorio. El detalle de negocio completo vive en el documento oficial del proyecto (*Documentación de Proyecto: Invesora*, v1.0); aquí se concentra lo **esencial para desarrollar y mantener el MVP** sin duplicar ese volumen.
+Índice de la documentación del repositorio. El detalle de negocio completo vive en el documento oficial del proyecto (*Documentación de Proyecto: Inversora*, v1.0); aquí se concentra lo **esencial para desarrollar y mantener el MVP** sin duplicar ese volumen.
 
 ## Cómo usar estos docs
 
@@ -8,8 +8,8 @@
 |---------------|-----|
 | Visión, principios y límites del producto | [product/vision-and-principles.md](./product/vision-and-principles.md) |
 | Qué entra y qué no en el MVP | [product/mvp-scope.md](./product/mvp-scope.md) |
-| Score Invesora, rankings y etiquetas UI | [product/scoring.md](./product/scoring.md) |
-| Reglas del Asistente Invesora (IA) | [product/assistant.md](./product/assistant.md) |
+| Score Inversora, rankings y etiquetas UI | [product/scoring.md](./product/scoring.md) |
+| Reglas del Asistente Inversora (IA) | [product/assistant.md](./product/assistant.md) |
 | Historias de usuario (HU) y trazabilidad | [product/user-stories-index.md](./product/user-stories-index.md) |
 | Avisos legales y copy obligatorio | [product/legal-and-disclaimers.md](./product/legal-and-disclaimers.md) |
 | Estado del código por feature | [architecture/mvp-feature-map.md](./architecture/mvp-feature-map.md) |
@@ -54,4 +54,4 @@ Definiciones que **no deberían cambiar** sin revisar el doc oficial o un ADR:
 ## Referencias externas
 
 - [Expo SDK 56](https://docs.expo.dev/versions/v56.0.0/)
-- Documento oficial: *Documentación de Proyecto: Invesora* (v1.0) — mantener copia local acordada por el equipo.
+- Documento oficial: *Documentación de Proyecto: Inversora* (v1.0) — mantener copia local acordada por el equipo.

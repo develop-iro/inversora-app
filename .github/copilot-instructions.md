@@ -1,4 +1,4 @@
-# Copilot instructions for Invesora
+# Copilot instructions for Inversora
 
 Use this repository's main guidance in [AGENTS.md](../AGENTS.md) and [README.md](../README.md) as the default source of truth.
 

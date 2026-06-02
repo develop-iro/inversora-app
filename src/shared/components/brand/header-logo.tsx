@@ -11,10 +11,10 @@ export function HeaderLogo() {
   return (
     <View
       accessibilityRole="image"
-      accessibilityLabel="Invesora"
+      accessibilityLabel="Inversora"
       style={styles.wrapper}
     >
-      <Text style={styles.wordmark}>Invesora</Text>
+      <Text style={styles.wordmark}>Inversora</Text>
     </View>
   );
 }

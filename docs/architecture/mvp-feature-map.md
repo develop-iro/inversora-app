@@ -20,7 +20,7 @@ Leyenda de madurez:
 | Área MVP | Progreso global | Bloqueador principal |
 |----------|-----------------|----------------------|
 | Dashboard inicial | 🟡 ~60% | Datos duplicados; navegación a detalle inexistente |
-| Catálogo y rankings | 🟡 ~15% | Sin listado, filtros ni `/funds/[isin]` |
+| Catálogo y rankings | 🟡 ~40% | Catálogo parcial; ficha ampliada en `/funds/[isin]` |
 | Modo educativo / perfil | ⬜ ~5% | CTA “Sora” sin ruta `/learn` |
 | Comparación | 🟡 ~10% | Solo shell de pantalla |
 | Favoritos locales | 🟡 ~5% | Sin storage ni estado |
@@ -40,7 +40,7 @@ Leyenda de madurez:
 | Tabs: inicio, fondos, favoritos, comparar, calcular | ✅ | `_layout.tsx` + `FloatingTabBar` |
 | Re-export fino a `features/*/screens` | ✅ | Patrón consistente |
 | `/learn` | ⬜ | No existe |
-| `/funds/[isin]` | ⬜ | No existe |
+| `/funds/[isin]` | ✅ | `app/funds/[isin].tsx` → ficha ampliada |
 | `/legal` | ⬜ | No existe |
 | `explore.tsx` (oculto, `href: null`) | 🟡 | Duplica `funds`; home navega aquí vía `router.push("/explore")` — deuda de rutas |
 
@@ -78,7 +78,7 @@ Leyenda de madurez:
 |---------------|--------|-------------------|
 | Dashboard inicial | 🟡 | `HomeHero`, panel de contenido, ranking top 3 |
 | Fondos destacados (carousel) | ✅ | `FeaturedFundsCarousel` + `FEATURED_FUNDS_MOCK` |
-| Ranking resumido (Score Invesora) | 🟡 | `RANKING_FUNDS` inline en `home-screen.tsx` (5 fondos, muestra 3) |
+| Ranking resumido (Score Inversora) | 🟡 | `RANKING_FUNDS` inline en `home-screen.tsx` (5 fondos, muestra 3) |
 | Búsqueda / asistente en barra | 🟡 | `SearchField` con placeholders animados; sin submit ni backend |
 | CTA “Quiero invertir” / explorar | 🟡 | Navega a `/explore` (pantalla oculta = fondos) |
 | Guía “Sora” (perfil educativo) | 🟡 | Card UI; navega a `/explore`, no a `/learn` |
@@ -116,17 +116,18 @@ Leyenda de madurez:
 | Búsqueda por nombre / ISIN / categoría | ⬜ | |
 | Filtros (comisión, riesgo, categoría, histórico) | ⬜ | |
 | Rankings por categoría | ⬜ | Solo preview en home |
-| Detalle resumido `/funds/[isin]` | ⬜ | |
-| Estados de calidad de datos | ⬜ | |
-| Fecha de actualización de datos | ⬜ | |
-| Servicios / repositorio | ⬜ | |
+| Detalle ampliado `/funds/[isin]` | ✅ | `fund-detail-screen.tsx` + secciones Información, Rentabilidad, Ratios, Exposición |
+| Desglose Score Inversora en ficha | ✅ | `FundScoreBreakdown` visible; dominio `FundDetailProfile` |
+| Estados de calidad de datos | 🟡 | `FundDataQualityBanner` si `scoringStatus` ≠ ok |
+| Fecha de actualización de datos | 🟡 | `profile.asOf` por sección (mock) |
+| Servicios / repositorio | 🟡 | `get-fund-by-isin.ts` + mocks; sin API |
 
 **Próximos pasos sugeridos:**
 
 1. `services/funds-repository.ts` (mock → API).
 2. Pantalla catálogo con lista + filtros.
-3. Stack route `app/funds/[isin].tsx` + `fund-detail-screen.tsx`.
-4. Mover tipos compartidos si `onboarding` sigue consumiendo fondos (ver ADR-001).
+3. Conectar catálogo y ranking a detalle ampliado (deep links consistentes).
+4. Sustituir mocks de `fund-detail-profile-mock.ts` por API/Supabase cuando exista.
 
 ---
 
@@ -227,7 +228,7 @@ app ──► features/* ──► shared
 | `/` | Dashboard | ✅ |
 | `/learn` | Modo educativo | ⬜ |
 | `/funds` | Catálogo | 🟡 placeholder |
-| `/funds/[isin]` | Detalle | ⬜ |
+| `/funds/[isin]` | Detalle ampliado | ✅ |
 | `/compare` | Comparación | 🟡 shell |
 | `/favorites` | Favoritos | 🟡 shell |
 | `/calculator` | Calculadora | 🟡 shell |

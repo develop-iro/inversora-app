@@ -1,7 +1,17 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { useSegments } from "expo-router";
+import { useMemo } from "react";
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
+import { isFundDetailPath } from "@/shared/navigation/tab-route-state";
 import { FontFamily } from "@/shared/theme/theme";
 
 export const FLOATING_TAB_BAR_HEIGHT = 76;
@@ -58,6 +68,15 @@ const tabs: Record<string, TabConfig> = {
   },
 };
 
+/** Top-level tab routes only — avoids duplicate `index` from nested stacks (e.g. funds/index). */
+const TAB_ROUTE_ORDER = [
+  "index",
+  "funds",
+  "favorites",
+  "compare",
+  "calculator",
+] as const;
+
 type FloatingTabBarProps = {
   bottomInset: number;
   descriptors: unknown;
@@ -88,12 +107,27 @@ export function FloatingTabBar({
     string,
     { options?: { href?: string | null } }
   >;
-  const activeRouteKey = state.routes[state.index]?.key;
-  const visibleRoutes = state.routes.filter((route) => {
-    const options = routeDescriptors[route.key]?.options;
+  const segments = useSegments();
+  const hideOnFundDetail = useMemo(() => isFundDetailPath(segments), [segments]);
+  const activeRoute = state.routes[state.index];
 
-    return tabs[route.name] && options?.href !== null;
-  });
+  if (hideOnFundDetail) {
+    return null;
+  }
+
+  const visibleRoutes = TAB_ROUTE_ORDER.map((routeName) => {
+    const route = state.routes.find((candidate) => candidate.name === routeName);
+    if (!route) {
+      return null;
+    }
+
+    const options = routeDescriptors[route.key]?.options;
+    if (!tabs[route.name] || options?.href === null) {
+      return null;
+    }
+
+    return route;
+  }).filter((route): route is (typeof state.routes)[number] => route !== null);
 
   return (
     <View
@@ -106,7 +140,11 @@ export function FloatingTabBar({
       <View style={[styles.container, { width: Math.min(width - 36, 560) }]}>
         {visibleRoutes.map((route) => {
           const tab = tabs[route.name];
-          const isFocused = route.key === activeRouteKey;
+          if (!tab) {
+            return null;
+          }
+
+          const isFocused = activeRoute?.key === route.key;
 
           const onPress = () => {
             const event = tabNavigation.emit({
@@ -137,7 +175,11 @@ export function FloatingTabBar({
               onPress={onPress}
               style={({ pressed }) => [
                 styles.item,
-                !isReducedMotionEnabled && pressed && styles.itemPressed,
+                isFocused && styles.itemFocused,
+                !isReducedMotionEnabled &&
+                  pressed &&
+                  Platform.OS !== "web" &&
+                  styles.itemPressed,
               ]}
             >
               <View
@@ -185,18 +227,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
+    overflow: "hidden",
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.07,
     shadowRadius: 16,
     elevation: 5,
+    ...Platform.select({
+      web: {
+        boxSizing: "border-box",
+      },
+      default: {},
+    }),
   },
   item: {
     flex: 1,
+    flexShrink: 1,
     minHeight: 64,
-    minWidth: 44,
+    minWidth: 0,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "transparent",
+    ...Platform.select({
+      web: {
+        borderWidth: 0,
+        outlineWidth: 0,
+        boxShadow: "none",
+        cursor: "pointer",
+        appearance: "none",
+      } as const,
+      default: {},
+    }),
+  },
+  itemFocused: {
+    backgroundColor: "transparent",
   },
   itemPressed: {
     opacity: 0.85,

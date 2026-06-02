@@ -1,6 +1,6 @@
 # Avisos legales y copy obligatorio
 
-Invesora es **informativa y educativa**. Estos mensajes deben ser visibles en superficies sensibles (dashboard, destacados, rankings, ficha, comparación, calculadora, explicaciones IA).
+Inversora es **informativa y educativa**. Estos mensajes deben ser visibles en superficies sensibles (dashboard, destacados, rankings, ficha, comparación, calculadora, explicaciones IA).
 
 ## Mensajes nucleares
 

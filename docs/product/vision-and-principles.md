@@ -1,8 +1,8 @@
 # Visión y principios
 
-## Qué es Invesora
+## Qué es Inversora
 
-Invesora es una aplicación **educativa e informativa** para que personas con poca experiencia financiera exploren y comparen **fondos indexados** con criterios objetivos, lenguaje claro y apoyo del **Asistente Invesora** (capa de IA explicativa).
+Inversora es una aplicación **educativa e informativa** para que personas con poca experiencia financiera exploren y comparen **fondos indexados** con criterios objetivos, lenguaje claro y apoyo del **Asistente Inversora** (capa de IA explicativa).
 
 No ejecuta inversiones, no sustituye a un asesor profesional ni conecta con brokers. El usuario toma decisiones fuera de la app (banco, broker, asesor).
 
@@ -29,7 +29,7 @@ Implicaciones prácticas:
 
 ## Límites no negociables
 
-| Invesora es | Invesora no es |
+| Inversora es | Inversora no es |
 |-------------|----------------|
 | Herramienta de información y comparación | Broker o roboadvisor |
 | Ranking por reglas objetivas y explicables | Recomendación de compra/venta |
@@ -47,7 +47,7 @@ Dashboard → Catálogo / Buscador → Ficha de fondo
                 ↓
     Rankings · Destacados · Comparador · Calculadora
                 ↓
-    Asistente Invesora (explicación) · Favoritos · Avisos legales
+    Asistente Inversora (explicación) · Favoritos · Avisos legales
 ```
 
 ## Relación con otras docs

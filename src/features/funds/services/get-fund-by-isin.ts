@@ -2,6 +2,8 @@ import type { FundDetail } from '@/core/domain/catalog';
 import { scoreFund } from '@/core/scoring/score-fund';
 
 import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
+import { getFundDetailProfileMock } from '@/features/funds/mocks/fund-detail-profile-mock';
+import { getFundMarketSnapshotMock } from '@/features/funds/mocks/fund-market-mock';
 import { RANKING_SOURCES_MOCK } from '@/features/funds/mocks/ranking-sources-mock';
 import { getRankings } from '@/features/funds/services/get-rankings';
 
@@ -32,9 +34,11 @@ export async function getFundByIsin(isin: string): Promise<FundDetail | null> {
 
   return {
     fund,
-    invesoraScore: scored.score,
+    inversoraScore: scored.score,
     rank: rankEntry?.rank,
     scoredBreakdown: scored.breakdown,
     scoringStatus: scored.status,
+    market: getFundMarketSnapshotMock(fund.isin),
+    profile: getFundDetailProfileMock(fund),
   };
 }

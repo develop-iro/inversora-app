@@ -4,7 +4,7 @@ import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { useAuroraBorder } from "@/shared/components/ui/search/hooks/use-aurora-border";
-import { Radius } from "@/shared/theme/theme";
+import { Radius, Spacing } from "@/shared/theme/theme";
 
 type AuroraBorderProps = {
   children: ReactNode;
@@ -23,7 +23,7 @@ export function AuroraBorder({
   borderColor,
   surfaceColor,
 }: AuroraBorderProps) {
-  const { auraStyle, containerStyle } = useAuroraBorder({
+  const { auraStyle } = useAuroraBorder({
     focused,
     paused,
     reducedMotionEnabled,
@@ -45,13 +45,7 @@ export function AuroraBorder({
         />
       </Animated.View>
 
-      <Animated.View
-        style={[
-          styles.content,
-          { backgroundColor: surfaceColor },
-          containerStyle,
-        ]}
-      >
+      <Animated.View style={[styles.content, { backgroundColor: surfaceColor }]}>
         {children}
       </Animated.View>
     </View>
@@ -61,6 +55,7 @@ export function AuroraBorder({
 const styles = StyleSheet.create({
   frame: {
     alignSelf: "stretch",
+    width: "100%",
     borderWidth: 1,
     borderRadius: Radius.field + 2,
     overflow: "hidden",
@@ -81,6 +76,7 @@ const styles = StyleSheet.create({
   content: {
     borderRadius: Radius.field,
     margin: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
   },
 });

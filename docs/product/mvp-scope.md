@@ -11,9 +11,9 @@ Resumen alineado con el documento oficial y con `README.md` / `AGENTS.md`. Ante 
 | Perfil educativo | Orientativo, local/anónimo, no vinculado a cuenta |
 | Catálogo | Fondos indexados visibles, categorías, estados de calidad de datos |
 | Búsqueda y filtros | Nombre, ISIN, categoría; filtros básicos (comisión, riesgo, benchmark, etc.) |
-| Rankings | Por categoría / benchmark comparable, Score Invesora |
+| Rankings | Por categoría / benchmark comparable, Score Inversora |
 | Ficha de fondo | Resumen con métricas, score, desglose y advertencias |
-| Asistente Invesora | Explicaciones en lenguaje llano; sin alterar rankings |
+| Asistente Inversora | Explicaciones en lenguaje llano; sin alterar rankings |
 | Comparación | Hasta **2 fondos**; advertencia si no son homogéneos |
 | Calculadora | Interés compuesto con escenarios educativos (prudente / medio / optimista) |
 | Favoritos | Solo en dispositivo; no implican recomendación |

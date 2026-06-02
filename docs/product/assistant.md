@@ -1,6 +1,6 @@
-# Asistente Invesora (IA)
+# Asistente Inversora (IA)
 
-Capa de **explicación educativa** entre los datos financieros y el usuario. En el documento oficial aparece como **Asistente Invesora**; en la portada del mismo documento el actor de IA se nombra **Sora** (nombre interno / personaje). En UI y copy de producto se prioriza **Asistente Invesora** salvo branding explícito de Sora en el modo “Quiero aprender”.
+Capa de **explicación educativa** entre los datos financieros y el usuario. En el documento oficial aparece como **Asistente Inversora**; en la portada del mismo documento el actor de IA se nombra **Sora** (nombre interno / personaje). En UI y copy de producto se prioriza **Asistente Inversora** salvo branding explícito de Sora en el modo “Quiero aprender”.
 
 ## Propósito
 

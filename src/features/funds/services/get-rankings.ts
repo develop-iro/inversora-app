@@ -15,7 +15,7 @@ function toRankedFunds(): RankedFund[] {
     }));
 }
 
-/** Returns funds ranked by Score Invesora (mock pipeline). */
+/** Returns funds ranked by Score Inversora (mock pipeline). */
 export async function getRankings(options?: GetRankingsOptions): Promise<RankedFund[]> {
   const ranked = toRankedFunds();
   const limit = options?.limit;

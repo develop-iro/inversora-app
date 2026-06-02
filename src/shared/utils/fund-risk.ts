@@ -27,5 +27,5 @@ export function getRiskBadgeVariant(risk: RiskLevel): 'mint' | 'danger' | 'warni
 
 export function buildRankingA11yLabel(fund: RankedFund): string {
   const riskLabel = getRiskLabel(fund.riskLevel).toLowerCase();
-  return `Ranking ${fund.rank}, ${fund.name}, Score Invesora ${fund.score} sobre 100, riesgo ${riskLabel}, comisión anual ${fund.terPercent.toFixed(2)} por ciento.`;
+  return `Ranking ${fund.rank}, ${fund.name}, Score Inversora ${fund.score} sobre 100, riesgo ${riskLabel}, comisión anual ${fund.terPercent.toFixed(2)} por ciento.`;
 }
