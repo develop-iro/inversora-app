@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
 import {
-    Platform,
     StyleSheet,
     TextInput,
     View,
@@ -14,9 +13,12 @@ import {
 import { AnimatedPlaceholder } from "@/shared/components/ui/search/animated-placeholder";
 import { AuroraBorder } from "@/shared/components/ui/search/aurora-border";
 import { SearchOrb } from "@/shared/components/ui/search/search-orb";
+import { isWeb } from "@/shared/platform/capabilities";
 import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
 import { useTheme } from "@/shared/hooks/use-theme";
 import { Spacing, Typography } from "@/shared/theme/theme";
+
+const SEARCH_FIELD_MIN_HEIGHT = 44;
 
 const DEFAULT_SUGGESTIONS = [
   "What do you want to achieve?",
@@ -25,6 +27,15 @@ const DEFAULT_SUGGESTIONS = [
   "Help me understand MSCI World",
   "I don't know where to start",
 ] as const;
+
+const webInputStyle: TextStyle | null = isWeb
+  ? ({
+      outlineWidth: 0,
+      outlineStyle: "none",
+      borderWidth: 0,
+      boxShadow: "none",
+    } as TextStyle)
+  : null;
 
 export type SearchBarProps = Omit<TextInputProps, "style"> & {
   leadingIcon?: ReactNode;
@@ -68,8 +79,6 @@ export function SearchBar({
   const isTyping = inputValue.length > 0;
   const placeholderPaused = isFocused || isTyping;
   const auroraPaused = isTyping;
-  const webInputStyle =
-    Platform.OS === "web" ? ({ outlineWidth: 0 } as TextStyle) : null;
 
   const handleChangeText = useCallback(
     (nextValue: string) => {
@@ -106,7 +115,11 @@ export function SearchBar({
       surfaceColor={theme.surfaceMuted}
     >
       <View
-        style={[styles.container, !editable && styles.disabled, containerStyle]}
+        style={[
+          styles.container,
+          !editable && styles.disabled,
+          containerStyle,
+        ]}
       >
         {leadingIcon ? <View style={styles.icon}>{leadingIcon}</View> : null}
         <SearchOrb
@@ -158,12 +171,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
     alignSelf: "stretch",
+    width: "100%",
+    minHeight: SEARCH_FIELD_MIN_HEIGHT,
+    gap: Spacing.sm,
   },
   inputWrapper: {
     flex: 1,
-    minHeight: 24,
+    minWidth: 0,
+    alignSelf: "stretch",
+    minHeight: 22,
     justifyContent: "center",
   },
   icon: {
@@ -171,11 +188,17 @@ const styles = StyleSheet.create({
     height: 18,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
   input: {
     flex: 1,
+    width: "100%",
+    minWidth: 0,
     padding: 0,
-    ...Typography.body,
+    margin: 0,
+    fontFamily: Typography.body.fontFamily,
+    fontSize: Typography.body.fontSize,
+    lineHeight: 20,
   },
   disabled: {
     opacity: 0.6,

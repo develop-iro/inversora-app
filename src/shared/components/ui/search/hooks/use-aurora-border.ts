@@ -65,12 +65,7 @@ export function useAuroraBorder({
     opacity: interpolate(focusProgress.value, [0, 1], [0.26, 0.42]),
   }));
 
-  const containerStyle = useAnimatedStyle(() => ({
-    paddingVertical: interpolate(focusProgress.value, [0, 1], [6, 7]),
-  }));
-
   return {
     auraStyle,
-    containerStyle,
   };
 }

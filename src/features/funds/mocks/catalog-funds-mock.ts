@@ -22,7 +22,7 @@ function rankingSourceToFeatured(source: FundScoringInput): FeaturedFund {
     quarterTag: 'Q1 2026',
     periodStart: '2026-01-01',
     periodEnd: '2026-03-31',
-    benefitSummary: 'Fondo indexado disponible en el catálogo educativo de Invesora.',
+    benefitSummary: 'Fondo indexado disponible en el catálogo educativo de Inversora.',
     featuredReason: 'Incluido en el ranking por criterios objetivos',
     isFeatured: false,
   };
@@ -48,7 +48,7 @@ const CATALOG_BASE = buildCatalogBase();
 
 export const CATALOG_FUNDS_MOCK: CatalogFund[] = CATALOG_BASE.map((fund) => ({
   ...fund,
-  invesoraScore: fund.efficiencyScore,
+  inversoraScore: fund.efficiencyScore,
 }));
 
 export const CATALOG_CATEGORIES = [

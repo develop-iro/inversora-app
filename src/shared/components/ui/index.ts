@@ -20,6 +20,12 @@ export {
 } from "@/shared/components/ui/card";
 export { Divider, type DividerProps } from "@/shared/components/ui/divider";
 export {
+    InfoHint,
+    InfoHintTrigger,
+    type InfoHintProps,
+    type InfoHintSurface
+} from "@/shared/components/ui/info-hint";
+export {
     ScorePill,
     type ScorePillProps
 } from "@/shared/components/ui/score-pill";

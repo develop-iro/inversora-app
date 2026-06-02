@@ -96,7 +96,7 @@ export default function FavoritesScreen() {
           </View>
         )}
 
-        <LegalNotice body="Los favoritos son una herramienta de seguimiento educativo. Invesora no ofrece asesoramiento financiero personalizado." />
+        <LegalNotice body="Los favoritos son una herramienta de seguimiento educativo. Inversora no ofrece asesoramiento financiero personalizado." />
       </View>
     </ScrollView>
   );

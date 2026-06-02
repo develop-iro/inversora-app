@@ -1,6 +1,6 @@
 # Índice de historias de usuario (MVP)
 
-Referencia condensada del documento oficial (*Documentación de Proyecto: Invesora*, v1.0). Para criterios de aceptación completos, consultar ese documento.
+Referencia condensada del documento oficial (*Documentación de Proyecto: Inversora*, v1.0). Para criterios de aceptación completos, consultar ese documento.
 
 **Leyenda de estado (implementación en repo):**
 
@@ -55,7 +55,7 @@ Estado detallado por módulo: [mvp-feature-map.md](../architecture/mvp-feature-m
 | HU-20 | Perfil orientativo (conservador/moderado/dinámico) | Alta | ⬜ |
 | HU-21 | Detectar respuestas inconsistentes | Media | ⬜ |
 
-## EP-05 — Asistente Invesora
+## EP-05 — Asistente Inversora
 
 | ID | Historia (resumen) | Prioridad | Estado |
 |----|-------------------|-----------|--------|

@@ -1,4 +1,4 @@
-# Agent Instructions: Invesora
+# Agent Instructions: Inversora
 
 ## Expo HAS CHANGED
 
@@ -8,7 +8,7 @@ This project uses Expo SDK 56. Do not rely on older Expo or React Native assumpt
 
 ## Product
 
-Invesora is an Expo / React Native app that helps beginner users understand and compare index funds.
+Inversora is an Expo / React Native app that helps beginner users understand and compare index funds.
 
 Guiding principle:
 
@@ -27,7 +27,7 @@ Build toward these surfaces:
 - Basic search and filters.
 - Category rankings.
 - Summary fund detail screen.
-- Invesora Assistant as an educational layer.
+- Inversora Assistant as an educational layer.
 - Fund comparison.
 - Compound-interest calculator.
 - Local favorites.
@@ -114,7 +114,7 @@ Target routes:
 
 ## AI And Finance Rules
 
-The Invesora Assistant:
+The Inversora Assistant:
 
 - Explains concepts and results in plain language.
 - Does not calculate or modify rankings.
@@ -125,7 +125,7 @@ The Invesora Assistant:
 
 Every sensitive surface must make clear that:
 
-- Invesora is informational and educational.
+- Inversora is informational and educational.
 - There is no personalized financial advice.
 - Past performance does not guarantee future results.
 - Every investment involves risk.

@@ -1,6 +1,6 @@
-# Invesora
+# Inversora
 
-Invesora is an Expo / React Native app that helps beginner investors understand and compare index funds through an educational, visual, AI-assisted experience.
+Inversora is an Expo / React Native app that helps beginner investors understand and compare index funds through an educational, visual, AI-assisted experience.
 
 The MVP does not execute investments and does not replace a financial advisor. Its goal is to help beginner users understand the basics, compare index funds with better context, and read clear explanations about rankings, fees, risk, and historical performance.
 
@@ -10,7 +10,7 @@ The MVP does not execute investments and does not replace a financial advisor. I
 
 **Educate first, compare later.**
 
-The experience should guide users before showing complex tables or rankings. Invesora should explain what an index fund is, how fees work, what risk means, why time horizon matters, and why past performance does not guarantee future results.
+The experience should guide users before showing complex tables or rankings. Inversora should explain what an index fund is, how fees work, what risk means, why time horizon matters, and why past performance does not guarantee future results.
 
 ## MVP Scope
 
@@ -22,7 +22,7 @@ Included:
 - Index-fund catalog.
 - Category rankings based on objective criteria.
 - Summary fund detail screen.
-- Invesora Assistant explanations.
+- Inversora Assistant explanations.
 - Search by name, ISIN, or category.
 - Basic filters for fee, risk, category, and historical performance.
 - Basic fund comparison (up to two funds).
@@ -88,9 +88,9 @@ Practical rules:
 - `core/*` contains cross-cutting infrastructure and should not depend on UI.
 - Avoid direct dependencies between features unless they go through shared contracts or `core` services.
 
-## Invesora Assistant
+## Inversora Assistant
 
-The Invesora Assistant is an educational explanation layer. It can translate financial concepts into plain language, explain why a fund appears highlighted, and help users navigate the app.
+The Inversora Assistant is an educational explanation layer. It can translate financial concepts into plain language, explain why a fund appears highlighted, and help users navigate the app.
 
 Key rules:
 
@@ -99,7 +99,7 @@ Key rules:
 - It does not invent financial data.
 - It does not issue direct buy or sell recommendations.
 - It must use prudent, educational language.
-- It must make clear that Invesora is an informational tool, not personalized financial advice.
+- It must make clear that Inversora is an informational tool, not personalized financial advice.
 
 ## Scoring And Data
 

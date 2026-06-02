@@ -1,4 +1,4 @@
-# Score Invesora y rankings
+# Score Inversora y rankings
 
 Reglas de producto para el motor de puntuación. La implementación vive en `src/core/scoring/`; en producción el cálculo definitivo debería ejecutarse en **backend** (ADR-001).
 

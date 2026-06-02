@@ -1,31 +1,44 @@
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useCallback, useState } from "react";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useCallback, useState } from 'react';
 import {
-    Animated,
-    Easing,
-    Platform,
-    StyleSheet,
-    View,
-    useWindowDimensions,
-    type StyleProp,
-    type ViewStyle,
-} from "react-native";
+  Animated,
+  Easing,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
-import type { FeaturedFund } from "@/features/funds/models/fund";
-import { ThemedText } from "@/shared/components/themed-text";
-import { Badge, Card, ScorePill } from "@/shared/components/ui";
-import { useTheme } from "@/shared/hooks/use-theme";
-import { Radius, Spacing } from "@/shared/theme/theme";
+import { FavoriteToggleButton } from '@/features/funds/components/favorite-toggle-button';
+import { FundMetricBlock } from '@/features/funds/components/fund-metric-block';
+import { useFavorite } from '@/features/funds/hooks/use-favorite';
+import {
+  buildFundCardA11yLabel,
+  getFundScore,
+  type FundSummarySource,
+} from '@/features/funds/utils/fund-summary';
+import { ThemedText } from '@/shared/components/themed-text';
+import { Badge, Card, ScorePill } from '@/shared/components/ui';
+import { usePlatformCapabilities } from '@/shared/hooks/use-platform-capabilities';
+import { useWebHover } from '@/shared/hooks/use-web-hover';
+import { useTheme } from '@/shared/hooks/use-theme';
+import { isWeb } from '@/shared/platform/capabilities';
+import { getEfficiencyBadgeVariant, getEfficiencyLabel } from '@/shared/utils/fund-efficiency';
+import { getRiskBadgeVariant, getRiskLabel } from '@/shared/utils/fund-risk';
+import { Radius, Spacing } from '@/shared/theme/theme';
 
-/** Reserved height for title (2 lines) + category + benefit (2 lines) + gaps. */
-const HEADER_BLOCK_MIN_HEIGHT = 30 * 2 + 19 + 19 * 2 + Spacing.sm * 2;
+/** Reserved height for title (2 lines) + category + gaps. */
+const HEADER_BLOCK_MIN_HEIGHT = 30 * 2 + 19 + Spacing.sm;
 
 export type FundCardProps = {
-  fund: FeaturedFund;
+  fund: FundSummarySource;
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
   onInteractionStart?: () => void;
   onInteractionEnd?: () => void;
+  showFavorite?: boolean;
 };
 
 export function FundCard({
@@ -34,12 +47,18 @@ export function FundCard({
   onPress,
   onInteractionStart,
   onInteractionEnd,
+  showFavorite = true,
 }: FundCardProps) {
   const theme = useTheme();
-  const { width } = useWindowDimensions();
+  const { supportsPointerHover } = usePlatformCapabilities();
   const [scaleAnim] = useState(() => new Animated.Value(1));
   const [hovered, setHovered] = useState(false);
-  const isNarrow = width < 360;
+  const { isFavorite, isLoading: isFavoriteLoading, toggle } = useFavorite(fund.isin);
+
+  const score = getFundScore(fund);
+  const efficiencyLabel = getEfficiencyLabel(score);
+  const riskLabel = getRiskLabel(fund.riskLevel);
+  const useNativeDriver = Platform.OS !== 'web';
 
   const animateTo = useCallback(
     (toValue: number, duration: number) => {
@@ -47,29 +66,32 @@ export function FundCard({
         toValue,
         duration,
         easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
+        useNativeDriver,
       }).start();
     },
-    [scaleAnim],
+    [scaleAnim, useNativeDriver],
   );
 
   const handleHoverIn = useCallback(() => {
-    if (Platform.OS !== "web") {
-      return;
-    }
     setHovered(true);
-    animateTo(0.985, 180);
+    if (supportsPointerHover) {
+      animateTo(0.985, 180);
+    }
     onInteractionStart?.();
-  }, [animateTo, onInteractionStart]);
+  }, [animateTo, onInteractionStart, supportsPointerHover]);
 
   const handleHoverOut = useCallback(() => {
-    if (Platform.OS !== "web") {
-      return;
-    }
     setHovered(false);
-    animateTo(1, 180);
+    if (supportsPointerHover) {
+      animateTo(1, 180);
+    }
     onInteractionEnd?.();
-  }, [animateTo, onInteractionEnd]);
+  }, [animateTo, onInteractionEnd, supportsPointerHover]);
+
+  const cardHoverProps = useWebHover({
+    onHoverIn: handleHoverIn,
+    onHoverOut: handleHoverOut,
+  });
 
   const handlePressIn = useCallback(() => {
     animateTo(0.97, 90);
@@ -77,9 +99,9 @@ export function FundCard({
   }, [animateTo, onInteractionStart]);
 
   const handlePressOut = useCallback(() => {
-    animateTo(hovered && Platform.OS === "web" ? 0.985 : 1, 140);
+    animateTo(hovered && supportsPointerHover ? 0.985 : 1, 140);
     onInteractionEnd?.();
-  }, [animateTo, hovered, onInteractionEnd]);
+  }, [animateTo, hovered, onInteractionEnd, supportsPointerHover]);
 
   const handleFocus = useCallback(() => {
     animateTo(0.985, 160);
@@ -87,251 +109,250 @@ export function FundCard({
   }, [animateTo, onInteractionStart]);
 
   const handleBlur = useCallback(() => {
-    animateTo(hovered && Platform.OS === "web" ? 0.985 : 1, 160);
+    animateTo(hovered && supportsPointerHover ? 0.985 : 1, 160);
     onInteractionEnd?.();
-  }, [animateTo, hovered, onInteractionEnd]);
+  }, [animateTo, hovered, onInteractionEnd, supportsPointerHover]);
 
-  return (
-    <Animated.View
-      style={[{ transform: [{ scale: scaleAnim }] }, styles.fill, style]}
-    >
-      <Card
-        onPress={onPress}
-        onHoverIn={handleHoverIn}
-        onHoverOut={handleHoverOut}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        accessibilityRole="button"
-        accessibilityLabel={`${fund.name}. ${fund.categoryLabel}. ${fund.benefitSummary}. Score Invesora ${fund.efficiencyScore} sobre 100. Comisión ${fund.terPercent.toFixed(2)} por ciento. Riesgo ${getRiskLabel(fund.riskLevel)}. ${fund.featuredReason}.`}
-        style={[
-          styles.card,
-          hovered && styles.cardHovered,
-          { borderColor: "rgba(0, 191, 166, 0.35)" },
-        ]}
-        contentStyle={styles.content}
+  const favoriteControl =
+    showFavorite ? (
+      <View
+        pointerEvents={onPress && isWeb ? 'auto' : undefined}
+        style={styles.favoriteSlot}
       >
-        <View style={[styles.toneBar, { backgroundColor: theme.primary }]} />
+        <FavoriteToggleButton
+          isin={fund.isin}
+          isFavorite={isFavorite}
+          isLoading={isFavoriteLoading}
+          onToggle={toggle}
+        />
+      </View>
+    ) : null;
 
-        <View style={styles.topMeta}>
-          <Badge
-            label={fund.badge}
-            variant="mint"
-            style={styles.topMetaBadge}
-          />
-          <Badge
-            label={`Actualizado ${fund.quarterTag}`}
-            variant="muted"
-            style={styles.topMetaBadge}
-          />
+  const cardBody = (
+    <Card
+      variant="elevated"
+      style={[
+        styles.card,
+        {
+          borderWidth: 1,
+          borderColor: hovered
+            ? 'rgba(0, 191, 166, 0.55)'
+            : 'rgba(0, 191, 166, 0.35)',
+        },
+        hovered && styles.cardHovered,
+        supportsPointerHover && styles.cardWeb,
+      ]}
+      contentStyle={styles.cardContent}
+    >
+      <View style={styles.content}>
+        <View style={styles.topRow}>
+          <View style={[styles.toneBar, { backgroundColor: theme.primary }]} />
+          {favoriteControl}
         </View>
 
         <View style={styles.header}>
           <ThemedText type="cardTitle" numberOfLines={2}>
             {fund.name}
           </ThemedText>
-          <ThemedText
-            type="caption"
-            themeColor="textSecondary"
-            numberOfLines={1}
-          >
+          <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
             {fund.categoryLabel}
           </ThemedText>
-          <ThemedText
-            type="caption"
-            themeColor="textSecondary"
-            numberOfLines={2}
-            style={isNarrow ? styles.benefitNarrow : undefined}
-          >
-            {fund.benefitSummary}
-          </ThemedText>
         </View>
 
-        <ScorePill score={fund.efficiencyScore} />
+        <View style={styles.scoreRow}>
+          <ScorePill score={score} />
+        </View>
 
         <View style={styles.metricsRow}>
-          <View style={styles.metricItem}>
-            <MaterialCommunityIcons
-              name="percent-circle-outline"
-              size={16}
-              color={theme.deepOcean}
-            />
-            <View style={styles.metricTextBlock}>
-              <ThemedText type="metaLabel" themeColor="textSecondary">
-                Comisión
-              </ThemedText>
-              <ThemedText type="bodyBold" style={styles.metricValue}>
-                {fund.terPercent.toFixed(2)}%
-              </ThemedText>
-            </View>
-          </View>
+          <FundMetricBlock
+            icon="percent-circle-outline"
+            label="Comisión"
+            surface="dashboard"
+            value={`${fund.terPercent.toFixed(2)}%`}
+          />
           <View style={styles.riskBadgeWrap}>
-            <Badge
-              label={`Riesgo ${getRiskLabel(fund.riskLevel)}`}
-              variant={getRiskBadgeVariant(fund.riskLevel)}
-            />
+            <ThemedText type="metaLabel" themeColor="textSecondary">
+              Riesgo
+            </ThemedText>
+            <Badge label={riskLabel} variant={getRiskBadgeVariant(fund.riskLevel)} />
           </View>
         </View>
 
-        <View style={styles.reasonWrap}>
-          <Badge
-            label={getDiversificationLabel(fund.diversification)}
-            variant="soft"
-          />
-          <ThemedText
-            type="caption"
-            themeColor="textSecondary"
-            numberOfLines={1}
-          >
-            {fund.featuredReason}
+        <View style={styles.efficiencyWrap}>
+          <ThemedText type="metaLabel" themeColor="textSecondary">
+            Eficiencia
           </ThemedText>
+          <Badge label={efficiencyLabel} variant={getEfficiencyBadgeVariant(score)} />
         </View>
 
         <View style={styles.footer}>
           <View style={styles.moreWrap}>
-            <ThemedText
-              type="metaLabel"
-              style={[styles.more, { color: theme.primary }]}
-            >
-              Ver más
+            <ThemedText type="metaLabel" style={[styles.more, { color: theme.primary }]}>
+              Ver detalle
             </ThemedText>
-            <MaterialCommunityIcons
-              name="arrow-right"
-              size={16}
-              color={theme.primary}
-            />
+            <MaterialCommunityIcons name="arrow-right" size={16} color={theme.primary} />
           </View>
         </View>
-      </Card>
+      </View>
+    </Card>
+  );
+
+  const pressableA11y = {
+    accessibilityRole: 'button' as const,
+    accessibilityLabel: buildFundCardA11yLabel(fund, efficiencyLabel),
+    accessibilityHint: 'Abre la ficha resumida del fondo',
+  };
+
+  return (
+    <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, styles.fill, style]}>
+      {onPress ? (
+        isWeb ? (
+          <View
+            {...(supportsPointerHover ? cardHoverProps : {})}
+            style={[
+              styles.pressableRoot,
+              supportsPointerHover && styles.cardWebCursor,
+            ]}
+          >
+            <Pressable
+              {...pressableA11y}
+              onPress={onPress}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              style={({ pressed }) => [styles.detailHitArea, pressed && styles.pressablePressed]}
+            />
+            <View pointerEvents="none" style={styles.cardContentLayer}>
+              {cardBody}
+            </View>
+          </View>
+        ) : (
+          <Pressable
+            {...pressableA11y}
+            onPress={onPress}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            style={({ pressed }) => [
+              styles.nativePressable,
+              pressed && styles.pressablePressed,
+            ]}
+          >
+            {cardBody}
+          </Pressable>
+        )
+      ) : (
+        cardBody
+      )}
     </Animated.View>
   );
-}
-
-function getRiskLabel(riskLevel: FeaturedFund["riskLevel"]) {
-  switch (riskLevel) {
-    case "low":
-      return "Bajo";
-    case "high":
-      return "Alto";
-    case "medium":
-    default:
-      return "Medio";
-  }
-}
-
-function getRiskBadgeVariant(riskLevel: FeaturedFund["riskLevel"]) {
-  switch (riskLevel) {
-    case "low":
-      return "mint" as const;
-    case "high":
-      return "danger" as const;
-    case "medium":
-    default:
-      return "warning" as const;
-  }
-}
-
-function getDiversificationLabel(
-  diversification: FeaturedFund["diversification"],
-) {
-  switch (diversification) {
-    case "high":
-      return "Diversificación alta";
-    case "low":
-      return "Diversificación baja";
-    case "medium":
-    default:
-      return "Diversificación media";
-  }
 }
 
 const styles = StyleSheet.create({
   fill: {
     flexGrow: 1,
-    alignSelf: "stretch",
+    alignSelf: 'stretch',
   },
   card: {
     flex: 1,
     minHeight: 420,
-    borderWidth: 1,
     borderRadius: Radius.card,
   },
   cardHovered: {
     shadowOpacity: 0.14,
-    shadowRadius: 10,
+    shadowRadius: 12,
     elevation: 5,
+  },
+  cardContent: {
+    flex: 1,
+  },
+  pressableRoot: {
+    flex: 1,
+    alignSelf: 'stretch',
+    position: 'relative',
+  },
+  nativePressable: {
+    flex: 1,
+    alignSelf: 'stretch',
+  },
+  detailHitArea: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 0,
+  },
+  cardContentLayer: {
+    flex: 1,
+    zIndex: 1,
+  },
+  favoriteSlot: {
+    flexShrink: 0,
+  },
+  pressablePressed: {
+    opacity: 0.97,
   },
   content: {
     flex: 1,
-    flexDirection: "column",
+    flexDirection: 'column',
     gap: Spacing.md,
     paddingTop: Spacing.lg,
   },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    minHeight: 40,
+  },
   toneBar: {
+    flex: 1,
     height: 5,
     borderRadius: Radius.full,
-    marginBottom: Spacing.xs,
-  },
-  topMeta: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-    alignItems: "center",
-    minHeight: 28,
-  },
-  topMetaBadge: {
-    flex: 1,
-    flexShrink: 1,
     minWidth: 0,
-    alignSelf: "stretch",
   },
   header: {
     gap: Spacing.sm,
     minHeight: HEADER_BLOCK_MIN_HEIGHT,
   },
-  benefitNarrow: {
-    fontSize: 12,
-    lineHeight: 17,
+  scoreRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
   },
+  cardWeb: {
+    overflow: 'visible',
+  },
+  cardWebCursor: Platform.select({
+    web: { cursor: 'pointer' as const },
+    default: {},
+  }),
   metricsRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
     gap: Spacing.md,
-    flexWrap: "wrap",
-  },
-  metricItem: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: Spacing.half,
-  },
-  metricTextBlock: {
-    gap: 1,
-    alignItems: "flex-start",
-  },
-  metricValue: {
-    lineHeight: 22,
+    flexWrap: 'wrap',
   },
   riskBadgeWrap: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
+    gap: Spacing.xs,
   },
-  reasonWrap: {
+  efficiencyWrap: {
     gap: Spacing.xs,
   },
   footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: Spacing.sm,
-    marginTop: "auto",
+    marginTop: 'auto',
     paddingTop: Spacing.xs,
   },
   more: {
     letterSpacing: 0.8,
   },
   moreWrap: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: Spacing.xs,
   },
 });

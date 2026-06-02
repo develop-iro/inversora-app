@@ -1,6 +1,6 @@
 # Arquitectura
 
-Documentación técnica del repositorio Invesora.
+Documentación técnica del repositorio Inversora.
 
 ## Documentos
 

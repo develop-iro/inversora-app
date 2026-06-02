@@ -86,7 +86,6 @@ export default function FundsScreen() {
           value={filters.query}
           onChangeText={handleQueryChange}
           suggestions={[...SEARCH_SUGGESTIONS]}
-          containerStyle={styles.search}
         />
 
         <FundCatalogFiltersBar value={filters} onChange={handleFiltersChange} />
@@ -139,9 +138,6 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: Spacing.sm,
-  },
-  search: {
-    minHeight: 56,
   },
   loader: {
     marginVertical: Spacing.xl,

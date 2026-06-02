@@ -14,7 +14,7 @@ export function ScorePill({ score }: ScorePillProps) {
   return (
     <View
       accessibilityRole="text"
-      accessibilityLabel={`Score Invesora ${score} sobre 100`}
+      accessibilityLabel={`Score Inversora ${score} sobre 100`}
       style={[
         styles.wrapper,
         {
@@ -27,7 +27,7 @@ export function ScorePill({ score }: ScorePillProps) {
         type="metaLabel"
         style={[styles.label, { color: theme.textSecondary }]}
       >
-        Score Invesora
+        Score Inversora
       </ThemedText>
       <ThemedText
         type="chip"

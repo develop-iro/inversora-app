@@ -4,18 +4,18 @@
 |-------|--------|
 | **Estado** | Aceptado |
 | **Fecha** | 2026-06-01 |
-| **Contexto** | MVP Invesora en Expo SDK 56; arquitectura feature-first documentada en `AGENTS.md` |
+| **Contexto** | MVP Inversora en Expo SDK 56; arquitectura feature-first documentada en `AGENTS.md` |
 
 ---
 
 ## Contexto
 
-Invesora debe:
+Inversora debe:
 
 - Educar antes de comparar; no actuar como broker ni asesor personalizado.
 - Mostrar rankings **deterministas, trazables y explicables**.
 - Permitir favoritos y perfil educativo **sin cuenta**, en almacenamiento local.
-- Ofrecer el **Asistente Invesora** (IA; nombre interno “Sora” en copy puntual) que **solo explique**, sin alterar datos ni recomendar compraventa.
+- Ofrecer el **Asistente Inversora** (IA; nombre interno “Sora” en copy puntual) que **solo explique**, sin alterar datos ni recomendar compraventa.
 
 Hoy el código tiene:
 
@@ -31,7 +31,7 @@ Sin decisiones explícitas, el scoring acabará en componentes React, el asisten
 
 ## Decisión
 
-### 1. Scoring (Score Invesora)
+### 1. Scoring (Score Inversora)
 
 **Dueño del cálculo:** backend (Supabase Edge Function o API dedicada) en producción; durante desarrollo, un módulo puro en `core/scoring` que pueda ejecutarse en cliente **solo para mocks**.
 
@@ -86,7 +86,7 @@ toggleFavorite(isin: string): Promise<void>;
 
 ---
 
-### 3. Asistente (Sora / Invesora Assistant)
+### 3. Asistente (Sora / Inversora Assistant)
 
 **Dueño:** `features/assistant` (UI + orquestación) y `core/api/assistant-client.ts` (transporte).
 
@@ -205,7 +205,7 @@ core/*      ↛  features/*, shared/components/*
 
 - [Mapa MVP por feature](./mvp-feature-map.md)
 - [Scoring (producto)](../product/scoring.md)
-- [Asistente Invesora (producto)](../product/assistant.md)
+- [Asistente Inversora (producto)](../product/assistant.md)
 - [Índice de documentación](../README.md)
 - `AGENTS.md` — Scoring, AI, Privacy
 - `README.md` — alcance MVP resumido

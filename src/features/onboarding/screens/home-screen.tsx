@@ -110,7 +110,6 @@ export default function HomeScreen() {
               </ThemedText>
               <SearchField
                 accessibilityLabel="Pregunta o busca fondos, categorías u objetivos"
-                containerStyle={styles.searchFieldInner}
                 placeholder="¿Qué quieres conseguir?"
                 suggestions={[...SEARCH_SUGGESTIONS]}
               />
@@ -118,13 +117,13 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.rankingSection}>
-            <ThemedText type="sectionTitle">Ranking Invesora</ThemedText>
+            <ThemedText type="sectionTitle">Ranking Inversora</ThemedText>
             <ThemedText
               type="caption"
               themeColor="textSecondary"
               style={styles.rankingSubtitle}
             >
-              Descubre los fondos mejor puntuados según el Score Invesora.
+              Descubre los fondos mejor puntuados según el Score Inversora.
             </ThemedText>
 
             <View style={styles.rankingList}>
@@ -224,7 +223,7 @@ export default function HomeScreen() {
 
                         <View style={styles.scoreBlock}>
                           <ThemedText type="metaLabel" themeColor="textSecondary">
-                            Score Invesora
+                            Score Inversora
                           </ThemedText>
                           <ThemedText type="chip" style={styles.scoreValue}>
                             {fund.score}/100
@@ -339,7 +338,7 @@ export default function HomeScreen() {
           <View style={styles.disclaimerSection}>
             <View
               accessibilityRole="summary"
-              accessibilityLabel="Información educativa. Invesora no ofrece asesoramiento financiero personalizado. La información mostrada es educativa y orientativa."
+              accessibilityLabel="Información educativa. Inversora no ofrece asesoramiento financiero personalizado. La información mostrada es educativa y orientativa."
               style={[
                 styles.disclaimerCard,
                 {
@@ -367,7 +366,7 @@ export default function HomeScreen() {
                 themeColor="textSecondary"
                 style={styles.disclaimerBody}
               >
-                Invesora no ofrece asesoramiento financiero personalizado. La
+                Inversora no ofrece asesoramiento financiero personalizado. La
                 información mostrada es educativa y orientativa.
               </ThemedText>
             </View>
@@ -422,9 +421,6 @@ const styles = StyleSheet.create({
   },
   searchLabel: {
     letterSpacing: 0.96,
-  },
-  searchFieldInner: {
-    minHeight: 60,
   },
   rankingSection: {
     paddingHorizontal: Layout.screenPaddingHorizontal,

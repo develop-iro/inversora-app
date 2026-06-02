@@ -2,18 +2,21 @@ import "@/global.css";
 
 import { DMSans_400Regular, DMSans_700Bold } from "@expo-google-fonts/dm-sans";
 import { useFonts } from "expo-font";
-import { DefaultTheme, Tabs, ThemeProvider } from "expo-router";
+import { DefaultTheme, Tabs, ThemeProvider, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Platform, StatusBar, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HeaderLogo } from "@/shared/components/brand/header-logo";
 import { FloatingTabBar } from "@/shared/components/navigation/floating-tab-bar";
+import { isFundDetailPath } from "@/shared/navigation/tab-route-state";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function TabLayout() {
+  const segments = useSegments();
+  const isFundDetailScreen = useMemo(() => isFundDetailPath(segments), [segments]);
   const [fontsLoaded] = useFonts({
     DMSans_400Regular,
     DMSans_700Bold,
@@ -38,6 +41,10 @@ export default function TabLayout() {
       <StatusBar barStyle="dark-content" />
       <Tabs
         screenOptions={{
+          tabBarStyle: {
+            display: "none",
+            height: 0,
+          },
           headerShown: true,
           headerTitle: () => <HeaderLogo />,
           headerTitleAlign: "center",
@@ -69,6 +76,7 @@ export default function TabLayout() {
           options={{
             title: "Fondos",
             tabBarAccessibilityLabel: "Explorar fondos",
+            headerShown: !isFundDetailScreen,
           }}
         />
         <Tabs.Screen

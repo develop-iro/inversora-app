@@ -1,7 +1,7 @@
 /**
- * Invesora brand primitives.
- * Source: Figma Invesora file + brand color table.
- * @see https://www.figma.com/design/S7oabGJ5AQJh52ITEVaH8G/Invesora
+ * Inversora brand primitives.
+ * Source: Figma Inversora file + brand color table.
+ * @see https://www.figma.com/design/S7oabGJ5AQJh52ITEVaH8G/Inversora
  */
 export const palette = {
   primaryTeal: '#00BFA6',

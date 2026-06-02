@@ -41,6 +41,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   text: {
-    ...Typography.body,
+    fontFamily: Typography.body.fontFamily,
+    fontSize: Typography.body.fontSize,
+    lineHeight: 20,
   },
 });

@@ -1,34 +1,110 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import type { ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { FundDetail } from '@/core/domain/catalog';
+import type { FundPerformanceTimeframe } from '@/core/domain/fund-market';
+import { SCORING_CRITERIA_VERSION } from '@/core/scoring/criteria';
+import { FavoriteToggleButton } from '@/features/funds/components/favorite-toggle-button';
+import { FundMetricsGrid } from '@/features/funds/components/fund-metrics-grid';
+import { FundPerformanceChart } from '@/features/funds/components/fund-performance-chart';
 import { FundScoreBreakdown } from '@/features/funds/components/fund-score-breakdown';
+import { TimeframeSegmentedControl } from '@/features/funds/components/timeframe-segmented-control';
 import { useFavorite } from '@/features/funds/hooks/use-favorite';
 import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
+import {
+  buildPerformanceA11yLabel,
+  formatPerformanceChange,
+  getPerformanceChangePercent,
+  getPerformancePeriodLabel,
+} from '@/features/funds/utils/fund-performance';
+import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { ThemedText } from '@/shared/components/themed-text';
-import { Badge, Button, ScorePill } from '@/shared/components/ui';
+import { Button, InfoHint } from '@/shared/components/ui';
+import { routes } from '@/shared/navigation/routes';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { getRiskBadgeVariant, getRiskLabel } from '@/shared/utils/fund-risk';
-import { BottomTabInset, Layout, MaxContentWidth, Radius, Spacing } from '@/shared/theme/theme';
+import { getDiversificationLabel } from '@/shared/utils/fund-diversification';
+import { getEfficiencyLabel } from '@/shared/utils/fund-efficiency';
+import { getRiskLabel } from '@/shared/utils/fund-risk';
+import { Layout, MaxContentWidth, Radius, Spacing } from '@/shared/theme/theme';
+
+const DETAIL_HEADER_HEIGHT = 60;
+
+type FundDetailScreenChromeProps = {
+  children: ReactNode;
+  bodyStyle?: StyleProp<ViewStyle>;
+};
+
+function FundDetailScreenChrome({ children, bodyStyle }: FundDetailScreenChromeProps) {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
+
+  return (
+    <View style={[styles.screen, { backgroundColor: theme.background, paddingTop: insets.top }]}>
+      <View
+        style={[
+          styles.screenHeader,
+          {
+            backgroundColor: theme.surface,
+            borderBottomColor: 'rgba(11, 46, 54, 0.06)',
+          },
+        ]}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Volver"
+          onPress={() => router.back()}
+          style={styles.navButton}
+        >
+          <MaterialCommunityIcons name="arrow-left" size={22} color={theme.deepOcean} />
+        </Pressable>
+        <ThemedText type="navTitle" style={styles.navTitle}>
+          Detalle del fondo
+        </ThemedText>
+        <View style={styles.navSpacer} />
+      </View>
+      <View style={[styles.body, bodyStyle]}>{children}</View>
+    </View>
+  );
+}
 
 export default function FundDetailScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { isin } = useLocalSearchParams<{ isin: string }>();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+
+  useLayoutEffect(() => {
+    const tabNavigation = navigation.getParent();
+    if (!tabNavigation) {
+      return;
+    }
+
+    tabNavigation.setOptions({ headerShown: false });
+
+    return () => {
+      tabNavigation.setOptions({ headerShown: true });
+    };
+  }, [navigation]);
   const [detail, setDetail] = useState<FundDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
+  const [timeframe, setTimeframe] = useState<FundPerformanceTimeframe>('1d');
 
   const resolvedIsin = typeof isin === 'string' ? isin : '';
   const { isFavorite, isLoading: isFavoriteLoading, toggle } = useFavorite(resolvedIsin);
@@ -67,110 +143,245 @@ export default function FundDetailScreen() {
     };
   }, [resolvedIsin]);
 
+  const performanceSeries = detail?.market.performanceByTimeframe[timeframe];
+  const performanceChange = performanceSeries
+    ? getPerformanceChangePercent(performanceSeries)
+    : 0;
+  const performanceTrendUp = performanceChange >= 0;
+
+  const chartA11yLabel = useMemo(() => {
+    if (!detail || !performanceSeries) {
+      return 'Gráfico de evolución no disponible';
+    }
+    return buildPerformanceA11yLabel(detail.fund.name, performanceSeries);
+  }, [detail, performanceSeries]);
+
+  const keyMetrics = useMemo(() => {
+    if (!detail) {
+      return [];
+    }
+
+    const { fund, inversoraScore, market } = detail;
+    const stabilityHint =
+      market.stabilityChangePercent != null
+        ? `${market.stabilityChangePercent > 0 ? '+' : ''}${market.stabilityChangePercent.toFixed(2)}%`
+        : undefined;
+
+    return [
+      {
+        id: 'risk',
+        label: 'Riesgo orientativo',
+        value: getRiskLabel(fund.riskLevel),
+      },
+      {
+        id: 'efficiency',
+        label: 'Índice de eficiencia',
+        value: (inversoraScore / 10).toFixed(1),
+      },
+      {
+        id: 'fee',
+        label: 'Comisión anual',
+        value: `${fund.terPercent.toFixed(2)}%`,
+      },
+      {
+        id: 'diversification',
+        label: 'Diversificación',
+        value: getDiversificationLabel(fund.diversification),
+      },
+      {
+        id: 'stability',
+        label: 'Estabilidad',
+        value: market.stabilityLabel,
+        hint: stabilityHint,
+      },
+      {
+        id: 'score',
+        label: FUND_GLOSSARY.inversoraScore.term,
+        value: `${inversoraScore}/100`,
+      },
+    ];
+  }, [detail]);
+
+  const regionMetrics = useMemo(() => {
+    if (!detail) {
+      return [];
+    }
+
+    return detail.market.regions.map((region) => ({
+      id: region.label,
+      label: region.label,
+      value: `${region.percent}%`,
+    }));
+  }, [detail]);
+
   if (isLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: theme.background }]}>
+      <FundDetailScreenChrome bodyStyle={styles.centered}>
         <ActivityIndicator color={theme.primary} />
-      </View>
+      </FundDetailScreenChrome>
     );
   }
 
   if (notFound || !detail) {
     return (
-      <View style={[styles.centered, styles.notFound, { backgroundColor: theme.background }]}>
+      <FundDetailScreenChrome bodyStyle={[styles.centered, styles.notFound]}>
         <ThemedText type="sectionTitle">Fondo no encontrado</ThemedText>
         <Button label="Volver al catálogo" variant="outline" onPress={() => router.back()} />
-      </View>
+      </FundDetailScreenChrome>
     );
   }
 
   const { fund } = detail;
-  const riskLabel = getRiskLabel(fund.riskLevel);
-  const favoriteLabel = isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos';
+  const efficiencyLabel = getEfficiencyLabel(detail.inversoraScore);
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: theme.background }]}
-      contentContainerStyle={[
-        styles.content,
-        { paddingBottom: insets.bottom + BottomTabInset + Spacing.xl },
-      ]}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.inner}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Volver"
-          onPress={() => router.back()}
-          style={styles.backRow}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={20} color={theme.primary} />
-          <ThemedText type="linkPrimary">Catálogo</ThemedText>
-        </Pressable>
-
-        <View style={styles.header}>
+    <FundDetailScreenChrome>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingBottom: insets.bottom + Spacing.xl,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.inner}>
+          <View style={styles.hero}>
           {detail.rank != null ? (
             <ThemedText type="metaLabel" themeColor="deepOcean">
               Ranking #{detail.rank}
             </ThemedText>
           ) : null}
-          <ThemedText type="sectionTitle">{fund.name}</ThemedText>
+          <View style={styles.titleRow}>
+            <ThemedText type="hero" style={styles.fundName} numberOfLines={3}>
+              {fund.name}
+            </ThemedText>
+            <FavoriteToggleButton
+              isin={fund.isin}
+              isFavorite={isFavorite}
+              isLoading={isFavoriteLoading}
+              onToggle={toggle}
+            />
+          </View>
           <ThemedText type="caption" themeColor="textSecondary">
             {fund.categoryLabel}
           </ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            ISIN {fund.isin}
-          </ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            Datos actualizados {fund.quarterTag} ({fund.periodStart} – {fund.periodEnd})
-          </ThemedText>
+
+          {performanceSeries ? (
+            <View style={styles.performanceRow}>
+              <MaterialCommunityIcons
+                name={performanceTrendUp ? 'trending-up' : 'trending-down'}
+                size={18}
+                color={theme.primary}
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+              />
+              <ThemedText type="bodyBold" style={{ color: theme.primary }}>
+                {formatPerformanceChange(performanceChange)}
+              </ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary">
+                {getPerformancePeriodLabel(timeframe)}
+              </ThemedText>
+            </View>
+          ) : null}
         </View>
 
-        <ScorePill score={detail.invesoraScore} />
+        <TimeframeSegmentedControl value={timeframe} onChange={setTimeframe} />
 
-        <View style={styles.badges}>
-          <Badge label={fund.badge} variant="mint" />
-          <Badge
-            label={`Riesgo ${riskLabel.toLowerCase()}`}
-            variant={getRiskBadgeVariant(fund.riskLevel)}
+        {performanceSeries ? (
+          <FundPerformanceChart
+            points={performanceSeries.points}
+            accessibilityLabel={chartA11yLabel}
           />
-          <Badge label={`TER ${fund.terPercent.toFixed(2)}%`} variant="soft" />
+        ) : null}
+
+        <ThemedText type="caption" themeColor="textSecondary">
+          {performanceSeries?.sourceLabel}. Actualizado{' '}
+          {performanceSeries?.asOf.slice(0, 10) ?? fund.periodEnd}. El rendimiento pasado no
+          garantiza resultados futuros.
+        </ThemedText>
+
+        <FundMetricsGrid title="Métricas clave" metrics={keyMetrics} />
+
+        <FundMetricsGrid title="Región y reparto" metrics={regionMetrics} />
+
+        <View style={styles.actionsRow}>
+          <Button
+            label="Pregúntale a Sora"
+            variant="primary"
+            style={styles.actionButton}
+            accessibilityLabel="Pregúntale a Sora, asistente educativo"
+            accessibilityHint="Abre la guía educativa en la pantalla principal"
+            onPress={() => router.push(routes.home)}
+          />
+          <Button
+            label="Comparar"
+            variant="primary"
+            style={[styles.actionButton, { backgroundColor: theme.deepOcean }]}
+            accessibilityLabel={`Comparar ${fund.name} con otros fondos`}
+            onPress={() => router.push(routes.compare)}
+          />
         </View>
 
-        <View style={[styles.summaryCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <ThemedText type="bodyBold">Resumen</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            {fund.benefitSummary}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: showTechnicalDetails }}
+          accessibilityLabel="Mostrar o ocultar detalles técnicos"
+          onPress={() => setShowTechnicalDetails((current) => !current)}
+          style={[styles.expandRow, { borderColor: theme.border, backgroundColor: theme.surface }]}
+        >
+          <ThemedText type="bodyBold">
+            {showTechnicalDetails ? 'Ocultar detalles técnicos' : 'Ver detalles técnicos'}
           </ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            {fund.featuredReason}
-          </ThemedText>
-        </View>
+          <MaterialCommunityIcons
+            name={showTechnicalDetails ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={theme.textSecondary}
+          />
+        </Pressable>
 
-        <View style={styles.section}>
-          <ThemedText type="bodyBold">Desglose del Score Invesora</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            Criterios objetivos usados en el MVP mock. La IA solo explica este resultado;
-            no lo recalcula.
-          </ThemedText>
-          <FundScoreBreakdown breakdown={detail.scoredBreakdown} />
-        </View>
-
-        <Button
-          label={favoriteLabel}
-          variant={isFavorite ? 'secondary' : 'primary'}
-          loading={isFavoriteLoading}
-          fullWidth
-          onPress={toggle}
-          accessibilityLabel={favoriteLabel}
-        />
+        {showTechnicalDetails ? (
+          <View
+            style={[
+              styles.technicalCard,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
+            <View style={styles.technicalBlock}>
+              <InfoHint
+                surface="detail"
+                term={FUND_GLOSSARY.isin.term}
+                explanation={FUND_GLOSSARY.isin.explanation}
+              />
+              <ThemedText type="caption" themeColor="textSecondary">
+                {fund.isin}
+              </ThemedText>
+            </View>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Etiqueta de eficiencia: {efficiencyLabel}
+            </ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Datos de scoring {fund.quarterTag} ({fund.periodStart} – {fund.periodEnd})
+            </ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              {fund.featuredReason}
+            </ThemedText>
+            <ThemedText type="metaLabel" themeColor="textSecondary">
+              Modelo: {SCORING_CRITERIA_VERSION}
+            </ThemedText>
+            <ThemedText type="bodyBold">Desglose del Score Inversora</ThemedText>
+            <FundScoreBreakdown breakdown={detail.scoredBreakdown} />
+          </View>
+        ) : null}
 
         <LegalNotice
-          title="Aviso de riesgo"
-          body="Invesora no ofrece asesoramiento financiero personalizado. El rendimiento pasado no garantiza resultados futuros. Guardar en favoritos no es una recomendación de compra."
+          title="Aviso legal"
+          body="Información educativa. Inversora no ofrece asesoramiento financiero personalizado. Los gráficos son series ilustrativas del MVP y no sustituyen la ficha oficial del gestor."
         />
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </FundDetailScreenChrome>
   );
 }
 
@@ -178,9 +389,21 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
+  body: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  screenHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: DETAIL_HEADER_HEIGHT,
+    paddingHorizontal: Layout.screenPaddingHorizontal,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
   content: {
     alignItems: 'center',
-    paddingTop: Spacing.md,
   },
   inner: {
     width: '100%',
@@ -197,28 +420,63 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
     paddingHorizontal: Layout.screenPaddingHorizontal,
   },
-  backRow: {
+  navButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -Spacing.sm,
+  },
+  navTitle: {
+    flex: 1,
+    textAlign: 'center',
+  },
+  navSpacer: {
+    width: 44,
+  },
+  hero: {
+    gap: Spacing.xs,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+  },
+  fundName: {
+    flex: 1,
+    minWidth: 0,
+    letterSpacing: -0.4,
+  },
+  performanceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
-    minHeight: 44,
-    alignSelf: 'flex-start',
+    marginTop: Spacing.xs,
   },
-  header: {
-    gap: Spacing.xs,
-  },
-  badges: {
+  actionsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: Spacing.sm,
   },
-  summaryCard: {
+  actionButton: {
+    flex: 1,
+  },
+  expandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: Radius.card,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    minHeight: 52,
+  },
+  technicalCard: {
     borderWidth: 1,
     borderRadius: Radius.card,
     padding: Spacing.md,
     gap: Spacing.sm,
   },
-  section: {
-    gap: Spacing.sm,
+  technicalBlock: {
+    gap: Spacing.xs,
   },
 });

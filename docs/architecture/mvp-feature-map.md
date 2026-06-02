@@ -78,7 +78,7 @@ Leyenda de madurez:
 |---------------|--------|-------------------|
 | Dashboard inicial | 🟡 | `HomeHero`, panel de contenido, ranking top 3 |
 | Fondos destacados (carousel) | ✅ | `FeaturedFundsCarousel` + `FEATURED_FUNDS_MOCK` |
-| Ranking resumido (Score Invesora) | 🟡 | `RANKING_FUNDS` inline en `home-screen.tsx` (5 fondos, muestra 3) |
+| Ranking resumido (Score Inversora) | 🟡 | `RANKING_FUNDS` inline en `home-screen.tsx` (5 fondos, muestra 3) |
 | Búsqueda / asistente en barra | 🟡 | `SearchField` con placeholders animados; sin submit ni backend |
 | CTA “Quiero invertir” / explorar | 🟡 | Navega a `/explore` (pantalla oculta = fondos) |
 | Guía “Sora” (perfil educativo) | 🟡 | Card UI; navega a `/explore`, no a `/learn` |
