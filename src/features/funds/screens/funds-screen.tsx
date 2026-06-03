@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { FundCatalogCategorySections } from '@/features/funds/components/fund-catalog-category-sections';
+import { FundCatalogEmptyState } from '@/features/funds/components/fund-catalog-empty-state';
 import {
   DEFAULT_CATALOG_FILTERS,
   FundCatalogFiltersBar,
@@ -13,19 +14,24 @@ import {
 } from '@/features/funds/components/fund-catalog-filters';
 import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
 import { CATALOG_CATEGORIES } from '@/features/funds/mocks/catalog-funds-mock';
-import { getFunds } from '@/features/funds/services/get-funds';
+import {
+  filterCatalogFunds,
+  getCatalogFunds,
+} from '@/features/funds/services/get-funds';
+import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { ThemedText } from '@/shared/components/themed-text';
 import { SearchField, SegmentTabs } from '@/shared/components/ui';
+import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
 import { BottomTabInset, Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
 
 const SEARCH_SUGGESTIONS = [
-  'Buscar por nombre o ISIN',
-  'Renta variable global',
-  'Fondos para empezar',
+  'MSCI World',
+  'IE00B4L5Y983',
+  'S&P 500',
 ] as const;
 
 function hasActiveSecondaryFilters(filters: FundCatalogFiltersState): boolean {
@@ -37,10 +43,17 @@ function hasActiveSecondaryFilters(filters: FundCatalogFiltersState): boolean {
   );
 }
 
-function shouldGroupByCategory(filters: FundCatalogFiltersState): boolean {
+function hasActiveNonSearchFilters(filters: FundCatalogFiltersState): boolean {
+  return filters.categoryLabel !== 'all' || hasActiveSecondaryFilters(filters);
+}
+
+function shouldGroupByCategory(
+  filters: FundCatalogFiltersState,
+  debouncedQuery: string,
+): boolean {
   return (
     filters.categoryLabel === 'all' &&
-    !filters.query.trim() &&
+    !debouncedQuery.trim() &&
     !hasActiveSecondaryFilters(filters)
   );
 }
@@ -50,8 +63,10 @@ export default function FundsScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const [filters, setFilters] = useState<FundCatalogFiltersState>(DEFAULT_CATALOG_FILTERS);
-  const [funds, setFunds] = useState<CatalogFund[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [catalog, setCatalog] = useState<CatalogFund[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  const debouncedQuery = useDebouncedValue(filters.query, CATALOG_SEARCH_DEBOUNCE_MS);
 
   const categoryTabs = useMemo(
     () => [
@@ -64,38 +79,56 @@ export default function FundsScreen() {
     [],
   );
 
+  const activeServiceFilters = useMemo(
+    () => ({
+      ...toServiceFilters(filters),
+      query: debouncedQuery,
+    }),
+    [filters, debouncedQuery],
+  );
+
+  const funds = useMemo(
+    () => filterCatalogFunds(catalog, activeServiceFilters),
+    [catalog, activeServiceFilters],
+  );
+
   const groupedFunds = useMemo(() => groupFundsByCategory(funds), [funds]);
-  const showGrouped = shouldGroupByCategory(filters);
+  const showGrouped = shouldGroupByCategory(filters, debouncedQuery);
+  const hasActiveFilters = hasActiveNonSearchFilters(filters);
 
   useEffect(() => {
     let cancelled = false;
 
-    void (async () => {
-      const results = await getFunds(toServiceFilters(filters));
+    void getCatalogFunds().then((loaded) => {
       if (!cancelled) {
-        setFunds(results);
-        setIsLoading(false);
+        setCatalog(loaded);
+        setIsInitialLoading(false);
       }
-    })();
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [filters]);
+  }, []);
 
   const handleQueryChange = useCallback((query: string) => {
-    setIsLoading(true);
     setFilters((current) => ({ ...current, query }));
   }, []);
 
   const handleFiltersChange = useCallback((next: FundCatalogFiltersState) => {
-    setIsLoading(true);
     setFilters(next);
   }, []);
 
   const handleCategoryChange = useCallback((categoryLabel: string | 'all') => {
-    setIsLoading(true);
     setFilters((current) => ({ ...current, categoryLabel }));
+  }, []);
+
+  const handleClearSearch = useCallback(() => {
+    setFilters((current) => ({ ...current, query: '' }));
+  }, []);
+
+  const handleResetFilters = useCallback(() => {
+    setFilters(DEFAULT_CATALOG_FILTERS);
   }, []);
 
   const handleFundPress = useCallback(
@@ -127,10 +160,13 @@ export default function FundsScreen() {
         </View>
 
         <SearchField
-          accessibilityLabel="Buscar fondos por nombre, ISIN o categoría"
-          placeholder="Buscar por nombre o ISIN"
+          accessibilityLabel="Buscar fondos por nombre o ISIN"
+          placeholder="Nombre del fondo o ISIN"
           value={filters.query}
           onChangeText={handleQueryChange}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
           suggestions={[...SEARCH_SUGGESTIONS]}
         />
 
@@ -143,20 +179,21 @@ export default function FundsScreen() {
 
         <FundCatalogFiltersBar value={filters} onChange={handleFiltersChange} />
 
-        {isLoading ? (
+        {isInitialLoading ? (
           <ActivityIndicator style={styles.loader} color={theme.primary} />
         ) : funds.length === 0 ? (
-          <View style={styles.empty}>
-            <ThemedText type="bodyBold">Sin resultados</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              Prueba a ampliar los filtros o cambia el texto de búsqueda.
-            </ThemedText>
-          </View>
+          <FundCatalogEmptyState
+            query={debouncedQuery}
+            hasActiveFilters={hasActiveFilters}
+            onClearSearch={debouncedQuery.trim() ? handleClearSearch : undefined}
+            onResetFilters={hasActiveFilters ? handleResetFilters : undefined}
+          />
         ) : (
           <View style={styles.results}>
             {!showGrouped ? (
               <ThemedText type="metaLabel" themeColor="textSecondary">
                 {funds.length} fondo{funds.length === 1 ? '' : 's'}
+                {debouncedQuery.trim() ? ` para «${debouncedQuery.trim()}»` : ''}
               </ThemedText>
             ) : null}
 
@@ -198,10 +235,6 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginVertical: Spacing.xl,
-  },
-  empty: {
-    gap: Spacing.xs,
-    paddingVertical: Spacing.xl,
   },
   results: {
     gap: Spacing.md,
