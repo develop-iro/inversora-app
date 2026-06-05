@@ -1,34 +1,35 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { RankedFund } from "@/core/scoring/types";
 import { FEATURED_FUNDS_MOCK } from "@/features/funds/mocks/featured-funds-mock";
-import { getRankings } from "@/features/funds/services/get-rankings";
+import { CATALOG_SEARCH_DEBOUNCE_MS } from "@/features/funds/utils/fund-search";
 import { FeaturedFundsCarousel } from "@/features/onboarding/components/featured-funds-carousel";
+import { HomeDynamicRankingSection } from "@/features/onboarding/components/home-dynamic-ranking-section";
 import { HomeHero } from "@/features/onboarding/components/home-hero";
+import {
+  resolveHomeSearch,
+  type HomeSearchResult,
+} from "@/features/onboarding/services/resolve-home-search";
 import {
   FLOATING_TAB_BAR_BOTTOM_GAP,
   FLOATING_TAB_BAR_CONTENT_GAP,
   FLOATING_TAB_BAR_HEIGHT,
 } from "@/shared/components/navigation/floating-tab-bar";
 import { ThemedText } from "@/shared/components/themed-text";
-import { Badge, SearchField } from "@/shared/components/ui";
+import { SearchField } from "@/shared/components/ui";
+import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 import { useMobileLayout } from "@/shared/hooks/use-mobile-layout";
 import { useTheme } from "@/shared/hooks/use-theme";
 import { routes } from "@/shared/navigation/routes";
 import { Layout, Radius, Spacing } from "@/shared/theme/theme";
-import {
-  buildRankingA11yLabel,
-  getRiskBadgeVariant,
-  getRiskLabel,
-} from "@/shared/utils/fund-risk";
 
 const SEARCH_SUGGESTIONS = [
   "¿Qué quieres conseguir?",
   "Quiero invertir a largo plazo",
+  "MSCI World",
   "Ayúdame a comparar fondos tranquilos",
 ] as const;
 
@@ -37,20 +38,32 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { contentWidth } = useMobileLayout();
-  const [rankingFunds, setRankingFunds] = useState<RankedFund[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResult, setSearchResult] = useState<HomeSearchResult | null>(null);
+  const [isSearchLoading, setIsSearchLoading] = useState(true);
+
+  const debouncedQuery = useDebouncedValue(searchQuery, CATALOG_SEARCH_DEBOUNCE_MS);
 
   useEffect(() => {
     let cancelled = false;
 
-    getRankings({ limit: 3 }).then((funds) => {
+    void (async () => {
+      setIsSearchLoading(true);
+      const result = await resolveHomeSearch(debouncedQuery);
+
       if (!cancelled) {
-        setRankingFunds(funds);
+        setSearchResult(result);
+        setIsSearchLoading(false);
       }
-    });
+    })();
 
     return () => {
       cancelled = true;
     };
+  }, [debouncedQuery]);
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
   }, []);
 
   return (
@@ -70,6 +83,7 @@ export default function HomeScreen() {
           },
         ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <HomeHero
           onInvestPress={() => {
@@ -111,175 +125,21 @@ export default function HomeScreen() {
               <SearchField
                 accessibilityLabel="Pregunta o busca fondos, categorías u objetivos"
                 placeholder="¿Qué quieres conseguir?"
+                value={searchQuery}
+                onChangeText={handleSearchChange}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="search"
                 suggestions={[...SEARCH_SUGGESTIONS]}
               />
             </View>
           </View>
 
-          <View style={styles.rankingSection}>
-            <ThemedText type="sectionTitle">Ranking Inversora</ThemedText>
-            <ThemedText
-              type="caption"
-              themeColor="textSecondary"
-              style={styles.rankingSubtitle}
-            >
-              Descubre los fondos mejor puntuados según el Score Inversora.
-            </ThemedText>
-
-            <View style={styles.rankingList}>
-              {rankingFunds.map((fund) => {
-                const isTopRank = fund.rank === 1;
-                const riskLabel = getRiskLabel(fund.riskLevel);
-
-                return (
-                  <Pressable
-                    key={fund.rank}
-                    accessibilityRole="button"
-                    accessibilityLabel={buildRankingA11yLabel(fund)}
-                    accessibilityHint="Abre la ficha resumida del fondo"
-                    onPress={() => {
-                      router.push(routes.fundDetail(fund.isin));
-                    }}
-                    style={({ pressed }) => [
-                      styles.rankingRow,
-                      {
-                        backgroundColor: isTopRank
-                          ? theme.backgroundSoft
-                          : theme.surface,
-                        borderColor: isTopRank
-                          ? "rgba(0, 191, 166, 0.35)"
-                          : theme.border,
-                      },
-                      pressed && styles.rankingRowPressed,
-                    ]}
-                  >
-                    <View style={styles.rankingMainContent}>
-                      <View style={styles.rankingMainRow}>
-                        <View style={styles.rankAndInfoBlock}>
-                          <View
-                            style={[
-                              styles.rankIndicator,
-                              isTopRank
-                                ? {
-                                    backgroundColor: "rgba(19, 78, 94, 0.92)",
-                                    borderColor: "rgba(0, 191, 166, 0.22)",
-                                  }
-                                : {
-                                    backgroundColor: theme.surfaceMuted,
-                                    borderColor: theme.border,
-                                  },
-                            ]}
-                          >
-                            <ThemedText
-                              type={isTopRank ? "chip" : "metaLabel"}
-                              style={{
-                                color: isTopRank
-                                  ? theme.textOnDark
-                                  : theme.textSecondary,
-                                letterSpacing: isTopRank ? -0.3 : 0.88,
-                              }}
-                            >
-                              #{fund.rank}
-                            </ThemedText>
-                          </View>
-
-                          <View style={styles.rankingTextBlock}>
-                            {isTopRank ? (
-                              <View
-                                style={[
-                                  styles.topFundBadge,
-                                  { backgroundColor: theme.accentMint },
-                                ]}
-                              >
-                                <ThemedText
-                                  type="caption"
-                                  style={styles.topFundBadgeLabel}
-                                >
-                                  Top fondo
-                                </ThemedText>
-                              </View>
-                            ) : null}
-
-                            <ThemedText type="bodyBold" numberOfLines={1}>
-                              {fund.name}
-                            </ThemedText>
-                            <ThemedText
-                              type="caption"
-                              themeColor="textSecondary"
-                              numberOfLines={1}
-                            >
-                              {fund.categoryLabel}
-                            </ThemedText>
-                            <ThemedText
-                              type="caption"
-                              themeColor="textSecondary"
-                              numberOfLines={1}
-                              style={styles.isinText}
-                            >
-                              ISIN {fund.isin}
-                            </ThemedText>
-                          </View>
-                        </View>
-
-                        <View style={styles.scoreBlock}>
-                          <ThemedText type="metaLabel" themeColor="textSecondary">
-                            Score Inversora
-                          </ThemedText>
-                          <ThemedText type="chip" style={styles.scoreValue}>
-                            {fund.score}/100
-                          </ThemedText>
-                        </View>
-                      </View>
-
-                      <View style={styles.rankingMetaRow}>
-                        <View style={styles.rankingMetaLeft}>
-                          <Badge
-                            label={`Riesgo ${riskLabel.toLowerCase()}`}
-                            variant={getRiskBadgeVariant(fund.riskLevel)}
-                          />
-                          <ThemedText
-                            type="caption"
-                            themeColor="textSecondary"
-                            style={styles.annualFeeText}
-                          >
-                            Comisión anual {fund.terPercent.toFixed(2)}%
-                          </ThemedText>
-                        </View>
-                        <MaterialCommunityIcons
-                          name="chevron-right"
-                          size={18}
-                          color={theme.textSecondary}
-                        />
-                      </View>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Ver ranking completo"
-              accessibilityHint="Navega al listado completo de fondos"
-              onPress={() => {
-                router.push(routes.fundsCatalog);
-              }}
-              style={({ pressed }) => [
-                styles.rankingCta,
-                { borderColor: theme.border },
-                pressed && styles.rankingCtaPressed,
-              ]}
-            >
-              <ThemedText type="linkPrimary" style={styles.rankingCtaLabel}>
-                Ver ranking completo
-              </ThemedText>
-              <MaterialCommunityIcons
-                name="arrow-right"
-                size={16}
-                color={theme.primary}
-              />
-            </Pressable>
-          </View>
+          <HomeDynamicRankingSection
+            result={searchResult}
+            isLoading={isSearchLoading}
+            hasQuery={searchQuery.trim().length > 0}
+          />
 
           <View style={styles.soraSection}>
             <Pressable
@@ -421,118 +281,6 @@ const styles = StyleSheet.create({
   },
   searchLabel: {
     letterSpacing: 0.96,
-  },
-  rankingSection: {
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    gap: Spacing.md,
-  },
-  rankingSubtitle: {
-    lineHeight: 20,
-    maxWidth: 620,
-  },
-  rankingList: {
-    gap: Spacing.sm,
-    paddingTop: Spacing.half,
-  },
-  rankingRow: {
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    minHeight: 96,
-  },
-  rankingRowPressed: {
-    opacity: 0.92,
-  },
-  rankingMainContent: {
-    gap: Spacing.xs,
-  },
-  rankingMainRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: Spacing.sm,
-  },
-  rankAndInfoBlock: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: Spacing.sm,
-  },
-  rankIndicator: {
-    minWidth: 37,
-    minHeight: 37,
-    borderRadius: 999,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: Spacing.sm,
-    marginTop: 2,
-  },
-  rankingTextBlock: {
-    flex: 1,
-    gap: 3,
-  },
-  topFundBadge: {
-    alignSelf: "flex-start",
-    borderRadius: Radius.chip,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    marginBottom: 1,
-  },
-  topFundBadgeLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  isinText: {
-    fontSize: 11,
-    lineHeight: 14,
-    opacity: 0.62,
-  },
-  scoreBlock: {
-    alignItems: "flex-end",
-    gap: 2,
-    minWidth: 88,
-  },
-  scoreValue: {
-    letterSpacing: -0.3,
-    fontSize: 18,
-    lineHeight: 24,
-  },
-  rankingMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: Spacing.md,
-  },
-  rankingMetaLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-    flex: 1,
-  },
-  annualFeeText: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  rankingCta: {
-    marginTop: Spacing.xs,
-    alignSelf: "flex-start",
-    minHeight: 44,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-  },
-  rankingCtaPressed: {
-    opacity: 0.85,
-  },
-  rankingCtaLabel: {
-    lineHeight: 20,
   },
   soraSection: {
     paddingTop: Spacing.xl + Spacing.xs,

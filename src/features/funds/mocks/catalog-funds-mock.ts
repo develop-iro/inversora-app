@@ -3,6 +3,7 @@ import type { FeaturedFund, FundScoringInput } from '@/core/domain/fund';
 import { scoreFund } from '@/core/scoring/score-fund';
 
 import { FEATURED_FUNDS_MOCK } from '@/features/funds/mocks/featured-funds-mock';
+import { resolveFundThemeLabel } from '@/features/funds/mocks/fund-theme-labels-mock';
 import { RANKING_SOURCES_MOCK } from '@/features/funds/mocks/ranking-sources-mock';
 
 type CatalogFundDraft = FeaturedFund & {
@@ -20,6 +21,7 @@ function rankingSourceToFeatured(
     isin: source.isin,
     name: source.name,
     categoryLabel: source.categoryLabel,
+    themeLabel: resolveFundThemeLabel(source.isin),
     badge: 'En catálogo',
     idealForBeginners: source.riskLevel === 'low',
     efficiencyScore: scored.score,
@@ -43,6 +45,7 @@ const HIDDEN_CATALOG_DRAFTS: CatalogFundDraft[] = [
     isin: 'IE00B8GKDB10',
     name: 'Global Equity Stale Data',
     categoryLabel: 'Renta Variable Global',
+    themeLabel: resolveFundThemeLabel('IE00B8GKDB10'),
     badge: 'Datos pendientes',
     idealForBeginners: false,
     efficiencyScore: 62,
@@ -62,6 +65,7 @@ const HIDDEN_CATALOG_DRAFTS: CatalogFundDraft[] = [
     isin: 'LU1234567890',
     name: 'Active Global Opportunities',
     categoryLabel: 'Renta Variable Global',
+    themeLabel: resolveFundThemeLabel('LU1234567890'),
     badge: 'Fuera de alcance MVP',
     idealForBeginners: false,
     efficiencyScore: 55,

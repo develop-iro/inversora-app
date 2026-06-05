@@ -79,12 +79,10 @@ function FundListRowContent({
 
         <View style={styles.metricsRow}>
           <FundMetricBlock
-            icon="percent-circle-outline"
-            label="Comisión"
+            icon="tag-text-outline"
+            label="Temática"
             surface="catalog"
-            hintTerm={FUND_GLOSSARY.annualFee.term}
-            hintExplanation={FUND_GLOSSARY.annualFee.explanation}
-            value={`${fund.terPercent.toFixed(2)}%`}
+            value={fund.themeLabel}
           />
           <View style={styles.riskBadgeWrap}>
             <Badge label={riskLabel} variant={getRiskBadgeVariant(fund.riskLevel)} />

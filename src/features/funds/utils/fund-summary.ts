@@ -9,5 +9,5 @@ export function getFundScore(fund: FundSummarySource): number {
 
 export function buildFundCardA11yLabel(fund: FundSummarySource, efficiencyLabel: string): string {
   const score = getFundScore(fund);
-  return `${fund.name}. ${fund.categoryLabel}. Comisión anual ${fund.terPercent.toFixed(2)} por ciento. ${efficiencyLabel}. Score Inversora ${score} sobre 100.`;
+  return `${fund.name}. ${fund.categoryLabel}. Temática ${fund.themeLabel}. ${efficiencyLabel}. Score Inversora ${score} sobre 100.`;
 }
