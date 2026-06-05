@@ -13,6 +13,7 @@ import {
   type FundCatalogFiltersState,
 } from '@/features/funds/components/fund-catalog-filters';
 import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
+import { FundCatalogSearchField } from '@/features/funds/components/fund-catalog-search-field';
 import { CATALOG_CATEGORIES } from '@/features/funds/mocks/catalog-funds-mock';
 import {
   filterCatalogFunds,
@@ -22,17 +23,11 @@ import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { ThemedText } from '@/shared/components/themed-text';
-import { SearchField, SegmentTabs } from '@/shared/components/ui';
+import { SegmentTabs } from '@/shared/components/ui';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
 import { BottomTabInset, Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
-
-const SEARCH_SUGGESTIONS = [
-  'MSCI World',
-  'IE00B4L5Y983',
-  'S&P 500',
-] as const;
 
 function hasActiveSecondaryFilters(filters: FundCatalogFiltersState): boolean {
   return (
@@ -159,15 +154,10 @@ export default function FundsScreen() {
           </ThemedText>
         </View>
 
-        <SearchField
-          accessibilityLabel="Buscar fondos por nombre o ISIN"
-          placeholder="Nombre del fondo o ISIN"
-          value={filters.query}
-          onChangeText={handleQueryChange}
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="search"
-          suggestions={[...SEARCH_SUGGESTIONS]}
+        <FundCatalogSearchField
+          query={filters.query}
+          catalog={catalog}
+          onQueryChange={handleQueryChange}
         />
 
         <SegmentTabs

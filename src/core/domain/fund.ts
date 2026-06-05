@@ -8,6 +8,8 @@ export type FeaturedFund = {
   isin: string;
   name: string;
   categoryLabel: string;
+  /** Investment theme shown on summary cards (e.g. renovables, tecnología). */
+  themeLabel: string;
   badge: string;
   idealForBeginners: boolean;
   efficiencyScore: number;

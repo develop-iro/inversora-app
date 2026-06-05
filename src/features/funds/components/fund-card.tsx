@@ -165,10 +165,10 @@ export function FundCard({
 
         <View style={styles.metricsRow}>
           <FundMetricBlock
-            icon="percent-circle-outline"
-            label="Comisión"
+            icon="tag-text-outline"
+            label="Temática"
             surface="dashboard"
-            value={`${fund.terPercent.toFixed(2)}%`}
+            value={fund.themeLabel}
           />
           <View style={styles.riskBadgeWrap}>
             <ThemedText type="metaLabel" themeColor="textSecondary">
