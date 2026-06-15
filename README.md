@@ -147,6 +147,12 @@ Run lint:
 npm run lint
 ```
 
+## Local API (development)
+
+To load real catalog and fund detail data from `inversora-api`, copy `.env.example` to `.env`, set `EXPO_PUBLIC_API_URL` for your emulator or device, start the backend on port 3000, then restart Expo.
+
+Full setup: [docs/development-api.md](./docs/development-api.md)
+
 ## UX Criteria
 
 - Mobile-first.

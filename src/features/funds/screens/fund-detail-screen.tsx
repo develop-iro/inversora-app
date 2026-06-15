@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { FundDetail } from '@/core/domain/catalog';
 import type { FundPerformanceTimeframe } from '@/core/domain/fund-market';
+import { FundApiErrorState } from '@/features/funds/components/fund-api-error-state';
 import { FundDataQualityBanner } from '@/features/funds/components/detail/fund-data-quality-banner';
 import { FundDetailDistributorsSection } from '@/features/funds/components/detail/fund-detail-distributors-section';
 import { FundDetailExposureSection } from '@/features/funds/components/detail/fund-detail-exposure-section';
@@ -30,6 +31,7 @@ import { FundPerformanceChart } from '@/features/funds/components/fund-performan
 import { TimeframeSegmentedControl } from '@/features/funds/components/timeframe-segmented-control';
 import { useFavorite } from '@/features/funds/hooks/use-favorite';
 import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
+import { resolveFundApiErrorMessage } from '@/features/funds/utils/resolve-fund-api-error-message';
 import {
   buildPerformanceA11yLabel,
   formatPerformanceChange,
@@ -122,6 +124,8 @@ export default function FundDetailScreen() {
   const [detail, setDetail] = useState<FundDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
   const [timeframe, setTimeframe] = useState<FundPerformanceTimeframe>('3y');
 
   const resolvedIsin = typeof isin === 'string' ? isin : '';
@@ -134,32 +138,51 @@ export default function FundDetailScreen() {
       if (!resolvedIsin) {
         if (!cancelled) {
           setNotFound(true);
+          setLoadError(null);
           setIsLoading(false);
         }
         return;
       }
 
-      const result = await getFundByIsin(resolvedIsin);
+      setIsLoading(true);
+      setLoadError(null);
+      setNotFound(false);
 
-      if (cancelled) {
-        return;
+      try {
+        const result = await getFundByIsin(resolvedIsin);
+
+        if (cancelled) {
+          return;
+        }
+
+        if (!result) {
+          setNotFound(true);
+          setDetail(null);
+        } else {
+          setDetail(result);
+          setNotFound(false);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setDetail(null);
+          setNotFound(false);
+          setLoadError(resolveFundApiErrorMessage(error));
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
-
-      if (!result) {
-        setNotFound(true);
-        setDetail(null);
-      } else {
-        setDetail(result);
-        setNotFound(false);
-      }
-
-      setIsLoading(false);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [resolvedIsin]);
+  }, [resolvedIsin, reloadToken]);
+
+  const handleRetryLoad = () => {
+    setReloadToken((current) => current + 1);
+  };
 
   const performanceSeries = detail?.market.performanceByTimeframe[timeframe];
   const performanceChange = performanceSeries
@@ -226,6 +249,19 @@ export default function FundDetailScreen() {
     return (
       <FundDetailScreenChrome bodyStyle={styles.centered}>
         <ActivityIndicator color={theme.primary} />
+      </FundDetailScreenChrome>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <FundDetailScreenChrome bodyStyle={[styles.centered, styles.notFound]}>
+        <FundApiErrorState
+          title="No se pudo cargar la ficha"
+          message={loadError}
+          onRetry={handleRetryLoad}
+        />
+        <Button label="Volver al catálogo" variant="outline" onPress={() => router.back()} />
       </FundDetailScreenChrome>
     );
   }

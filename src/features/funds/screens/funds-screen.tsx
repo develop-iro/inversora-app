@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { FundCatalogCategorySections } from '@/features/funds/components/fund-catalog-category-sections';
+import { FundApiErrorState } from '@/features/funds/components/fund-api-error-state';
 import { FundCatalogEmptyState } from '@/features/funds/components/fund-catalog-empty-state';
 import {
   DEFAULT_CATALOG_FILTERS,
@@ -14,11 +15,13 @@ import {
 } from '@/features/funds/components/fund-catalog-filters';
 import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
 import { FundCatalogSearchField } from '@/features/funds/components/fund-catalog-search-field';
-import { CATALOG_CATEGORIES } from '@/features/funds/mocks/catalog-funds-mock';
 import {
   filterCatalogFunds,
   getCatalogFunds,
+  resetCatalogCache,
 } from '@/features/funds/services/get-funds';
+import { deriveCatalogCategories } from '@/features/funds/utils/derive-catalog-categories';
+import { resolveFundApiErrorMessage } from '@/features/funds/utils/resolve-fund-api-error-message';
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
@@ -60,18 +63,20 @@ export default function FundsScreen() {
   const [filters, setFilters] = useState<FundCatalogFiltersState>(DEFAULT_CATALOG_FILTERS);
   const [catalog, setCatalog] = useState<CatalogFund[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   const debouncedQuery = useDebouncedValue(filters.query, CATALOG_SEARCH_DEBOUNCE_MS);
 
   const categoryTabs = useMemo(
     () => [
       { value: 'all' as const, label: 'Todas' },
-      ...CATALOG_CATEGORIES.map((category) => ({
+      ...deriveCatalogCategories(catalog).map((category) => ({
         value: category,
         label: category,
       })),
     ],
-    [],
+    [catalog],
   );
 
   const activeServiceFilters = useMemo(
@@ -94,16 +99,36 @@ export default function FundsScreen() {
   useEffect(() => {
     let cancelled = false;
 
-    void getCatalogFunds().then((loaded) => {
-      if (!cancelled) {
-        setCatalog(loaded);
-        setIsInitialLoading(false);
+    void (async () => {
+      setIsInitialLoading(true);
+      setLoadError(null);
+
+      try {
+        const loaded = await getCatalogFunds();
+
+        if (!cancelled) {
+          setCatalog(loaded);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setCatalog([]);
+          setLoadError(resolveFundApiErrorMessage(error));
+        }
+      } finally {
+        if (!cancelled) {
+          setIsInitialLoading(false);
+        }
       }
-    });
+    })();
 
     return () => {
       cancelled = true;
     };
+  }, [reloadToken]);
+
+  const handleRetryLoad = useCallback(() => {
+    resetCatalogCache();
+    setReloadToken((current) => current + 1);
   }, []);
 
   const handleQueryChange = useCallback((query: string) => {
@@ -171,6 +196,12 @@ export default function FundsScreen() {
 
         {isInitialLoading ? (
           <ActivityIndicator style={styles.loader} color={theme.primary} />
+        ) : loadError ? (
+          <FundApiErrorState
+            title="No se pudo cargar el catálogo"
+            message={loadError}
+            onRetry={handleRetryLoad}
+          />
         ) : funds.length === 0 ? (
           <FundCatalogEmptyState
             query={debouncedQuery}

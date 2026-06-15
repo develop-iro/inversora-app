@@ -1,10 +1,11 @@
 import type { CatalogFund } from '@/core/domain/catalog';
 import type { RiskLevel } from '@/core/domain/fund';
 
-import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
+import { apiGet } from '@/core/api/client';
+import { parseFundListResponse } from '@/core/api/parse-fund-list-response';
+import { AppError } from '@/core/errors/app-error';
 import { filterCatalogVisible } from '@/features/funds/utils/catalog-visibility';
 import { matchesFundSearch } from '@/features/funds/utils/fund-search';
-import { getRankings } from '@/features/funds/services/get-rankings';
 
 export type FundCatalogFilters = {
   query?: string;
@@ -15,43 +16,68 @@ export type FundCatalogFilters = {
   idealForBeginnersOnly?: boolean;
 };
 
-let enrichedCatalogCache: CatalogFund[] | null = null;
-let enrichedCatalogPromise: Promise<CatalogFund[]> | null = null;
+const CATALOG_PAGE_LIMIT = 100;
 
-async function withRankingMetadata(funds: CatalogFund[]): Promise<CatalogFund[]> {
-  const rankings = await getRankings();
-  const rankByIsin = new Map(rankings.map((entry) => [entry.isin, entry]));
+let catalogCache: CatalogFund[] | null = null;
+let catalogPromise: Promise<CatalogFund[]> | null = null;
 
-  return funds.map((fund) => {
-    const ranked = rankByIsin.get(fund.isin);
+/**
+ * Fetches every visible catalog page from `GET /funds`.
+ *
+ * @param signal - Optional abort signal for in-flight requests.
+ */
+async function fetchCatalogFromApi(signal?: AbortSignal): Promise<CatalogFund[]> {
+  const funds: CatalogFund[] = [];
+  let page = 1;
+  let totalPages = 1;
 
-    if (!ranked) {
-      return fund;
-    }
+  while (page <= totalPages) {
+    const payload = await apiGet<unknown>({
+      path: '/funds',
+      searchParams: {
+        page,
+        limit: CATALOG_PAGE_LIMIT,
+        sortBy: 'score',
+        sortOrder: 'desc',
+      },
+      signal,
+    });
 
-    return {
-      ...fund,
-      inversoraScore: ranked.score,
-      rank: ranked.rank,
-      efficiencyScore: ranked.score,
-    };
-  });
-}
-
-/** Loads the visible catalog once and caches ranking metadata for fast client-side search. */
-export async function getCatalogFunds(): Promise<CatalogFund[]> {
-  if (enrichedCatalogCache) {
-    return enrichedCatalogCache;
+    const response = parseFundListResponse(payload);
+    funds.push(...response.data);
+    totalPages = response.meta.totalPages;
+    page += 1;
   }
 
-  enrichedCatalogPromise ??= (async () => {
-    const visible = filterCatalogVisible(CATALOG_FUNDS_MOCK);
-    const enriched = await withRankingMetadata([...visible]);
-    enrichedCatalogCache = enriched;
-    return enriched;
+  return filterCatalogVisible(funds);
+}
+
+/** Loads the visible catalog once and caches it for fast client-side search. */
+export async function getCatalogFunds(signal?: AbortSignal): Promise<CatalogFund[]> {
+  if (catalogCache) {
+    return catalogCache;
+  }
+
+  catalogPromise ??= (async () => {
+    try {
+      const loaded = await fetchCatalogFromApi(signal);
+      catalogCache = loaded;
+      return loaded;
+    } catch (error) {
+      catalogPromise = null;
+      throw error instanceof AppError
+        ? error
+        : new AppError('FUNDS_FETCH_FAILED', 'No se pudo cargar el catálogo de fondos.', error);
+    }
   })();
 
-  return enrichedCatalogPromise;
+  return catalogPromise;
+}
+
+/** Clears the in-memory catalog cache (useful after retry flows). */
+export function resetCatalogCache(): void {
+  catalogCache = null;
+  catalogPromise = null;
 }
 
 /** Synchronous filter for in-memory catalog search (target: well under 500 ms). */
@@ -101,7 +127,10 @@ export function filterCatalogFunds(
 }
 
 /** Returns catalog funds with optional filters, sorted by Inversora score. No login required. */
-export async function getFunds(filters?: FundCatalogFilters): Promise<CatalogFund[]> {
-  const catalog = await getCatalogFunds();
+export async function getFunds(
+  filters?: FundCatalogFilters,
+  signal?: AbortSignal,
+): Promise<CatalogFund[]> {
+  const catalog = await getCatalogFunds(signal);
   return filterCatalogFunds(catalog, filters);
 }

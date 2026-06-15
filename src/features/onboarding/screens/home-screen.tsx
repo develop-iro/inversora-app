@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { FEATURED_FUNDS_MOCK } from "@/features/funds/mocks/featured-funds-mock";
+import { getFeaturedFundsForCarousel } from "@/features/funds/services/get-featured-funds";
+import type { FeaturedFund } from "@/features/funds/models/fund";
 import { CATALOG_SEARCH_DEBOUNCE_MS } from "@/features/funds/utils/fund-search";
 import { FeaturedFundsCarousel } from "@/features/onboarding/components/featured-funds-carousel";
 import { HomeDynamicRankingSection } from "@/features/onboarding/components/home-dynamic-ranking-section";
@@ -41,8 +42,38 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState<HomeSearchResult | null>(null);
   const [isSearchLoading, setIsSearchLoading] = useState(true);
+  const [featuredFunds, setFeaturedFunds] = useState<FeaturedFund[]>([]);
+  const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
 
   const debouncedQuery = useDebouncedValue(searchQuery, CATALOG_SEARCH_DEBOUNCE_MS);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      setIsFeaturedLoading(true);
+
+      try {
+        const funds = await getFeaturedFundsForCarousel();
+
+        if (!cancelled) {
+          setFeaturedFunds(funds);
+        }
+      } catch {
+        if (!cancelled) {
+          setFeaturedFunds([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsFeaturedLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,7 +138,7 @@ export default function HomeScreen() {
           </View>
 
           <FeaturedFundsCarousel
-            funds={FEATURED_FUNDS_MOCK.filter((fund) => fund.isFeatured)}
+            funds={isFeaturedLoading ? [] : featuredFunds}
             onFundPress={(fund) => {
               router.push(routes.fundDetail(fund.isin));
             }}

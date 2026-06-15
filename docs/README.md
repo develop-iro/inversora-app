@@ -14,8 +14,10 @@
 | Avisos legales y copy obligatorio | [product/legal-and-disclaimers.md](./product/legal-and-disclaimers.md) |
 | Estado del código por feature | [architecture/mvp-feature-map.md](./architecture/mvp-feature-map.md) |
 | Límites de dominio (scoring, favoritos, IA) | [architecture/adr-001-domain-boundaries.md](./architecture/adr-001-domain-boundaries.md) |
+| Versión scoring MVP (RN-04 vs mvp-1) | [architecture/adr-002-scoring-mvp-version.md](./architecture/adr-002-scoring-mvp-version.md) |
 | Stack elegido vs alternativas del doc oficial | [architecture/stack-decisions.md](./architecture/stack-decisions.md) |
 | Contrato API detalle fondo (BFF, acuerdo con backend) | [inversora-api/docs/bff-fund-detail-contract.md](../inversora-api/docs/bff-fund-detail-contract.md) |
+| Conectar app a API local en dev | [development-api.md](./development-api.md) |
 
 ## Jerarquía de fuentes de verdad
 
