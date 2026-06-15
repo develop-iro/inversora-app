@@ -22,6 +22,7 @@ import { FundDetailExposureSection } from '@/features/funds/components/detail/fu
 import { FundDetailInformationSection } from '@/features/funds/components/detail/fund-detail-information-section';
 import { FundDetailRatiosSection } from '@/features/funds/components/detail/fund-detail-ratios-section';
 import { FundDetailReturnsSection } from '@/features/funds/components/detail/fund-detail-returns-section';
+import { FundDetailSectionEmptyState } from '@/features/funds/components/detail/fund-detail-section-empty-state';
 import { FundDetailHeroIsin } from '@/features/funds/components/detail/fund-detail-hero-isin';
 import { FundDetailScoreSection } from '@/features/funds/components/detail/fund-detail-score-section';
 import { FundDetailSheetFreshness } from '@/features/funds/components/detail/fund-detail-sheet-freshness';
@@ -31,6 +32,7 @@ import { FundPerformanceChart } from '@/features/funds/components/fund-performan
 import { TimeframeSegmentedControl } from '@/features/funds/components/timeframe-segmented-control';
 import { useFavorite } from '@/features/funds/hooks/use-favorite';
 import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
+import { getRegionMetricsForGrid, shouldShowRegionSummary } from '@/features/funds/utils/fund-detail-presentation';
 import { resolveFundApiErrorMessage } from '@/features/funds/utils/resolve-fund-api-error-message';
 import {
   buildPerformanceA11yLabel,
@@ -234,15 +236,11 @@ export default function FundDetailScreen() {
   }, [detail]);
 
   const regionMetrics = useMemo(() => {
-    if (!detail) {
+    if (!detail || !shouldShowRegionSummary(detail)) {
       return [];
     }
 
-    return detail.market.regions.map((region) => ({
-      id: region.label,
-      label: region.label,
-      value: `${region.percent}%`,
-    }));
+    return getRegionMetricsForGrid(detail);
   }, [detail]);
 
   if (isLoading) {
@@ -373,13 +371,15 @@ export default function FundDetailScreen() {
 
         <TimeframeSegmentedControl value={timeframe} onChange={setTimeframe} />
 
-        {performanceSeries ? (
+        {performanceSeries && performanceSeries.points.length > 1 ? (
           <FundPerformanceChart
             points={performanceSeries.points}
             navBase={getIllustrativeNavBase(fund.isin)}
             accessibilityLabel={chartA11yLabel}
           />
-        ) : null}
+        ) : (
+          <FundDetailSectionEmptyState message="Todavía no hay suficiente histórico para mostrar la evolución en este periodo." />
+        )}
 
         <ThemedText type="caption" themeColor="textSecondary">
           {performanceSeries?.sourceLabel}. Valores liquidativos ilustrativos en EUR. El rendimiento
@@ -392,7 +392,9 @@ export default function FundDetailScreen() {
 
         <FundMetricsGrid title="Métricas clave" metrics={keyMetrics} />
 
-        <FundMetricsGrid title="Región y reparto (resumen)" metrics={regionMetrics} />
+        {regionMetrics.length > 0 ? (
+          <FundMetricsGrid title="Región y reparto (resumen)" metrics={regionMetrics} />
+        ) : null}
 
         <FundDetailRatiosSection profile={detail.profile} fundName={fund.name} />
 

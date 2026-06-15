@@ -5,6 +5,7 @@ import type { FundDetailProfile, RatioHorizon } from '@/core/domain/fund-detail-
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { KeyValueList, SegmentTabs } from '@/shared/components/ui';
+import { hasAnyRatioData } from '@/features/funds/utils/fund-detail-presentation';
 import { Spacing } from '@/shared/theme/theme';
 
 const RATIO_TABS: { value: RatioHorizon; label: string }[] = [
@@ -20,6 +21,11 @@ export type FundDetailRatiosSectionProps = {
 
 export function FundDetailRatiosSection({ profile, fundName }: FundDetailRatiosSectionProps) {
   const [horizon, setHorizon] = useState<RatioHorizon>('12m');
+
+  if (!hasAnyRatioData(profile)) {
+    return null;
+  }
+
   const rows = profile.ratiosByHorizon[horizon].map((row) => ({
     id: row.id,
     label: row.label,

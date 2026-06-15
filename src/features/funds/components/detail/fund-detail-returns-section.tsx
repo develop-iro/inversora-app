@@ -2,10 +2,12 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { FundDetailProfile } from '@/core/domain/fund-detail-profile';
+import { FundDetailSectionEmptyState } from '@/features/funds/components/detail/fund-detail-section-empty-state';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { ThemedText } from '@/shared/components/themed-text';
 import { HorizontalBarChart, SegmentTabs } from '@/shared/components/ui';
+import { hasReturnData } from '@/features/funds/utils/fund-detail-presentation';
 import { Spacing } from '@/shared/theme/theme';
 
 type ReturnsTab = 'periods' | 'years';
@@ -42,6 +44,7 @@ export function FundDetailReturnsSection({ profile, fundName }: FundDetailReturn
   const chartA11y = `Rentabilidad de ${fundName}, ${
     tab === 'periods' ? 'por periodos' : 'por años'
   }`;
+  const hasData = hasReturnData(profile, tab);
 
   return (
     <FundDetailSectionShell
@@ -52,7 +55,11 @@ export function FundDetailReturnsSection({ profile, fundName }: FundDetailReturn
       <SegmentTabs tabs={RETURNS_TABS} value={tab} onChange={setTab} accessibilityLabel="Rentabilidad del fondo" />
 
       <View style={styles.chartWrap}>
-        <HorizontalBarChart data={chartData} accessibilityLabel={chartA11y} />
+        {hasData ? (
+          <HorizontalBarChart data={chartData} accessibilityLabel={chartA11y} />
+        ) : (
+          <FundDetailSectionEmptyState message="Todavía no hay rentabilidades publicadas para este fondo en este horizonte." />
+        )}
       </View>
 
       <View style={styles.notes}>
