@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { CatalogFund } from '@/core/domain/catalog';
+import { FundApiErrorState } from '@/features/funds/components/fund-api-error-state';
 import { FundCatalogCategorySections } from '@/features/funds/components/fund-catalog-category-sections';
 import { FundCatalogEmptyState } from '@/features/funds/components/fund-catalog-empty-state';
 import {
@@ -14,11 +15,13 @@ import {
 } from '@/features/funds/components/fund-catalog-filters';
 import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
 import { FundCatalogSearchField } from '@/features/funds/components/fund-catalog-search-field';
-import { CATALOG_CATEGORIES } from '@/features/funds/mocks/catalog-funds-mock';
 import {
-  filterCatalogFunds,
-  getCatalogFunds,
+  getCatalogBrowseIndex,
+  getFunds,
+  resetCatalogBrowseIndex,
 } from '@/features/funds/services/get-funds';
+import { deriveCatalogCategories } from '@/features/funds/utils/derive-catalog-categories';
+import { resolveFundApiErrorMessage } from '@/features/funds/utils/resolve-fund-api-error-message';
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
@@ -58,20 +61,25 @@ export default function FundsScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const [filters, setFilters] = useState<FundCatalogFiltersState>(DEFAULT_CATALOG_FILTERS);
-  const [catalog, setCatalog] = useState<CatalogFund[]>([]);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [browseIndex, setBrowseIndex] = useState<CatalogFund[]>([]);
+  const [funds, setFunds] = useState<CatalogFund[]>([]);
+  const [isBrowseLoading, setIsBrowseLoading] = useState(true);
+  const [isResultsLoading, setIsResultsLoading] = useState(true);
+  const [browseError, setBrowseError] = useState<string | null>(null);
+  const [resultsError, setResultsError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   const debouncedQuery = useDebouncedValue(filters.query, CATALOG_SEARCH_DEBOUNCE_MS);
 
   const categoryTabs = useMemo(
     () => [
       { value: 'all' as const, label: 'Todas' },
-      ...CATALOG_CATEGORIES.map((category) => ({
+      ...deriveCatalogCategories(browseIndex).map((category) => ({
         value: category,
         label: category,
       })),
     ],
-    [],
+    [browseIndex],
   );
 
   const activeServiceFilters = useMemo(
@@ -82,29 +90,70 @@ export default function FundsScreen() {
     [filters, debouncedQuery],
   );
 
-  const funds = useMemo(
-    () => filterCatalogFunds(catalog, activeServiceFilters),
-    [catalog, activeServiceFilters],
-  );
-
   const groupedFunds = useMemo(() => groupFundsByCategory(funds), [funds]);
   const showGrouped = shouldGroupByCategory(filters, debouncedQuery);
   const hasActiveFilters = hasActiveNonSearchFilters(filters);
+  const isInitialLoading = isBrowseLoading || (isResultsLoading && funds.length === 0);
 
   useEffect(() => {
     let cancelled = false;
 
-    void getCatalogFunds().then((loaded) => {
-      if (!cancelled) {
-        setCatalog(loaded);
-        setIsInitialLoading(false);
+    void (async () => {
+      setIsBrowseLoading(true);
+      setBrowseError(null);
+
+      try {
+        const loaded = await getCatalogBrowseIndex();
+
+        if (!cancelled) {
+          setBrowseIndex(loaded);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setBrowseIndex([]);
+          setBrowseError(resolveFundApiErrorMessage(error));
+        }
+      } finally {
+        if (!cancelled) {
+          setIsBrowseLoading(false);
+        }
       }
-    });
+    })();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadToken]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      setIsResultsLoading(true);
+      setResultsError(null);
+
+      try {
+        const loaded = await getFunds(activeServiceFilters);
+
+        if (!cancelled) {
+          setFunds(loaded);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setFunds([]);
+          setResultsError(resolveFundApiErrorMessage(error));
+        }
+      } finally {
+        if (!cancelled) {
+          setIsResultsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeServiceFilters, reloadToken]);
 
   const handleQueryChange = useCallback((query: string) => {
     setFilters((current) => ({ ...current, query }));
@@ -126,12 +175,19 @@ export default function FundsScreen() {
     setFilters(DEFAULT_CATALOG_FILTERS);
   }, []);
 
+  const handleRetryLoad = useCallback(() => {
+    resetCatalogBrowseIndex();
+    setReloadToken((current) => current + 1);
+  }, []);
+
   const handleFundPress = useCallback(
     (fund: CatalogFund) => {
       router.push(routes.fundDetail(fund.isin));
     },
     [router],
   );
+
+  const blockingError = browseError ?? (resultsError && funds.length === 0 ? resultsError : null);
 
   return (
     <ScrollView
@@ -156,7 +212,7 @@ export default function FundsScreen() {
 
         <FundCatalogSearchField
           query={filters.query}
-          catalog={catalog}
+          catalog={browseIndex}
           onQueryChange={handleQueryChange}
         />
 
@@ -171,6 +227,12 @@ export default function FundsScreen() {
 
         {isInitialLoading ? (
           <ActivityIndicator style={styles.loader} color={theme.primary} />
+        ) : blockingError ? (
+          <FundApiErrorState
+            title="No se pudo cargar el catálogo"
+            message={blockingError}
+            onRetry={handleRetryLoad}
+          />
         ) : funds.length === 0 ? (
           <FundCatalogEmptyState
             query={debouncedQuery}
@@ -180,6 +242,16 @@ export default function FundsScreen() {
           />
         ) : (
           <View style={styles.results}>
+            {isResultsLoading ? (
+              <ActivityIndicator style={styles.inlineLoader} color={theme.primary} />
+            ) : null}
+
+            {resultsError ? (
+              <ThemedText type="caption" themeColor="textSecondary">
+                {resultsError}
+              </ThemedText>
+            ) : null}
+
             {!showGrouped ? (
               <ThemedText type="metaLabel" themeColor="textSecondary">
                 {funds.length} fondo{funds.length === 1 ? '' : 's'}
@@ -225,6 +297,9 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginVertical: Spacing.xl,
+  },
+  inlineLoader: {
+    alignSelf: 'flex-start',
   },
   results: {
     gap: Spacing.md,
