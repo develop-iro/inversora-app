@@ -1,45 +1,39 @@
 import type { FundDetail } from '@/core/domain/catalog';
-import { scoreFund } from '@/core/scoring/score-fund';
 
-import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
-import { getFundDetailProfileMock } from '@/features/funds/mocks/fund-detail-profile-mock';
-import { getFundMarketSnapshotMock } from '@/features/funds/mocks/fund-market-mock';
-import { RANKING_SOURCES_MOCK } from '@/features/funds/mocks/ranking-sources-mock';
-import { getRankings } from '@/features/funds/services/get-rankings';
-import { isCatalogVisible } from '@/features/funds/utils/catalog-visibility';
+import { apiGet } from '@/core/api/client';
+import { parseFundDetailResponse } from '@/core/api/parse-fund-detail-response';
+import { AppError } from '@/core/errors/app-error';
 
-export async function getFundByIsin(isin: string): Promise<FundDetail | null> {
+/**
+ * Fetches the aggregated fund detail for a given ISIN from `GET /funds/:isin`.
+ *
+ * @param isin - Fund ISIN (case-insensitive).
+ * @param signal - Optional abort signal for in-flight requests.
+ */
+export async function getFundByIsin(
+  isin: string,
+  signal?: AbortSignal,
+): Promise<FundDetail | null> {
   const normalizedIsin = isin.trim().toUpperCase();
-  const fund = CATALOG_FUNDS_MOCK.find((entry) => entry.isin.toUpperCase() === normalizedIsin);
 
-  if (!fund || !isCatalogVisible(fund)) {
+  if (!normalizedIsin) {
     return null;
   }
 
-  const rankingSource = RANKING_SOURCES_MOCK.find(
-    (entry) => entry.isin.toUpperCase() === normalizedIsin,
-  );
+  try {
+    const payload = await apiGet<unknown>({
+      path: `/funds/${encodeURIComponent(normalizedIsin)}`,
+      signal,
+    });
 
-  const scored = scoreFund(
-    rankingSource ?? {
-      isin: fund.isin,
-      name: fund.name,
-      categoryLabel: fund.categoryLabel,
-      riskLevel: fund.riskLevel,
-      terPercent: fund.terPercent,
-      referenceScore: fund.efficiencyScore,
-    },
-  );
-  const rankings = await getRankings();
-  const rankEntry = rankings.find((entry) => entry.isin.toUpperCase() === normalizedIsin);
+    return parseFundDetailResponse(payload);
+  } catch (error) {
+    if (error instanceof AppError && error.status === 404) {
+      return null;
+    }
 
-  return {
-    fund,
-    inversoraScore: scored.score,
-    rank: rankEntry?.rank,
-    scoredBreakdown: scored.breakdown,
-    scoringStatus: scored.status,
-    market: getFundMarketSnapshotMock(fund.isin),
-    profile: getFundDetailProfileMock(fund),
-  };
+    throw error instanceof AppError
+      ? error
+      : new AppError('FUNDS_FETCH_FAILED', 'No se pudo cargar la ficha del fondo.', error);
+  }
 }

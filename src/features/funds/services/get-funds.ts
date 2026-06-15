@@ -1,107 +1,134 @@
 import type { CatalogFund } from '@/core/domain/catalog';
 import type { RiskLevel } from '@/core/domain/fund';
 
-import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
+import { apiGet } from '@/core/api/client';
+import {
+  mapCatalogFiltersToApiQuery,
+  type FundListApiQuery,
+} from '@/core/api/map-catalog-filters-to-query';
+import { parseFundListResponse } from '@/core/api/parse-fund-list-response';
+import { AppError } from '@/core/errors/app-error';
+import type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
 import { filterCatalogVisible } from '@/features/funds/utils/catalog-visibility';
-import { matchesFundSearch } from '@/features/funds/utils/fund-search';
-import { getRankings } from '@/features/funds/services/get-rankings';
 
-export type FundCatalogFilters = {
-  query?: string;
-  riskLevel?: RiskLevel | 'all';
-  categoryLabel?: string | 'all';
-  maxTerPercent?: number | null;
-  minScore?: number | null;
-  idealForBeginnersOnly?: boolean;
-};
+export type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
 
-let enrichedCatalogCache: CatalogFund[] | null = null;
-let enrichedCatalogPromise: Promise<CatalogFund[]> | null = null;
+let browseIndexCache: CatalogFund[] | null = null;
+let browseIndexPromise: Promise<CatalogFund[]> | null = null;
 
-async function withRankingMetadata(funds: CatalogFund[]): Promise<CatalogFund[]> {
-  const rankings = await getRankings();
-  const rankByIsin = new Map(rankings.map((entry) => [entry.isin, entry]));
+/**
+ * Fetches all pages for a fund list query.
+ *
+ * @param baseQuery - Validated API query parameters.
+ * @param signal - Optional abort signal.
+ */
+async function fetchFundListPages(
+  baseQuery: FundListApiQuery,
+  signal?: AbortSignal,
+): Promise<CatalogFund[]> {
+  const funds: CatalogFund[] = [];
+  let page = baseQuery.page;
+  let totalPages = 1;
 
-  return funds.map((fund) => {
-    const ranked = rankByIsin.get(fund.isin);
+  while (page <= totalPages) {
+    const payload = await apiGet<unknown>({
+      path: '/funds',
+      searchParams: {
+        ...baseQuery,
+        page,
+      },
+      signal,
+    });
 
-    if (!ranked) {
-      return fund;
-    }
-
-    return {
-      ...fund,
-      inversoraScore: ranked.score,
-      rank: ranked.rank,
-      efficiencyScore: ranked.score,
-    };
-  });
-}
-
-/** Loads the visible catalog once and caches ranking metadata for fast client-side search. */
-export async function getCatalogFunds(): Promise<CatalogFund[]> {
-  if (enrichedCatalogCache) {
-    return enrichedCatalogCache;
+    const response = parseFundListResponse(payload);
+    funds.push(...response.data);
+    totalPages = response.meta.totalPages;
+    page += 1;
   }
 
-  enrichedCatalogPromise ??= (async () => {
-    const visible = filterCatalogVisible(CATALOG_FUNDS_MOCK);
-    const enriched = await withRankingMetadata([...visible]);
-    enrichedCatalogCache = enriched;
-    return enriched;
-  })();
-
-  return enrichedCatalogPromise;
+  return filterCatalogVisible(funds);
 }
 
-/** Synchronous filter for in-memory catalog search (target: well under 500 ms). */
-export function filterCatalogFunds(
+/**
+ * Applies filters that the API cannot express (risk ranges).
+ *
+ * @param funds - Funds returned by the API.
+ * @param filters - Active catalog filters.
+ */
+export function applyClientOnlyCatalogFilters(
   funds: CatalogFund[],
   filters?: FundCatalogFilters,
 ): CatalogFund[] {
-  if (!filters) {
-    return [...funds].sort((a, b) => b.inversoraScore - a.inversoraScore);
+  if (!filters?.riskLevel || filters.riskLevel === 'all') {
+    return [...funds].sort((left, right) => right.inversoraScore - left.inversoraScore);
   }
 
-  const query = filters.query?.trim() ?? '';
+  const riskLevel: RiskLevel = filters.riskLevel;
 
-  const filtered = funds.filter((fund) => {
-    if (query && !matchesFundSearch(fund, query)) {
-      return false;
-    }
-
-    if (filters.riskLevel && filters.riskLevel !== 'all' && fund.riskLevel !== filters.riskLevel) {
-      return false;
-    }
-
-    if (
-      filters.categoryLabel &&
-      filters.categoryLabel !== 'all' &&
-      fund.categoryLabel !== filters.categoryLabel
-    ) {
-      return false;
-    }
-
-    if (filters.maxTerPercent != null && fund.terPercent > filters.maxTerPercent) {
-      return false;
-    }
-
-    if (filters.minScore != null && fund.inversoraScore < filters.minScore) {
-      return false;
-    }
-
-    if (filters.idealForBeginnersOnly && !fund.idealForBeginners) {
-      return false;
-    }
-
-    return true;
-  });
-
-  return filtered.sort((a, b) => b.inversoraScore - a.inversoraScore);
+  return funds
+    .filter((fund) => fund.riskLevel === riskLevel)
+    .sort((left, right) => right.inversoraScore - left.inversoraScore);
 }
 
-/** Returns catalog funds with optional filters, sorted by Inversora score. No login required. */
-export async function getFunds(filters?: FundCatalogFilters): Promise<CatalogFund[]> {
-  const catalog = await getCatalogFunds();
-  return filterCatalogFunds(catalog, filters);
+/**
+ * Loads the unfiltered browse index used for category tabs and search suggestions.
+ *
+ * @param signal - Optional abort signal.
+ */
+export async function getCatalogBrowseIndex(signal?: AbortSignal): Promise<CatalogFund[]> {
+  if (browseIndexCache) {
+    return browseIndexCache;
+  }
+
+  browseIndexPromise ??= (async () => {
+    try {
+      const loaded = await fetchFundListPages(mapCatalogFiltersToApiQuery(), signal);
+      browseIndexCache = loaded;
+      return loaded;
+    } catch (error) {
+      browseIndexPromise = null;
+      throw error instanceof AppError
+        ? error
+        : new AppError('FUNDS_FETCH_FAILED', 'No se pudo cargar el catálogo de fondos.', error);
+    }
+  })();
+
+  return browseIndexPromise;
+}
+
+/** Clears the browse index cache (retry flows). */
+export function resetCatalogBrowseIndex(): void {
+  browseIndexCache = null;
+  browseIndexPromise = null;
+}
+
+/**
+ * @deprecated Use `getCatalogBrowseIndex` for suggestions/categories and `getFunds` for results.
+ */
+export async function getCatalogFunds(signal?: AbortSignal): Promise<CatalogFund[]> {
+  return getCatalogBrowseIndex(signal);
+}
+
+/**
+ * Returns catalog funds with optional filters via `GET /funds`.
+ *
+ * Server-side: search, benchmark/category, TER, score, beginners.
+ * Client-side: risk level ranges.
+ *
+ * @param filters - Optional catalog filters.
+ * @param signal - Optional abort signal.
+ */
+export async function getFunds(
+  filters?: FundCatalogFilters,
+  signal?: AbortSignal,
+): Promise<CatalogFund[]> {
+  try {
+    const apiQuery = mapCatalogFiltersToApiQuery(filters);
+    const funds = await fetchFundListPages(apiQuery, signal);
+    return applyClientOnlyCatalogFilters(funds, filters);
+  } catch (error) {
+    throw error instanceof AppError
+      ? error
+      : new AppError('FUNDS_FETCH_FAILED', 'No se pudo cargar el catálogo de fondos.', error);
+  }
 }

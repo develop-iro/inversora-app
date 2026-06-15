@@ -81,18 +81,21 @@ La ficha debe poder mostrar puntos por TER, tracking error, AUM y edad, más **v
 
 | Artefacto | Rol |
 |-----------|-----|
-| `src/core/scoring/criteria.ts` | Pesos versionados (`SCORING_CRITERIA_VERSION`) |
-| `src/core/scoring/score-fund.ts` | Motor **mock** determinista para desarrollo |
-| `src/core/scoring/types.ts` | `ScoredFund`, desglose, estados |
+| `src/core/scoring/criteria.ts` | Pesos RN-04 versionados (`SCORING_CRITERIA_VERSION = 'rn-04-mock'`) |
+| `src/core/scoring/score-fund.ts` | Motor **mock** determinista para desarrollo de UI |
+| `src/core/scoring/types.ts` | `ScoredFund`, desglose (4 criterios), estados |
 
-### Desfase actual (importante)
+### Decisión de versión (ADR-002)
 
-El mock en repo (`mvp-mock-1`) incluye pesos adicionales (**consistencia histórica**, **calidad de datos**) que **no** forman parte de RN-04 del documento oficial. Hasta alinear código y backend:
+**RN-04** es la versión canónica del MVP para rankings y producción. El mock del cliente está alineado con los cuatro criterios RN-04.
 
-- Tratar RN-04 como **especificación de producto** para producción.
-- Tratar `SCORING_CRITERIA` del cliente como **prototipo ampliado** para UI y desglose mock.
+| Versión | Dónde | Uso |
+|---------|-------|-----|
+| `rn-04` | Backend (`inversora-api`) | Score real en producción (pendiente de implementación) |
+| `rn-04-mock` | App (`criteria.ts`) | UI y desarrollo local |
+| `mvp-1` | Backend legado | Experimental — no usar en rankings públicos |
 
-**Tarea de alineación:** unificar `criteria.ts` con RN-04 o documentar una v2 del modelo en un ADR antes de publicar rankings reales.
+Detalle: [architecture/adr-002-scoring-mvp-version.md](../architecture/adr-002-scoring-mvp-version.md) y `inversora-api/docs/scoring-rn-04.md`.
 
 ## Criterios mencionados en README pero fuera del score MVP
 

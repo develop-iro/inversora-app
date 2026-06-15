@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { RiskLevel } from '@/core/domain/fund';
-import type { FundCatalogFilters } from '@/features/funds/services/get-funds';
+import type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
 import { ThemedText } from '@/shared/components/themed-text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';

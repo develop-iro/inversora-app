@@ -15,6 +15,7 @@
 | Estado del código por feature | [architecture/mvp-feature-map.md](./architecture/mvp-feature-map.md) |
 | Límites de dominio (scoring, favoritos, IA) | [architecture/adr-001-domain-boundaries.md](./architecture/adr-001-domain-boundaries.md) |
 | Stack elegido vs alternativas del doc oficial | [architecture/stack-decisions.md](./architecture/stack-decisions.md) |
+| Conectar app a API local en dev (HU-07 filtros) | [development-api.md](./development-api.md) |
 
 ## Jerarquía de fuentes de verdad
 
