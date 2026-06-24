@@ -2,6 +2,8 @@
   "name": "inversora",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "author": "Ivan Romero",
+  "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo-google-fonts/nunito": "^0.4.2",

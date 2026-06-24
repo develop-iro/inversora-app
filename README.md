@@ -168,3 +168,13 @@ Full setup: [docs/development-api.md](./docs/development-api.md)
 ## Privacy
 
 The MVP must not store personal data. Educational profiles and favorites should be local or anonymous. Any analytics must be minimal, anonymous, and focused on validating MVP usage.
+
+## License
+
+**Proprietary — all rights reserved.**
+
+This repository is not open source. Use, copying, modification, distribution,
+or reuse of the code by third parties is not permitted without written
+permission from the copyright holder.
+
+See [LICENSE.md](./LICENSE.md) for the full legal text.
