@@ -151,6 +151,13 @@ npm run lint
 
 To load real catalog and fund detail data from `inversora-api`, copy `.env.example` to `.env`, set `EXPO_PUBLIC_API_URL` for your emulator or device, start the backend on port 3000, then restart Expo.
 
+```bash
+npm run api:url          # print suggested URLs (iOS, Android, LAN, web)
+npm run api:url -- --lan # physical device on Wi‑Fi
+```
+
+Expo web requires CORS on the API (`CORS_ORIGINS` in staging). Native simulators and devices only need a reachable URL.
+
 Catalog filters (HU-07) are sent to `GET /funds` where the API supports them; risk level is filtered client-side.
 
 Full setup: [docs/development-api.md](./docs/development-api.md)
