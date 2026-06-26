@@ -20,10 +20,10 @@ const HERO_WIDE_HEIGHT = 436;
 const WIDE_HERO_BREAKPOINT = 768;
 
 export type HomeHeroProps = {
-  onInvestPress?: () => void;
+  onLearnPress?: () => void;
 };
 
-export function HomeHero({ onInvestPress }: HomeHeroProps) {
+export function HomeHero({ onLearnPress }: HomeHeroProps) {
   const { width } = useWindowDimensions();
   const isWideLayout = width >= WIDE_HERO_BREAKPOINT;
   const heroHeight = isWideLayout ? HERO_WIDE_HEIGHT : HERO_MOBILE_HEIGHT;
@@ -157,7 +157,7 @@ export function HomeHero({ onInvestPress }: HomeHeroProps) {
                   size="sm"
                   label="Quiero aprender"
                   accessibilityLabel="Quiero aprender, abrir guía educativa"
-                  onPress={onInvestPress}
+                  onPress={onLearnPress}
                 />
               </Animated.View>
             </View>

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SoraChatSheet } from '@/features/assistant/components/sora-chat-sheet';
 import type { FundDetail } from '@/core/domain/catalog';
 import type { FundPerformanceTimeframe } from '@/core/domain/fund-market';
 import { FundApiErrorState } from '@/features/funds/components/fund-api-error-state';
@@ -129,6 +130,8 @@ export default function FundDetailScreen() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
   const [timeframe, setTimeframe] = useState<FundPerformanceTimeframe>('3y');
+  const [isSoraVisible, setIsSoraVisible] = useState(false);
+  const [soraSession, setSoraSession] = useState(0);
 
   const resolvedIsin = typeof isin === 'string' ? isin : '';
   const { isFavorite, isLoading: isFavoriteLoading, toggle } = useFavorite(resolvedIsin);
@@ -357,8 +360,11 @@ export default function FundDetailScreen() {
             variant="primary"
             style={styles.actionButton}
             accessibilityLabel="Pregúntale a Sora, asistente educativo"
-            accessibilityHint="Abre la guía educativa en la pantalla principal"
-            onPress={() => router.push(routes.home)}
+            accessibilityHint="Abre el asistente educativo con contexto de este fondo"
+            onPress={() => {
+              setSoraSession((current) => current + 1);
+              setIsSoraVisible(true);
+            }}
           />
           <Button
             label="Comparar"
@@ -408,6 +414,21 @@ export default function FundDetailScreen() {
         />
         </View>
       </ScrollView>
+
+      <SoraChatSheet
+        key={`fund-sora-${soraSession}`}
+        visible={isSoraVisible}
+        onClose={() => {
+          setIsSoraVisible(false);
+        }}
+        surface="fund-detail"
+        fundIsin={fund.isin}
+        quickPrompts={[
+          '¿Qué significa este score?',
+          '¿Qué es el TER?',
+          '¿Por qué aparece en el ranking?',
+        ]}
+      />
     </FundDetailScreenChrome>
   );
 }

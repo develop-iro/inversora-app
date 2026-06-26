@@ -59,8 +59,13 @@ Campos típicos (ver ADR-001 para el tipo completo):
 
 ## Estado en el repo
 
-- Feature `features/assistant`: **no creada** (ver [mvp-feature-map.md](../architecture/mvp-feature-map.md)).
-- Entrada UI provisional: card “Sora” / búsqueda en home sin backend.
+- Feature `features/assistant`: **implementada (Fase 1)** — single-turn en home, catálogo y ficha.
+- Cliente: `core/api/assistant-client.ts` → `POST /assistant/explain`.
+- Cache híbrido en backend: glosario estático + PostgreSQL (`assistant_response_cache`).
+- UI: `SoraAnswerCard`, `SoraChatSheet`, chip en catálogo, integración en `resolveHomeSearch`.
+- Pendiente Fase 2: chat multi-turn con historial local (`POST /assistant/chat`).
+
+Para activar OpenAI en local, configura `ASSISTANT_ENABLED=true` y `OPENAI_API_KEY` en `inversora-api/.env`.
 
 ## Ver también
 

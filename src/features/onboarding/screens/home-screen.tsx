@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getFeaturedFundsForCarousel } from "@/features/funds/services/get-featured-funds";
+import { SoraChatSheet } from "@/features/assistant/components/sora-chat-sheet";
 import type { FeaturedFund } from "@/core/domain/fund";
 import { CATALOG_SEARCH_DEBOUNCE_MS } from "@/features/funds/utils/fund-search";
 import { FeaturedFundsCarousel } from "@/features/onboarding/components/featured-funds-carousel";
@@ -44,6 +45,8 @@ export default function HomeScreen() {
   const [isSearchLoading, setIsSearchLoading] = useState(true);
   const [featuredFunds, setFeaturedFunds] = useState<FeaturedFund[]>([]);
   const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
+  const [isSoraVisible, setIsSoraVisible] = useState(false);
+  const [soraSession, setSoraSession] = useState(0);
 
   const debouncedQuery = useDebouncedValue(searchQuery, CATALOG_SEARCH_DEBOUNCE_MS);
 
@@ -117,8 +120,8 @@ export default function HomeScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <HomeHero
-          onInvestPress={() => {
-            router.push(routes.fundsCatalog);
+          onLearnPress={() => {
+            router.push(routes.learn);
           }}
         />
 
@@ -175,10 +178,11 @@ export default function HomeScreen() {
           <View style={styles.soraSection}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="No sabes por dónde empezar, abrir guía de Sora"
-              accessibilityHint="Inicia una guía breve antes de comparar fondos"
+              accessibilityLabel="No sabes por dónde empezar, abrir asistente SORA"
+              accessibilityHint="Abre SORA para hacer preguntas educativas antes de comparar fondos"
               onPress={() => {
-                router.push(routes.fundsCatalog);
+                setSoraSession((current) => current + 1);
+                setIsSoraVisible(true);
               }}
               style={({ pressed }) => [
                 styles.soraCard,
@@ -212,11 +216,11 @@ export default function HomeScreen() {
                 themeColor="textSecondary"
                 style={styles.soraBody}
               >
-                Sora puede ayudarte a entender tu perfil antes de comparar fondos.
+                Sora puede ayudarte a entender conceptos y tu perfil antes de comparar fondos.
               </ThemedText>
 
               <View style={styles.soraCtaRow}>
-                <ThemedText type="linkPrimary">Empezar guía</ThemedText>
+                <ThemedText type="linkPrimary">Preguntar a SORA</ThemedText>
                 <MaterialCommunityIcons
                   name="arrow-right"
                   size={14}
@@ -264,6 +268,21 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <SoraChatSheet
+        key={`home-sora-${soraSession}`}
+        visible={isSoraVisible}
+        onClose={() => {
+          setIsSoraVisible(false);
+        }}
+        surface="home"
+        initialMessage="¿Por dónde empiezo a entender los fondos indexados?"
+        quickPrompts={[
+          "¿Qué es el TER?",
+          "¿Cómo comparar fondos?",
+          "¿Qué es el Score Inversora?",
+        ]}
+      />
     </View>
   );
 }
