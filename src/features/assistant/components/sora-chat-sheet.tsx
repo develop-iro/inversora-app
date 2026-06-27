@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,10 +13,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SoraAnswerCard } from '@/features/assistant/components/sora-answer-card';
+import { useAssistantChat } from '@/features/assistant/hooks/use-assistant-chat';
 import { useAssistantExplain } from '@/features/assistant/hooks/use-assistant-explain';
 import type { AssistantSurface } from '@/features/assistant/types/assistant-context';
 import { ThemedText } from '@/shared/components/themed-text';
 import { Button } from '@/shared/components/ui/button';
+import { routes } from '@/shared/navigation/routes';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Layout, Radius, Spacing } from '@/shared/theme/theme';
 
@@ -24,22 +27,62 @@ export type SoraChatSheetProps = {
   onClose: () => void;
   surface: AssistantSurface;
   fundIsin?: string;
+  fundIsins?: readonly string[];
   initialMessage?: string;
   quickPrompts?: readonly string[];
+  conversationMode?: boolean;
 };
+
+function resolveFundPayload(
+  fundIsin: string | undefined,
+  fundIsins: readonly string[] | undefined,
+): { fund?: { isin: string }; funds?: { isin: string }[] } {
+  const merged = [
+    ...(fundIsins ?? []),
+    ...(fundIsin ? [fundIsin] : []),
+  ].map((isin) => isin.trim().toUpperCase());
+
+  const unique = [...new Set(merged)].filter((isin) => isin.length > 0);
+
+  if (unique.length === 0) {
+    return {};
+  }
+
+  if (unique.length === 1) {
+    return { fund: { isin: unique[0] } };
+  }
+
+  return {
+    funds: unique.map((isin) => ({ isin })),
+  };
+}
 
 export function SoraChatSheet({
   visible,
   onClose,
   surface,
   fundIsin,
+  fundIsins,
   initialMessage = '',
   quickPrompts = [],
+  conversationMode = false,
 }: SoraChatSheetProps) {
   const theme = useTheme();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { explain, response, isLoading, errorMessage } = useAssistantExplain();
+  const explainState = useAssistantExplain();
+  const chatState = useAssistantChat();
   const [message, setMessage] = useState(initialMessage);
+
+  const isLoading = conversationMode ? chatState.isLoading : explainState.isLoading;
+  const errorMessage = conversationMode
+    ? chatState.errorMessage
+    : explainState.errorMessage;
+
+  const handleRelatedFundPress = (isin: string) => {
+    onClose();
+    router.push(routes.fundDetail(isin));
+  };
 
   const handleSubmit = async (prompt: string) => {
     const trimmed = prompt.trim();
@@ -49,12 +92,23 @@ export function SoraChatSheet({
     }
 
     setMessage(trimmed);
+    const fundPayload = resolveFundPayload(fundIsin, fundIsins);
 
-    await explain({
+    if (conversationMode) {
+      await chatState.sendMessage({
+        surface,
+        message: trimmed,
+        locale: 'es',
+        ...fundPayload,
+      });
+      return;
+    }
+
+    await explainState.explain({
       surface,
       message: trimmed,
-      fund: fundIsin ? { isin: fundIsin } : undefined,
       locale: 'es',
+      ...fundPayload,
     });
   };
 
@@ -78,7 +132,9 @@ export function SoraChatSheet({
           <View style={styles.headerCopy}>
             <ThemedText type="sectionTitle">SORA</ThemedText>
             <ThemedText type="caption" themeColor="textSecondary">
-              Asistente educativo de Inversora
+              {conversationMode
+                ? 'Conversación educativa con contexto de pantalla'
+                : 'Asistente educativo de Inversora'}
             </ThemedText>
           </View>
           <Pressable
@@ -120,6 +176,30 @@ export function SoraChatSheet({
             </View>
           ) : null}
 
+          {conversationMode
+            ? chatState.turns.map((turn) =>
+                turn.role === 'user' ? (
+                  <View
+                    key={turn.id}
+                    style={[styles.userBubble, { backgroundColor: theme.surface }]}
+                  >
+                    <ThemedText type="caption">{turn.message}</ThemedText>
+                  </View>
+                ) : turn.response ? (
+                  <SoraAnswerCard
+                    key={turn.id}
+                    query={turn.message}
+                    title={turn.response.title ?? 'Respuesta de SORA'}
+                    body={turn.response.text}
+                    source={turn.response.source}
+                    disclaimer={turn.response.disclaimer}
+                    relatedFundIsin={turn.response.relatedFundIsin}
+                    onRelatedFundPress={handleRelatedFundPress}
+                  />
+                ) : null,
+              )
+            : null}
+
           <View style={styles.inputBlock}>
             <TextInput
               accessibilityLabel="Escribe tu pregunta para SORA"
@@ -156,13 +236,15 @@ export function SoraChatSheet({
             </ThemedText>
           ) : null}
 
-          {response ? (
+          {!conversationMode && explainState.response ? (
             <SoraAnswerCard
               query={message}
-              title={response.title ?? 'Respuesta de SORA'}
-              body={response.text}
-              source={response.source}
-              disclaimer={response.disclaimer}
+              title={explainState.response.title ?? 'Respuesta de SORA'}
+              body={explainState.response.text}
+              source={explainState.response.source}
+              disclaimer={explainState.response.disclaimer}
+              relatedFundIsin={explainState.response.relatedFundIsin}
+              onRelatedFundPress={handleRelatedFundPress}
             />
           ) : null}
         </ScrollView>
@@ -217,6 +299,13 @@ const styles = StyleSheet.create({
   },
   promptChipPressed: {
     opacity: 0.85,
+  },
+  userBubble: {
+    alignSelf: 'flex-end',
+    maxWidth: '92%',
+    borderRadius: Radius.card,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
   },
   inputBlock: {
     gap: Spacing.sm,

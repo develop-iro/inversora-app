@@ -6,6 +6,11 @@ export const routes = {
   learn: '/learn' as Href,
   fundsCatalog: '/funds' as Href,
   compare: '/compare' as Href,
+  compareWithIsins: (isins: readonly string[]): Href =>
+    ({
+      pathname: '/compare',
+      params: { isins: [...new Set(isins.map((isin) => isin.trim().toUpperCase()))].join(',') },
+    }) as Href,
   fundDetail: (isin: string): Href =>
     ({
       pathname: '/funds/[isin]',

@@ -1,6 +1,11 @@
 import { apiPost } from '@/core/api/client';
-import { parseAssistantExplainResponse } from '@/core/api/parse-assistant-response';
+import {
+  parseAssistantChatResponse,
+  parseAssistantExplainResponse,
+} from '@/core/api/parse-assistant-response';
 import type {
+  AssistantChatRequest,
+  AssistantChatResponse,
   AssistantExplainRequest,
   AssistantExplainResponse,
 } from '@/features/assistant/types/assistant-context';
@@ -19,4 +24,23 @@ export async function explainAssistant(
   });
 
   return parseAssistantExplainResponse(payload);
+}
+
+/**
+ * Requests a conversational assistant reply from the SORA chat API.
+ *
+ * @param request - Chat context, optional session and selected funds.
+ */
+export async function chatAssistant(
+  request: AssistantChatRequest,
+): Promise<AssistantChatResponse> {
+  const payload = await apiPost<unknown, AssistantChatRequest>({
+    path: '/assistant/chat',
+    body: {
+      ...request,
+      funds: request.funds ? [...request.funds] : undefined,
+    },
+  });
+
+  return parseAssistantChatResponse(payload);
 }

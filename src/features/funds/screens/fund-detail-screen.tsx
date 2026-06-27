@@ -371,7 +371,7 @@ export default function FundDetailScreen() {
             variant="primary"
             style={[styles.actionButton, { backgroundColor: theme.deepOcean }]}
             accessibilityLabel={`Comparar ${fund.name} con otros fondos`}
-            onPress={() => router.push(routes.compare)}
+            onPress={() => router.push(routes.compareWithIsins([fund.isin]))}
           />
         </View>
 
@@ -423,6 +423,7 @@ export default function FundDetailScreen() {
         }}
         surface="fund-detail"
         fundIsin={fund.isin}
+        conversationMode
         quickPrompts={[
           '¿Qué significa este score?',
           '¿Qué es el TER?',
