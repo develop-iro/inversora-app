@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { AssistantResponseSource } from '@/features/assistant/types/assistant-context';
 import { ThemedText } from '@/shared/components/themed-text';
@@ -12,6 +12,8 @@ export type SoraAnswerCardProps = {
   body: string;
   source: AssistantResponseSource;
   disclaimer?: string;
+  relatedFundIsin?: string;
+  onRelatedFundPress?: (isin: string) => void;
 };
 
 function resolveSourceLabel(source: AssistantResponseSource): string {
@@ -35,6 +37,8 @@ export function SoraAnswerCard({
   body,
   source,
   disclaimer,
+  relatedFundIsin,
+  onRelatedFundPress,
 }: SoraAnswerCardProps) {
   const theme = useTheme();
   const sourceLabel = resolveSourceLabel(source);
@@ -73,6 +77,19 @@ export function SoraAnswerCard({
         {body}
       </ThemedText>
 
+      {relatedFundIsin && onRelatedFundPress ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Ver ficha del fondo ${relatedFundIsin}`}
+          onPress={() => onRelatedFundPress(relatedFundIsin)}
+          style={({ pressed }) => [styles.relatedLink, pressed && styles.relatedLinkPressed]}
+        >
+          <ThemedText type="caption" themeColor="deepOcean">
+            Ver fondo relacionado ({relatedFundIsin})
+          </ThemedText>
+        </Pressable>
+      ) : null}
+
       <ThemedText type="caption" themeColor="textSecondary" style={styles.disclaimer}>
         {resolvedDisclaimer}
       </ThemedText>
@@ -106,6 +123,12 @@ const styles = StyleSheet.create({
   },
   body: {
     lineHeight: 20,
+  },
+  relatedLink: {
+    alignSelf: 'flex-start',
+  },
+  relatedLinkPressed: {
+    opacity: 0.8,
   },
   disclaimer: {
     lineHeight: 17,

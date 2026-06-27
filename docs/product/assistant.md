@@ -59,11 +59,12 @@ Campos típicos (ver ADR-001 para el tipo completo):
 
 ## Estado en el repo
 
-- Feature `features/assistant`: **implementada (Fase 1)** — single-turn en home, catálogo y ficha.
-- Cliente: `core/api/assistant-client.ts` → `POST /assistant/explain`.
+- Feature `features/assistant`: **implementada (Fase 1 + 2 parcial)** — explain en home, catálogo y ficha; chat multi-turn en ficha y comparador.
+- Cliente explain: `core/api/assistant-client.ts` → `POST /assistant/explain`.
+- Cliente chat: `chatAssistant()` → `POST /assistant/chat` con `sessionId` y hasta 5 fondos.
+- Comparador `/compare`: selección local de fondos, tabla métricas y SORA con `surface: 'compare'`.
 - Cache híbrido en backend: glosario estático + PostgreSQL (`assistant_response_cache`).
 - UI: `SoraAnswerCard`, `SoraChatSheet`, chip en catálogo, integración en `resolveHomeSearch`.
-- Pendiente Fase 2: chat multi-turn con historial local (`POST /assistant/chat`).
 
 Para activar OpenAI en local, configura `ASSISTANT_ENABLED=true` y `OPENAI_API_KEY` en `inversora-api/.env`.
 
