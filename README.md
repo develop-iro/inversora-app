@@ -184,4 +184,4 @@ This repository is not open source. Use, copying, modification, distribution,
 or reuse of the code by third parties is not permitted without written
 permission from the copyright holder.
 
-See [LICENSE](./LICENSE) for the full legal text.
+See [LICENSE.md](./LICENSE.md) for the full legal text.
