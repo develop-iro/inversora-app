@@ -3,6 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { FundCatalogSoraChip } from '@/features/assistant/components/fund-catalog-sora-chip';
+import { SoraChatSheet } from '@/features/assistant/components/sora-chat-sheet';
+import { isQuestionLikeQuery } from '@/features/assistant/utils/search-intent';
 import type { CatalogFund } from '@/core/domain/catalog';
 import { FundApiErrorState } from '@/features/funds/components/fund-api-error-state';
 import { FundCatalogCategorySections } from '@/features/funds/components/fund-catalog-category-sections';
@@ -68,8 +71,11 @@ export default function FundsScreen() {
   const [browseError, setBrowseError] = useState<string | null>(null);
   const [resultsError, setResultsError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [isSoraVisible, setIsSoraVisible] = useState(false);
+  const [soraSession, setSoraSession] = useState(0);
 
   const debouncedQuery = useDebouncedValue(filters.query, CATALOG_SEARCH_DEBOUNCE_MS);
+  const showSoraChip = isQuestionLikeQuery(debouncedQuery);
 
   const categoryTabs = useMemo(
     () => [
@@ -216,6 +222,16 @@ export default function FundsScreen() {
           onQueryChange={handleQueryChange}
         />
 
+        {showSoraChip ? (
+          <FundCatalogSoraChip
+            query={debouncedQuery}
+            onPress={() => {
+              setSoraSession((current) => current + 1);
+              setIsSoraVisible(true);
+            }}
+          />
+        ) : null}
+
         <SegmentTabs
           accessibilityLabel="Filtrar catálogo por categoría"
           tabs={categoryTabs}
@@ -274,6 +290,16 @@ export default function FundsScreen() {
           body="Guardar o comparar fondos no implica una recomendación de inversión. Revisa siempre comisiones, riesgo y horizonte temporal."
         />
       </View>
+
+      <SoraChatSheet
+        key={`catalog-sora-${soraSession}`}
+        visible={isSoraVisible}
+        onClose={() => {
+          setIsSoraVisible(false);
+        }}
+        surface="catalog"
+        initialMessage={debouncedQuery}
+      />
     </ScrollView>
   );
 }

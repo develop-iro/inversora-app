@@ -45,3 +45,8 @@ export function isFundDetailPath(segments: readonly string[]): boolean {
   const nestedSegment = segments[fundsIndex + 1];
   return isFundsStackDetailRoute(nestedSegment);
 }
+
+/** Path-based check for `/learn` (reactive with `useSegments`). */
+export function isLearnPath(segments: readonly string[]): boolean {
+  return segments.includes('learn');
+}

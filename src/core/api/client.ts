@@ -7,6 +7,35 @@ type ApiRequestOptions = {
   signal?: AbortSignal;
 };
 
+type ApiPostOptions<TBody> = ApiRequestOptions & {
+  body: TBody;
+};
+
+async function parseApiResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const message =
+      response.status === 404
+        ? 'El recurso solicitado no existe en la API.'
+        : response.status === 503
+          ? 'La API no está disponible temporalmente. Inténtalo de nuevo en unos minutos.'
+          : response.status === 400
+            ? 'La petición no es válida para el asistente SORA.'
+            : `La API respondió con estado ${response.status}.`;
+
+    throw new AppError('API_REQUEST_FAILED', message, undefined, response.status);
+  }
+
+  try {
+    return (await response.json()) as T;
+  } catch (error) {
+    throw new AppError(
+      'API_INVALID_RESPONSE',
+      'La API devolvió una respuesta JSON inválida.',
+      error,
+    );
+  }
+}
+
 /**
  * Performs a JSON GET request against the Inversora API.
  *
@@ -41,24 +70,46 @@ export async function apiGet<T>(options: ApiRequestOptions): Promise<T> {
     );
   }
 
-  if (!response.ok) {
-    const message =
-      response.status === 404
-        ? 'El recurso solicitado no existe en la API.'
-        : response.status === 503
-          ? 'La API no está disponible temporalmente. Inténtalo de nuevo en unos minutos.'
-          : `La API respondió con estado ${response.status}.`;
+  return parseApiResponse<T>(response);
+}
 
-    throw new AppError('API_REQUEST_FAILED', message, undefined, response.status);
+/**
+ * Performs a JSON POST request against the Inversora API.
+ *
+ * @param options - Request path, body payload, and optional query parameters.
+ */
+export async function apiPost<TResponse, TBody>(
+  options: ApiPostOptions<TBody>,
+): Promise<TResponse> {
+  const url = new URL(options.path, `${getApiBaseUrl()}/`);
+
+  if (options.searchParams !== undefined) {
+    for (const [key, value] of Object.entries(options.searchParams)) {
+      if (value !== undefined) {
+        url.searchParams.set(key, String(value));
+      }
+    }
   }
 
+  let response: Response;
+
   try {
-    return (await response.json()) as T;
+    response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(options.body),
+      signal: options.signal,
+    });
   } catch (error) {
     throw new AppError(
-      'API_INVALID_RESPONSE',
-      'La API devolvió una respuesta JSON inválida.',
+      'API_REQUEST_FAILED',
+      'No se pudo conectar con la API de Inversora.',
       error,
     );
   }
+
+  return parseApiResponse<TResponse>(response);
 }

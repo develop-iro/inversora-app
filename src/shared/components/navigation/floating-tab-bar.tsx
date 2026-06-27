@@ -11,7 +11,7 @@ import {
 } from "react-native";
 
 import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
-import { isFundDetailPath } from "@/shared/navigation/tab-route-state";
+import { isFundDetailPath, isLearnPath } from "@/shared/navigation/tab-route-state";
 import { FontFamily } from "@/shared/theme/theme";
 
 export const FLOATING_TAB_BAR_HEIGHT = 76;
@@ -109,9 +109,10 @@ export function FloatingTabBar({
   >;
   const segments = useSegments();
   const hideOnFundDetail = useMemo(() => isFundDetailPath(segments), [segments]);
+  const hideOnLearn = useMemo(() => isLearnPath(segments), [segments]);
   const activeRoute = state.routes[state.index];
 
-  if (hideOnFundDetail) {
+  if (hideOnFundDetail || hideOnLearn) {
     return null;
   }
 

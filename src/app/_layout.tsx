@@ -100,6 +100,13 @@ export default function TabLayout() {
             tabBarAccessibilityLabel: "Abrir calculadora",
           }}
         />
+        <Tabs.Screen
+          name="learn"
+          options={{
+            href: null,
+            headerShown: false,
+          }}
+        />
       </Tabs>
     </ThemeProvider>
   );
