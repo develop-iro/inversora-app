@@ -19,6 +19,9 @@ function rankingSourceToFeatured(
   return {
     id: `catalog-${source.isin}`,
     isin: source.isin,
+    symbol: source.isin.slice(-4),
+    issuer: null,
+    logoUrl: null,
     name: source.name,
     categoryLabel: source.categoryLabel,
     themeLabel: resolveFundThemeLabel(source.isin),
@@ -43,6 +46,9 @@ const HIDDEN_CATALOG_DRAFTS: CatalogFundDraft[] = [
   {
     id: 'catalog-stale-data',
     isin: 'IE00B8GKDB10',
+    symbol: 'DB10',
+    issuer: null,
+    logoUrl: null,
     name: 'Global Equity Stale Data',
     categoryLabel: 'Renta Variable Global',
     themeLabel: resolveFundThemeLabel('IE00B8GKDB10'),
@@ -63,6 +69,9 @@ const HIDDEN_CATALOG_DRAFTS: CatalogFundDraft[] = [
   {
     id: 'catalog-active-mgmt',
     isin: 'LU1234567890',
+    symbol: '7890',
+    issuer: null,
+    logoUrl: null,
     name: 'Active Global Opportunities',
     categoryLabel: 'Renta Variable Global',
     themeLabel: resolveFundThemeLabel('LU1234567890'),

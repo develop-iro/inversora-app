@@ -25,6 +25,8 @@ export type ApiFund = {
   symbol: string;
   isin: string | null;
   name: string;
+  issuer: string | null;
+  logoUrl: string | null;
   benchmark: string | null;
   metrics: ApiFundMetrics;
   riskLevel: number | null;
@@ -126,6 +128,9 @@ export function mapApiFundToFeaturedFields(
   return {
     id: fund.id,
     isin,
+    symbol: fund.symbol,
+    issuer: fund.issuer,
+    logoUrl: fund.logoUrl,
     name: fund.name,
     categoryLabel: buildApiCategoryLabel(fund),
     themeLabel: fund.editorial.themeLabel,

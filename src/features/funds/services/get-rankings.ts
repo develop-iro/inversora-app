@@ -1,10 +1,12 @@
 import { apiGet } from '@/core/api/client';
+import { shouldUseMockData } from '@/core/config/app-environment';
 import {
   flattenRankingsToRankedFunds,
   parseRankingsResponse,
 } from '@/core/api/parse-rankings-response';
 import { AppError } from '@/core/errors/app-error';
 import type { RankedFund } from '@/core/scoring/types';
+import { getRankingsMock } from '@/features/funds/mocks/get-rankings-mock';
 
 export type GetRankingsOptions = {
   benchmark?: string;
@@ -61,6 +63,10 @@ export async function getRankings(
   options?: GetRankingsOptions,
 ): Promise<RankedFund[]> {
   const { benchmark, limit, signal } = options ?? {};
+
+  if (shouldUseMockData()) {
+    return getRankingsMock(benchmark, limit);
+  }
 
   if (benchmark !== undefined) {
     try {

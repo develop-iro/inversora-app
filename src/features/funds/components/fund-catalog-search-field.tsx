@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import type { CatalogFund } from '@/core/domain/catalog';
+import { searchCatalogFunds } from '@/features/funds/services/get-funds';
 import { FundCatalogSearchSuggestions } from '@/features/funds/components/fund-catalog-search-suggestions';
 import {
   CATALOG_SEARCH_DEBOUNCE_MS,
@@ -9,6 +9,8 @@ import {
   getFundSearchSuggestions,
   type FundSearchSuggestion,
 } from '@/features/funds/utils/fund-search';
+import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
+import { shouldUseMockData } from '@/core/config/app-environment';
 import { SearchField } from '@/shared/components/ui';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { Spacing } from '@/shared/theme/theme';
@@ -18,24 +20,66 @@ const BLUR_DISMISS_DELAY_MS = 160;
 
 export type FundCatalogSearchFieldProps = {
   query: string;
-  catalog: CatalogFund[];
   onQueryChange: (query: string) => void;
 };
 
+function mapCatalogFundsToSuggestions(
+  funds: readonly { isin: string; name: string; categoryLabel?: string }[],
+): FundSearchSuggestion[] {
+  return funds.map((fund) => ({
+    isin: fund.isin,
+    name: fund.name,
+    categoryLabel: fund.categoryLabel ?? '',
+  }));
+}
+
 export function FundCatalogSearchField({
   query,
-  catalog,
   onQueryChange,
 }: FundCatalogSearchFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const [suggestions, setSuggestions] = useState<FundSearchSuggestion[]>([]);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef(0);
 
   const debouncedQuery = useDebouncedValue(query, CATALOG_SEARCH_DEBOUNCE_MS);
 
-  const suggestions = useMemo(
-    () => getFundSearchSuggestions(catalog, debouncedQuery),
-    [catalog, debouncedQuery],
-  );
+  useEffect(() => {
+    const trimmedQuery = debouncedQuery.trim();
+
+    if (trimmedQuery.length < CATALOG_SUGGESTIONS_MIN_QUERY_LENGTH) {
+      setSuggestions([]);
+      return;
+    }
+
+    if (shouldUseMockData()) {
+      setSuggestions(getFundSearchSuggestions(CATALOG_FUNDS_MOCK, debouncedQuery));
+      return;
+    }
+
+    const requestId = ++requestIdRef.current;
+    const controller = new AbortController();
+
+    void searchCatalogFunds(trimmedQuery, { signal: controller.signal })
+      .then((results) => {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
+        setSuggestions(mapCatalogFundsToSuggestions(results));
+      })
+      .catch(() => {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
+        setSuggestions([]);
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [debouncedQuery]);
 
   const showSuggestions =
     isFocused &&

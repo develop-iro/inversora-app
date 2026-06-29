@@ -1,10 +1,9 @@
 import { palette } from '@/shared/theme/palette';
 
-const lightTextSecondary = 'rgba(0, 0, 0, 0.5)';
 const lightSurfaceMuted = 'rgba(0, 0, 0, 0.04)';
 const lightBorder = 'rgba(0, 0, 0, 0.08)';
 
-const darkTextSecondary = 'rgba(255, 255, 255, 0.6)';
+const darkTextSecondary = palette.textSecondaryOnDark;
 const darkSurfaceMuted = 'rgba(255, 255, 255, 0.08)';
 const darkBorder = 'rgba(255, 255, 255, 0.12)';
 
@@ -14,6 +13,7 @@ export const semanticColors = {
     deepOcean: palette.deepOcean,
     accentMint: palette.mintAccent,
     accentLime: palette.limeAccent,
+    chartInterest: palette.chartInterestTeal,
     warning: palette.warningSoft,
     danger: palette.dangerSoft,
 
@@ -25,19 +25,20 @@ export const semanticColors = {
     surfaceMuted: lightSurfaceMuted,
 
     text: palette.textPrimary,
-    textSecondary: lightTextSecondary,
+    textSecondary: palette.textSecondary,
     textOnPrimary: palette.white,
     textOnDark: palette.white,
 
     border: lightBorder,
     tabActive: '#0F172A',
-    tabInactive: lightTextSecondary,
+    tabInactive: palette.textSecondary,
   },
   dark: {
     primary: palette.primaryTeal,
     deepOcean: palette.deepOcean,
     accentMint: palette.mintAccent,
     accentLime: palette.limeAccent,
+    chartInterest: palette.chartInterestTeal,
     warning: palette.warningSoft,
     danger: palette.dangerSoft,
 

@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { CatalogFund } from '@/core/domain/catalog';
 import { FundListRow } from '@/features/funds/components/fund-list-row';
 import { useFavoritesList } from '@/features/funds/hooks/use-favorites-list';
-import { getFunds } from '@/features/funds/services/get-funds';
+import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
+import { mapFundDetailToCatalogFund } from '@/features/funds/utils/map-fund-detail-to-catalog';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { ThemedText } from '@/shared/components/themed-text';
 import { useTheme } from '@/shared/hooks/use-theme';
@@ -23,6 +24,7 @@ export default function FavoritesScreen() {
 
   useEffect(() => {
     if (isins.length === 0) {
+      setFunds([]);
       return;
     }
 
@@ -30,13 +32,18 @@ export default function FavoritesScreen() {
 
     void (async () => {
       setIsCatalogLoading(true);
-      const catalog = await getFunds();
+
+      const details = await Promise.all(isins.map((isin) => getFundByIsin(isin)));
+
       if (cancelled) {
         return;
       }
 
-      const favoriteSet = new Set(isins);
-      setFunds(catalog.filter((fund) => favoriteSet.has(fund.isin)));
+      const favoriteFunds = details
+        .filter((detail) => detail !== null)
+        .map((detail) => mapFundDetailToCatalogFund(detail));
+
+      setFunds(favoriteFunds);
       setIsCatalogLoading(false);
     })();
 

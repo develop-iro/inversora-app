@@ -252,6 +252,16 @@ function buildSummaryRows(fund: FeaturedFund, preset: (typeof PROFILE_PRESETS)[s
       label: 'Fecha de inicio',
       value: p.inceptionDate ?? '01/01/2018',
     },
+    {
+      id: 'currency',
+      label: 'Divisa',
+      value: fund.isin.startsWith('IE') ? 'EUR' : 'USD',
+    },
+    {
+      id: 'vehicle',
+      label: 'Vehículo',
+      value: fund.isin.startsWith('LU') ? 'Fondo de inversión' : 'ETF',
+    },
   ];
 }
 

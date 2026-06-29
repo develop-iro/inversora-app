@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { FavoriteToggleButton } from '@/features/funds/components/favorite-toggle-button';
+import { FundCardIcon } from '@/features/onboarding/components/fund-card-icon';
 import { FundMetricBlock } from '@/features/funds/components/fund-metric-block';
 import { useFavorite } from '@/features/funds/hooks/use-favorite';
 import {
@@ -151,12 +152,21 @@ export function FundCard({
         </View>
 
         <View style={styles.header}>
-          <ThemedText type="cardTitle" numberOfLines={2}>
-            {fund.name}
-          </ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
-            {fund.categoryLabel}
-          </ThemedText>
+          <View style={styles.headerTitleRow}>
+            <FundCardIcon
+              symbol={fund.symbol}
+              logoUrl={fund.logoUrl}
+              accessibilityLabel={`Logo gestora de ${fund.name}`}
+            />
+            <View style={styles.headerText}>
+              <ThemedText type="cardTitle" numberOfLines={2}>
+                {fund.name}
+              </ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+                {fund.categoryLabel}
+              </ThemedText>
+            </View>
+          </View>
         </View>
 
         <View style={styles.scoreRow}>
@@ -312,6 +322,16 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.sm,
     minHeight: HEADER_BLOCK_MIN_HEIGHT,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+  },
+  headerText: {
+    flex: 1,
+    gap: Spacing.xs,
+    minWidth: 0,
   },
   scoreRow: {
     flexDirection: 'row',

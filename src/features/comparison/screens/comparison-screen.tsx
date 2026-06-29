@@ -1,27 +1,31 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { CatalogFund } from '@/core/domain/catalog';
-import { SoraChatSheet } from '@/features/assistant/components/sora-chat-sheet';
-import { CompareFundPickerModal } from '@/features/comparison/components/compare-fund-picker-modal';
-import { CompareMetricsTable } from '@/features/comparison/components/compare-metrics-table';
-import { useCompareSelection } from '@/features/comparison/hooks/use-compare-selection';
-import { getFunds } from '@/features/funds/services/get-funds';
 import { MIN_COMPARE_FUNDS } from '@/core/storage/compare-selection-storage-key';
+import { CompareEmptyBody } from '@/features/comparison/components/compare-empty-body';
+import { CompareFairnessBanner } from '@/features/comparison/components/compare-fairness-banner';
+import { CompareFundPickerModal } from '@/features/comparison/components/compare-fund-picker-modal';
+import { CompareFundVersusHeader } from '@/features/comparison/components/compare-fund-versus-header';
+import { CompareLoadErrorsBanner } from '@/features/comparison/components/compare-load-errors-banner';
+import { CompareLoadingSkeleton } from '@/features/comparison/components/compare-loading-skeleton';
+import { CompareMetricsTable } from '@/features/comparison/components/compare-metrics-table';
+import { ComparePartialSelectionHint } from '@/features/comparison/components/compare-partial-selection-hint';
+import { CompareScoreBreakdownSection } from '@/features/comparison/components/compare-score-breakdown-section';
+import { CompareSoraSection } from '@/features/comparison/components/compare-sora-section';
+import { useCompareFunds } from '@/features/comparison/hooks/use-compare-funds';
+import { useCompareSelection } from '@/features/comparison/hooks/use-compare-selection';
+import { useFavoritesList } from '@/features/funds/hooks/use-favorites-list';
+import { buildCompareQuickPrompts } from '@/features/comparison/utils/build-compare-quick-prompts';
+import { buildCompareTableRows } from '@/features/comparison/utils/build-compare-table-rows';
+import { evaluateCompareFairness } from '@/features/comparison/utils/evaluate-compare-fairness';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
+import { ScreenBodyIntro } from '@/shared/components/layout';
 import { ThemedText } from '@/shared/components/themed-text';
-import { Button } from '@/shared/components/ui/button';
+import { SkeletonShimmerProvider } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { BottomTabInset, Layout, Radius, Spacing } from '@/shared/theme/theme';
+import { BottomTabInset, Layout, Spacing } from '@/shared/theme/theme';
 
 function parseIsinsParam(value: string | string[] | undefined): string[] {
   if (value === undefined) {
@@ -48,32 +52,14 @@ export default function ComparisonScreen() {
     removeFund,
     setFunds,
   } = useCompareSelection();
-  const [catalogFunds, setCatalogFunds] = useState<CatalogFund[]>([]);
-  const [isCatalogLoading, setIsCatalogLoading] = useState(true);
+  const { isins: favoriteIsins } = useFavoritesList();
+  const { entries, loadedDetails, notFoundIsins, isLoading: isFundsLoading } =
+    useCompareFunds(selectedIsins);
   const [isPickerVisible, setIsPickerVisible] = useState(false);
   const [isSoraVisible, setIsSoraVisible] = useState(false);
   const [soraSession, setSoraSession] = useState(0);
+  const [soraInitialMessage, setSoraInitialMessage] = useState('');
   const hasSeededRef = useRef(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getFunds()
-      .then((funds) => {
-        if (!cancelled) {
-          setCatalogFunds(funds);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsCatalogLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (hasSeededRef.current || isSelectionLoading) {
@@ -91,139 +77,142 @@ export default function ComparisonScreen() {
     void setFunds(seededIsins);
   }, [isSelectionLoading, params.isins, setFunds]);
 
-  const selectedFunds = useMemo(
-    () =>
-      selectedIsins
-        .map((isin) => catalogFunds.find((fund) => fund.isin === isin))
-        .filter((fund): fund is CatalogFund => fund !== undefined),
-    [catalogFunds, selectedIsins],
+  const fairness = useMemo(() => evaluateCompareFairness(loadedDetails), [loadedDetails]);
+  const tableRows = useMemo(() => buildCompareTableRows(loadedDetails), [loadedDetails]);
+  const quickPrompts = useMemo(
+    () => buildCompareQuickPrompts(loadedDetails, fairness),
+    [loadedDetails, fairness],
   );
 
-  const canAskSora = selectedFunds.length >= MIN_COMPARE_FUNDS;
-  const isLoading = isSelectionLoading || isCatalogLoading;
+  const canCompare = loadedDetails.length >= MIN_COMPARE_FUNDS;
+  const canAskSora = selectedIsins.length >= MIN_COMPARE_FUNDS;
+  const isLoading = isSelectionLoading || isFundsLoading;
+  const isEmpty = selectedIsins.length === 0;
+  const needsSecondFund = selectedIsins.length === 1;
+
+  const handleOpenPicker = useCallback(() => {
+    setIsPickerVisible(true);
+  }, []);
+
+  const handleApplyPair = useCallback(
+    (isins: readonly string[]) => {
+      void setFunds(isins);
+    },
+    [setFunds],
+  );
+
+  const handleOpenSora = (initialMessage = '') => {
+    setSoraInitialMessage(initialMessage);
+    setSoraSession((current) => current + 1);
+    setIsSoraVisible(true);
+  };
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: theme.background }]}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingTop: Spacing.xl,
-          paddingBottom: insets.bottom + BottomTabInset,
-        },
-      ]}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.headerBlock}>
-        <ThemedText type="sectionTitle">Comparar</ThemedText>
-        <ThemedText type="caption" themeColor="textSecondary">
-          Compara métricas clave de varios fondos en una sola vista educativa. No implica
-          recomendación de inversión.
-        </ThemedText>
-      </View>
-
-      {isLoading ? (
-        <ActivityIndicator color={theme.primary} />
-      ) : (
-        <>
-          <View style={styles.selectionBlock}>
-            <ThemedText type="bodyBold">Fondos seleccionados</ThemedText>
-            <View style={styles.chips}>
-              {selectedIsins.length === 0 ? (
-                <ThemedText type="caption" themeColor="textSecondary">
-                  Añade al menos dos fondos para iniciar la comparación.
-                </ThemedText>
-              ) : (
-                selectedIsins.map((isin) => {
-                  const fund = catalogFunds.find((item) => item.isin === isin);
-
-                  return (
-                    <Pressable
-                      key={isin}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Quitar ${fund?.name ?? isin} de la comparación`}
-                      onPress={() => {
-                        void removeFund(isin);
-                      }}
-                      style={({ pressed }) => [
-                        styles.chip,
-                        { borderColor: theme.border, backgroundColor: theme.surface },
-                        pressed && styles.chipPressed,
-                      ]}
-                    >
-                      <ThemedText type="caption" numberOfLines={1}>
-                        {fund?.name ?? isin}
-                      </ThemedText>
-                      <MaterialCommunityIcons
-                        name="close-circle"
-                        size={16}
-                        color={theme.textSecondary}
-                      />
-                    </Pressable>
-                  );
-                })
-              )}
-            </View>
-
-            <Button
-              label={canAddMore ? 'Añadir fondo' : 'Máximo alcanzado'}
-              variant="secondary"
-              onPress={() => setIsPickerVisible(true)}
-              disabled={!canAddMore}
-            />
-          </View>
-
-          {selectedFunds.length >= MIN_COMPARE_FUNDS ? (
-            <CompareMetricsTable funds={selectedFunds} />
-          ) : null}
-
-          <View style={styles.soraBlock}>
-            <ThemedText type="bodyBold">Pregunta a SORA</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              SORA puede explicar diferencias de TER, score y categoría usando solo los datos
-              visibles en esta comparación.
-            </ThemedText>
-            <Button
-              label="Abrir chat de comparación"
-              onPress={() => {
-                setSoraSession((current) => current + 1);
-                setIsSoraVisible(true);
-              }}
-              disabled={!canAskSora}
-            />
-          </View>
-
-          <LegalNotice
-            title="Aviso educativo"
-            body="Esta comparación es orientativa. SORA no recomienda comprar ni vender productos y no modifica rankings ni scores."
-          />
-        </>
-      )}
-
-      <CompareFundPickerModal
-        visible={isPickerVisible}
-        selectedIsins={selectedIsins}
-        canAddMore={canAddMore}
-        onClose={() => setIsPickerVisible(false)}
-        onSelectFund={(fund) => {
-          void addFund(fund.isin);
-        }}
-      />
-
-      <SoraChatSheet
-        key={`compare-sora-${soraSession}`}
-        visible={isSoraVisible}
-        onClose={() => setIsSoraVisible(false)}
-        surface="compare"
-        fundIsins={selectedIsins}
-        conversationMode
-        quickPrompts={[
-          '¿Qué diferencia hay en el TER?',
-          '¿Esta comparación es homogénea?',
-          '¿Cómo interpretar el Score Inversora aquí?',
+    <SkeletonShimmerProvider>
+      <ScrollView
+        style={[styles.screen, { backgroundColor: theme.background }]}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: Spacing.xl,
+            paddingBottom: insets.bottom + BottomTabInset,
+          },
         ]}
-      />
-    </ScrollView>
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerBlock}>
+          <ThemedText type="sectionTitle" themeColor="deepOcean">
+            Comparar
+          </ThemedText>
+          <ScreenBodyIntro description="Vista educativa de métricas clave. No es recomendación de inversión." />
+        </View>
+
+        {isEmpty ? (
+          <CompareEmptyBody
+            favoriteIsins={favoriteIsins}
+            onOpenPicker={handleOpenPicker}
+            onApplyPair={handleApplyPair}
+          />
+        ) : null}
+
+        {isLoading ? (
+          <CompareLoadingSkeleton />
+        ) : !isEmpty ? (
+          <View style={styles.selectionBlock}>
+            <CompareFundVersusHeader
+              entries={entries}
+              onRemoveFund={(isin) => {
+                void removeFund(isin);
+              }}
+            />
+
+            {canAddMore ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Añadir fondo"
+                onPress={handleOpenPicker}
+                style={({ pressed }) => pressed && styles.linkPressed}
+              >
+                <ThemedText type="caption" themeColor="primary" style={styles.addLink}>
+                  + Añadir fondo
+                </ThemedText>
+              </Pressable>
+            ) : (
+              <ThemedText type="caption" themeColor="textSecondary">
+                Máximo de fondos alcanzado.
+              </ThemedText>
+            )}
+          </View>
+        ) : null}
+
+        {!isLoading && needsSecondFund ? (
+          <ComparePartialSelectionHint
+            onOpenPicker={handleOpenPicker}
+            onApplyPair={handleApplyPair}
+          />
+        ) : null}
+
+        {!isLoading && selectedIsins.length > 0 ? (
+          <>
+            <CompareLoadErrorsBanner notFoundIsins={notFoundIsins} />
+
+            {canCompare ? (
+              <>
+                <CompareFairnessBanner fairness={fairness} />
+                <CompareMetricsTable details={loadedDetails} rows={tableRows} />
+                <CompareScoreBreakdownSection details={loadedDetails} />
+              </>
+            ) : null}
+
+            <CompareSoraSection
+              selectedIsins={selectedIsins}
+              quickPrompts={quickPrompts}
+              canAskSora={canAskSora}
+              isSoraVisible={isSoraVisible}
+              soraSession={soraSession}
+              soraInitialMessage={soraInitialMessage}
+              onOpenChat={handleOpenSora}
+              onCloseChat={() => setIsSoraVisible(false)}
+            />
+          </>
+        ) : null}
+
+        <LegalNotice
+          title="Aviso educativo"
+          body="Esta comparación es orientativa. SORA no recomienda comprar ni vender productos y no modifica rankings ni scores."
+        />
+
+        <CompareFundPickerModal
+          visible={isPickerVisible}
+          selectedIsins={selectedIsins}
+          canAddMore={canAddMore}
+          onClose={() => setIsPickerVisible(false)}
+          onSelectFund={(fund) => {
+            void addFund(fund.isin);
+          }}
+        />
+      </ScrollView>
+    </SkeletonShimmerProvider>
   );
 }
 
@@ -241,25 +230,10 @@ const styles = StyleSheet.create({
   selectionBlock: {
     gap: Spacing.sm,
   },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
+  addLink: {
+    textAlign: 'center',
   },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    maxWidth: '100%',
-  },
-  chipPressed: {
+  linkPressed: {
     opacity: 0.85,
-  },
-  soraBlock: {
-    gap: Spacing.sm,
   },
 });

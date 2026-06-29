@@ -1,112 +1,149 @@
-import type { CatalogFund } from '@/core/domain/catalog';
-import { getFundScore } from '@/features/funds/utils/fund-summary';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+
+import type { FundDetail } from '@/core/domain/catalog';
+import type { CompareMetricRow } from '@/features/comparison/models/compare-fund-entry';
 import { ThemedText } from '@/shared/components/themed-text';
-import { ScorePill } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
+import { palette } from '@/shared/theme/palette';
 import { Radius, Spacing } from '@/shared/theme/theme';
-import { StyleSheet, View } from 'react-native';
+
+export const COMPARE_TABLE_LABEL_WIDTH = 112;
+export const COMPARE_TABLE_FUND_COLUMN_WIDTH = 76;
 
 export type CompareMetricsTableProps = {
-  funds: readonly CatalogFund[];
+  details: readonly FundDetail[];
+  rows: readonly CompareMetricRow[];
 };
 
-type MetricRow = {
-  label: string;
-  values: readonly string[];
-};
-
-function formatTer(value: number): string {
-  return `${value.toFixed(2).replace('.', ',')} %`;
-}
-
-function buildRows(funds: readonly CatalogFund[]): MetricRow[] {
-  return [
-    {
-      label: 'Score Inversora',
-      values: funds.map((fund) => String(getFundScore(fund))),
-    },
-    {
-      label: 'TER',
-      values: funds.map((fund) => formatTer(fund.terPercent)),
-    },
-    {
-      label: 'Categoría',
-      values: funds.map((fund) => fund.categoryLabel),
-    },
-    {
-      label: 'Riesgo',
-      values: funds.map((fund) => fund.riskLevel),
-    },
-    {
-      label: 'ISIN',
-      values: funds.map((fund) => fund.isin),
-    },
-  ];
-}
-
-export function CompareMetricsTable({ funds }: CompareMetricsTableProps) {
-  const theme = useTheme();
-
-  if (funds.length === 0) {
+function resolveEmphasizedIsin(row: CompareMetricRow): string | null {
+  if (!row.emphasizeLower) {
     return null;
   }
 
-  const rows = buildRows(funds);
+  const numericValues = row.values.filter(
+    (value) => !value.isMissing && value.numericValue !== undefined,
+  );
+
+  if (numericValues.length < 2) {
+    return null;
+  }
+
+  const best = numericValues.reduce((currentBest, value) =>
+    (value.numericValue ?? Number.POSITIVE_INFINITY) <
+    (currentBest.numericValue ?? Number.POSITIVE_INFINITY)
+      ? value
+      : currentBest,
+  );
+
+  return best.isin;
+}
+
+function CompareTableHeader({ details }: { details: readonly FundDetail[] }) {
+  const theme = useTheme();
+
+  return (
+    <View style={[styles.headerRow, { borderBottomColor: theme.border }]}>
+      <View style={[styles.labelCell, { width: COMPARE_TABLE_LABEL_WIDTH }]} />
+      {details.map((detail) => {
+        const shortLabel =
+          detail.fund.symbol.length > 0 ? detail.fund.symbol : detail.fund.isin.slice(-4);
+
+        return (
+          <View
+            key={detail.fund.isin}
+            style={[styles.fundCell, { width: COMPARE_TABLE_FUND_COLUMN_WIDTH }]}
+          >
+            <ThemedText type="bodyBold" numberOfLines={1}>
+              {shortLabel}
+            </ThemedText>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+function CompareTableRow({ row }: { row: CompareMetricRow }) {
+  const theme = useTheme();
+  const emphasizedIsin = resolveEmphasizedIsin(row);
+
+  return (
+    <View style={[styles.dataRow, { borderTopColor: theme.border }]}>
+      <View style={[styles.labelCell, { width: COMPARE_TABLE_LABEL_WIDTH }]}>
+        <ThemedText type="caption" themeColor="textSecondary" numberOfLines={2}>
+          {row.label}
+        </ThemedText>
+      </View>
+
+      {row.values.map((value) => {
+        const isEmphasized = emphasizedIsin === value.isin;
+
+        return (
+          <View
+            key={`${value.isin}-${row.id}`}
+            style={[
+              styles.fundCell,
+              { width: COMPARE_TABLE_FUND_COLUMN_WIDTH },
+              isEmphasized && styles.emphasizedCell,
+            ]}
+          >
+            <ThemedText
+              type={row.id === 'score' ? 'bodyBold' : 'caption'}
+              themeColor={value.isMissing ? 'textSecondary' : 'text'}
+              numberOfLines={2}
+            >
+              {value.displayValue}
+            </ThemedText>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+/**
+ * Compact side-by-side metrics table inside a single card.
+ */
+export function CompareMetricsTable({ details, rows }: CompareMetricsTableProps) {
+  const theme = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const contentPadding = Spacing.lg * 2;
+  const tableMinWidth =
+    COMPARE_TABLE_LABEL_WIDTH + details.length * COMPARE_TABLE_FUND_COLUMN_WIDTH;
+  const needsHorizontalScroll = tableMinWidth + contentPadding > windowWidth;
+
+  if (details.length === 0 || rows.length === 0) {
+    return null;
+  }
+
+  const tableBody = (
+    <View style={{ minWidth: tableMinWidth }}>
+      <CompareTableHeader details={details} />
+      {rows.map((row) => (
+        <CompareTableRow key={row.id} row={row} />
+      ))}
+    </View>
+  );
 
   return (
     <View
       accessibilityRole="summary"
       accessibilityLabel="Tabla comparativa educativa de fondos"
-      style={[styles.table, { borderColor: theme.border, backgroundColor: theme.surface }]}
+      style={[styles.card, { borderColor: theme.border, backgroundColor: theme.surface }]}
     >
-      <View style={[styles.headerRow, { borderBottomColor: theme.border }]}>
-        <View style={styles.metricLabelCell}>
-          <ThemedText type="metaLabel" themeColor="textSecondary">
-            Métrica
-          </ThemedText>
-        </View>
-        {funds.map((fund) => (
-          <View key={fund.isin} style={styles.valueCell}>
-            <ThemedText type="caption" numberOfLines={2}>
-              {fund.name}
-            </ThemedText>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.scoreRow}>
-        <View style={styles.metricLabelCell}>
-          <ThemedText type="caption" themeColor="textSecondary">
-            Score
-          </ThemedText>
-        </View>
-        {funds.map((fund) => (
-          <View key={`${fund.isin}-score`} style={styles.valueCell}>
-            <ScorePill score={getFundScore(fund)} />
-          </View>
-        ))}
-      </View>
-
-      {rows.slice(1).map((row) => (
-        <View key={row.label} style={[styles.dataRow, { borderTopColor: theme.border }]}>
-          <View style={styles.metricLabelCell}>
-            <ThemedText type="caption" themeColor="textSecondary">
-              {row.label}
-            </ThemedText>
-          </View>
-          {row.values.map((value, index) => (
-            <View key={`${funds[index]?.isin ?? index}-${row.label}`} style={styles.valueCell}>
-              <ThemedText type="caption">{value}</ThemedText>
-            </View>
-          ))}
-        </View>
-      ))}
+      {needsHorizontalScroll ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {tableBody}
+        </ScrollView>
+      ) : (
+        tableBody
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  table: {
+  card: {
     borderWidth: 1,
     borderRadius: Radius.card,
     overflow: 'hidden',
@@ -116,24 +153,25 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingVertical: Spacing.sm,
   },
-  scoreRow: {
-    flexDirection: 'row',
-    paddingVertical: Spacing.sm,
-  },
   dataRow: {
     flexDirection: 'row',
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingVertical: Spacing.sm,
+    alignItems: 'center',
   },
-  metricLabelCell: {
-    width: 88,
-    paddingHorizontal: Spacing.sm,
+  labelCell: {
+    paddingHorizontal: Spacing.md,
     justifyContent: 'center',
   },
-  valueCell: {
-    flex: 1,
+  fundCell: {
     paddingHorizontal: Spacing.xs,
     justifyContent: 'center',
-    gap: Spacing.xs,
+    alignItems: 'center',
+  },
+  emphasizedCell: {
+    backgroundColor: palette.softTealBackground,
+    borderRadius: Radius.chip,
+    marginVertical: -Spacing.xs,
+    paddingVertical: Spacing.xs,
   },
 });

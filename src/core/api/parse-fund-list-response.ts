@@ -72,6 +72,8 @@ function parseApiFund(value: unknown): ApiFund | null {
     symbol,
     isin,
     name,
+    issuer,
+    logoUrl,
     benchmark,
     metrics,
     riskLevel,
@@ -88,6 +90,8 @@ function parseApiFund(value: unknown): ApiFund | null {
     typeof symbol !== 'string' ||
     (typeof isin !== 'string' && isin !== null) ||
     typeof name !== 'string' ||
+    (typeof issuer !== 'string' && issuer !== null) ||
+    (typeof logoUrl !== 'string' && logoUrl !== null) ||
     (typeof benchmark !== 'string' && benchmark !== null) ||
     parsedMetrics === null ||
     (typeof riskLevel !== 'number' && riskLevel !== null) ||
@@ -105,6 +109,8 @@ function parseApiFund(value: unknown): ApiFund | null {
     symbol,
     isin,
     name,
+    issuer: issuer ?? null,
+    logoUrl: logoUrl ?? null,
     benchmark,
     metrics: parsedMetrics,
     riskLevel,

@@ -1,3 +1,4 @@
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -16,7 +17,7 @@ import { SearchOrb } from "@/shared/components/ui/search/search-orb";
 import { isWeb } from "@/shared/platform/capabilities";
 import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
 import { useTheme } from "@/shared/hooks/use-theme";
-import { Spacing, Typography } from "@/shared/theme/theme";
+import { Radius, Spacing, Typography } from "@/shared/theme/theme";
 
 const SEARCH_FIELD_MIN_HEIGHT = 44;
 
@@ -28,6 +29,9 @@ const DEFAULT_SUGGESTIONS = [
   "I don't know where to start",
 ] as const;
 
+const DEFAULT_ACCESSIBILITY_LABEL =
+  "Buscar fondos, categorías u objetivos de inversión";
+
 const webInputStyle: TextStyle | null = isWeb
   ? ({
       outlineWidth: 0,
@@ -37,14 +41,107 @@ const webInputStyle: TextStyle | null = isWeb
     } as TextStyle)
   : null;
 
+export type SearchFieldVariant = "premium" | "plain";
+
 export type SearchBarProps = Omit<TextInputProps, "style"> & {
   leadingIcon?: ReactNode;
   containerStyle?: StyleProp<ViewStyle>;
   suggestions?: string[];
+  variant?: SearchFieldVariant;
 };
 
+function PlainSearchBar({
+  leadingIcon,
+  containerStyle,
+  editable = true,
+  placeholder = "Buscar conceptos o fondos...",
+  value,
+  defaultValue,
+  onChangeText,
+  onFocus,
+  onBlur,
+  accessibilityLabel = DEFAULT_ACCESSIBILITY_LABEL,
+  ...inputProps
+}: SearchBarProps) {
+  const theme = useTheme();
+  const [isFocused, setIsFocused] = useState(false);
+  const [uncontrolledValue, setUncontrolledValue] = useState(
+    defaultValue ?? "",
+  );
+
+  const isControlled = value !== undefined;
+  const inputValue = String(isControlled ? (value ?? "") : uncontrolledValue);
+
+  const handleChangeText = useCallback(
+    (nextValue: string) => {
+      if (!isControlled) {
+        setUncontrolledValue(nextValue);
+      }
+      onChangeText?.(nextValue);
+    },
+    [isControlled, onChangeText],
+  );
+
+  const handleFocus: NonNullable<TextInputProps["onFocus"]> = useCallback(
+    (event) => {
+      setIsFocused(true);
+      onFocus?.(event);
+    },
+    [onFocus],
+  );
+
+  const handleBlur: NonNullable<TextInputProps["onBlur"]> = useCallback(
+    (event) => {
+      setIsFocused(false);
+      onBlur?.(event);
+    },
+    [onBlur],
+  );
+
+  return (
+    <View
+      style={[
+        styles.plainShell,
+        {
+          backgroundColor: theme.surface,
+          borderColor: isFocused ? theme.primary : theme.border,
+        },
+        !editable && styles.disabled,
+        containerStyle,
+      ]}
+    >
+      <View style={styles.icon}>
+        {leadingIcon ?? (
+          <MaterialCommunityIcons
+            name="magnify"
+            size={18}
+            color={isFocused ? theme.primary : theme.textSecondary}
+          />
+        )}
+      </View>
+
+      <TextInput
+        accessibilityRole="search"
+        accessibilityLabel={accessibilityLabel}
+        editable={editable}
+        cursorColor={theme.primary}
+        selectionColor={theme.primary}
+        underlineColorAndroid="transparent"
+        value={inputValue}
+        onChangeText={handleChangeText}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        placeholder={placeholder}
+        placeholderTextColor={theme.textSecondary}
+        style={[styles.input, webInputStyle, { color: theme.text }]}
+        {...inputProps}
+      />
+    </View>
+  );
+}
+
 /** Premium search surface with calm motion and educational prompt guidance. */
-export function SearchBar({
+function PremiumSearchBar({
   leadingIcon,
   containerStyle,
   editable = true,
@@ -55,6 +152,7 @@ export function SearchBar({
   onFocus,
   onBlur,
   suggestions,
+  accessibilityLabel = DEFAULT_ACCESSIBILITY_LABEL,
   ...inputProps
 }: SearchBarProps) {
   const theme = useTheme();
@@ -139,7 +237,7 @@ export function SearchBar({
 
           <TextInput
             accessibilityRole="search"
-            accessibilityLabel="Search funds, categories or investment goals"
+            accessibilityLabel={accessibilityLabel}
             editable={editable}
             cursorColor={theme.primary}
             selectionColor={theme.primary}
@@ -161,6 +259,14 @@ export function SearchBar({
   );
 }
 
+export function SearchBar({ variant = "premium", ...props }: SearchBarProps) {
+  if (variant === "plain") {
+    return <PlainSearchBar {...props} />;
+  }
+
+  return <PremiumSearchBar {...props} />;
+}
+
 export type SearchFieldProps = SearchBarProps;
 
 export function SearchField(props: SearchFieldProps) {
@@ -168,6 +274,17 @@ export function SearchField(props: SearchFieldProps) {
 }
 
 const styles = StyleSheet.create({
+  plainShell: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "stretch",
+    width: "100%",
+    minHeight: SEARCH_FIELD_MIN_HEIGHT,
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderRadius: Radius.field,
+    paddingHorizontal: Spacing.md,
+  },
   container: {
     flexDirection: "row",
     alignItems: "center",

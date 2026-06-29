@@ -1,8 +1,8 @@
 import type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
 
 export type FundListApiQuery = {
-  page: number;
-  limit: number;
+  page?: number;
+  limit?: number;
   sortBy: 'score';
   sortOrder: 'desc';
   q?: string;
@@ -46,8 +46,6 @@ export function mapCatalogFiltersToApiQuery(
   filters?: FundCatalogFilters,
 ): FundListApiQuery {
   const query: FundListApiQuery = {
-    page: 1,
-    limit: 100,
     sortBy: 'score',
     sortOrder: 'desc',
   };

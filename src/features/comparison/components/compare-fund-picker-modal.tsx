@@ -1,22 +1,26 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FlatList, Modal, StyleSheet, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
-import { getFunds } from '@/features/funds/services/get-funds';
+import { MAX_COMPARE_FUNDS } from '@/core/storage/compare-selection-storage-key';
+import { CompareFundPickerRow } from '@/features/comparison/components/compare-fund-picker-row';
+import { loadComparePickerFunds } from '@/features/comparison/services/load-compare-picker-funds';
+import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
+import {
+  ScreenBody,
+  ScreenBodyIntro,
+  ScreenFooter,
+  ScreenHeader,
+  ScreenHeaderIconButton,
+  ScreenShell,
+} from '@/shared/components/layout';
 import { ThemedText } from '@/shared/components/themed-text';
-import { Button } from '@/shared/components/ui/button';
+import { Button, ContentEmptyState, SearchField, SkeletonShimmerProvider } from '@/shared/components/ui';
+import { SkeletonPickerRow } from '@/shared/components/ui/skeleton-picker-row';
+import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Layout, Radius, Spacing } from '@/shared/theme/theme';
+import { Spacing } from '@/shared/theme/theme';
 
 export type CompareFundPickerModalProps = {
   visible: boolean;
@@ -26,6 +30,26 @@ export type CompareFundPickerModalProps = {
   onSelectFund: (fund: CatalogFund) => void;
 };
 
+function PickerLoadingSkeleton() {
+  return (
+    <SkeletonShimmerProvider>
+      <View style={styles.skeletonList} accessibilityLabel="Cargando catálogo">
+        <SkeletonPickerRow />
+        <SkeletonPickerRow />
+        <SkeletonPickerRow />
+        <SkeletonPickerRow />
+      </View>
+    </SkeletonShimmerProvider>
+  );
+}
+
+function ListSeparator() {
+  return <View style={styles.separator} />;
+}
+
+/**
+ * Full-screen sheet to search and add funds to the comparison selection.
+ */
 export function CompareFundPickerModal({
   visible,
   selectedIsins,
@@ -34,193 +58,261 @@ export function CompareFundPickerModal({
   onSelectFund,
 }: CompareFundPickerModalProps) {
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [funds, setFunds] = useState<CatalogFund[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
-  const handleOpen = async () => {
-    if (funds.length > 0 || isLoading) {
+  const debouncedQuery = useDebouncedValue(query, CATALOG_SEARCH_DEBOUNCE_MS);
+
+  const resetModalState = useCallback(() => {
+    setQuery('');
+    setFunds([]);
+    setErrorMessage(null);
+    setIsLoading(false);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    resetModalState();
+    onClose();
+  }, [onClose, resetModalState]);
+
+  useEffect(() => {
+    if (!visible) {
       return;
     }
 
-    setIsLoading(true);
-    setErrorMessage(null);
+    let cancelled = false;
+    const controller = new AbortController();
 
-    try {
-      const catalog = await getFunds();
-      setFunds(catalog);
-    } catch {
-      setErrorMessage('No se pudo cargar el catálogo para comparar fondos.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    void (async () => {
+      if (!cancelled) {
+        setIsLoading(true);
+        setErrorMessage(null);
+      }
 
-  const filteredFunds = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
+      try {
+        const loaded = await loadComparePickerFunds(debouncedQuery, {
+          signal: controller.signal,
+        });
 
-    return funds
-      .filter((fund) => !selectedIsins.includes(fund.isin))
-      .filter((fund) => {
-        if (!normalized) {
-          return true;
+        if (!cancelled) {
+          setFunds(loaded);
         }
+      } catch {
+        if (!cancelled) {
+          setFunds([]);
+          setErrorMessage('No se pudo cargar el catálogo para comparar fondos.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    })();
 
-        return (
-          fund.name.toLowerCase().includes(normalized) ||
-          fund.isin.toLowerCase().includes(normalized) ||
-          fund.categoryLabel.toLowerCase().includes(normalized)
-        );
-      })
-      .slice(0, 40);
-  }, [funds, query, selectedIsins]);
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [visible, debouncedQuery, reloadToken]);
+
+  const filteredFunds = useMemo(
+    () => funds.filter((fund) => !selectedIsins.includes(fund.isin)),
+    [funds, selectedIsins],
+  );
+
+  const listHeader = useMemo(() => {
+    const trimmedQuery = debouncedQuery.trim();
+
+    return (
+      <View style={styles.listHeader}>
+        <ThemedText type="metaLabel" themeColor="textSecondary" style={styles.sectionEyebrow}>
+          {trimmedQuery.length > 0
+            ? `${filteredFunds.length} resultado${filteredFunds.length === 1 ? '' : 's'}`
+            : 'Fondos del catálogo educativo'}
+        </ThemedText>
+        {!canAddMore ? (
+          <View style={[styles.limitChip, { backgroundColor: theme.backgroundSoft }]}>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Máximo de {MAX_COMPARE_FUNDS} fondos en comparación
+            </ThemedText>
+          </View>
+        ) : null}
+      </View>
+    );
+  }, [canAddMore, debouncedQuery, filteredFunds.length, theme.backgroundSoft]);
+
+  const handleRetry = useCallback(() => {
+    setReloadToken((current) => current + 1);
+  }, []);
+
+  const handleSelectFund = useCallback(
+    (fund: CatalogFund) => {
+      onSelectFund(fund);
+      handleClose();
+    },
+    [handleClose, onSelectFund],
+  );
+
+  const renderListContent = () => {
+    if (isLoading) {
+      return <PickerLoadingSkeleton />;
+    }
+
+    if (errorMessage !== null) {
+      return (
+        <ContentEmptyState
+          icon="cloud-off-outline"
+          title="No se pudo cargar el catálogo"
+          message={errorMessage}
+          actionLabel="Reintentar"
+          onAction={handleRetry}
+        />
+      );
+    }
+
+    if (filteredFunds.length === 0) {
+      const trimmedQuery = debouncedQuery.trim();
+
+      return (
+        <ContentEmptyState
+          icon={trimmedQuery.length > 0 ? 'magnify-close' : 'database-off-outline'}
+          title={trimmedQuery.length > 0 ? 'Sin coincidencias' : 'Catálogo vacío'}
+          message={
+            trimmedQuery.length > 0
+              ? `No encontramos fondos para “${trimmedQuery}”. Prueba con el nombre completo o el ISIN.`
+              : 'No hay fondos visibles disponibles en este momento.'
+          }
+          actionLabel={trimmedQuery.length > 0 ? 'Limpiar búsqueda' : 'Reintentar'}
+          onAction={trimmedQuery.length > 0 ? () => setQuery('') : handleRetry}
+        />
+      );
+    }
+
+    return (
+      <FlatList
+        data={filteredFunds}
+        keyExtractor={(fund) => fund.isin}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        ItemSeparatorComponent={ListSeparator}
+        ListHeaderComponent={listHeader}
+        renderItem={({ item }) => (
+          <CompareFundPickerRow
+            fund={item}
+            disabled={!canAddMore}
+            onPress={() => handleSelectFund(item)}
+          />
+        )}
+      />
+    );
+  };
 
   return (
     <Modal
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onShow={() => {
-        void handleOpen();
-      }}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <View style={[styles.screen, { backgroundColor: theme.background }]}>
-        <View
-          style={[
-            styles.header,
-            {
-              paddingTop: insets.top + Spacing.sm,
-              borderBottomColor: theme.border,
-            },
-          ]}
-        >
-          <ThemedText type="sectionTitle">Añadir fondo</ThemedText>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Cerrar selector de fondos"
-            onPress={onClose}
-          >
-            <MaterialCommunityIcons name="close" size={20} color={theme.text} />
-          </Pressable>
-        </View>
-
-        <ScrollView
-          contentContainerStyle={[
-            styles.content,
-            { paddingBottom: insets.bottom + Spacing.lg },
-          ]}
-          keyboardShouldPersistTaps="handled"
-        >
-          {!canAddMore ? (
-            <ThemedText type="caption" themeColor="textSecondary">
-              Ya has seleccionado el máximo de fondos para comparar.
-            </ThemedText>
-          ) : (
-            <>
-              <TextInput
-                accessibilityLabel="Buscar fondo para comparar"
-                placeholder="Busca por nombre, ISIN o categoría"
-                placeholderTextColor={theme.textSecondary}
-                value={query}
-                onChangeText={setQuery}
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
-                    borderColor: theme.border,
-                    backgroundColor: theme.surface,
-                  },
-                ]}
+      <ScreenShell
+        header={
+          <ScreenHeader
+            title="Elegir fondo"
+            trailing={
+              <ScreenHeaderIconButton
+                icon="close"
+                accessibilityLabel="Cerrar selector de fondos"
+                onPress={handleClose}
               />
-
-              {isLoading ? <ActivityIndicator color={theme.primary} /> : null}
-              {errorMessage ? (
-                <ThemedText type="caption" themeColor="textSecondary">
-                  {errorMessage}
-                </ThemedText>
+            }
+          />
+        }
+        body={
+          <ScreenBody>
+            <ScreenBodyIntro description="Busca por nombre, ISIN o categoría y añádelo a la comparación.">
+              {selectedIsins.length > 0 ? (
+                <View style={[styles.selectionChip, { backgroundColor: theme.backgroundSoft }]}>
+                  <MaterialCommunityIcons name="scale-balance" size={16} color={theme.primary} />
+                  <ThemedText type="caption" themeColor="textSecondary">
+                    {selectedIsins.length} fondo{selectedIsins.length === 1 ? '' : 's'} en comparación
+                  </ThemedText>
+                </View>
               ) : null}
+            </ScreenBodyIntro>
 
-              {filteredFunds.map((fund) => (
-                <Pressable
-                  key={fund.isin}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Añadir ${fund.name} a la comparación`}
-                  onPress={() => {
-                    onSelectFund(fund);
-                    onClose();
-                  }}
-                  style={({ pressed }) => [
-                    styles.row,
-                    { borderColor: theme.border, backgroundColor: theme.surface },
-                    pressed && styles.rowPressed,
-                  ]}
-                >
-                  <View style={styles.rowCopy}>
-                    <ThemedText type="bodyBold" numberOfLines={2}>
-                      {fund.name}
-                    </ThemedText>
-                    <ThemedText type="caption" themeColor="textSecondary">
-                      {fund.categoryLabel} · {fund.isin}
-                    </ThemedText>
-                  </View>
-                  <MaterialCommunityIcons
-                    name="plus-circle-outline"
-                    size={20}
-                    color={theme.deepOcean}
-                  />
-                </Pressable>
-              ))}
-            </>
-          )}
+            <SearchField
+              variant="plain"
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Buscar por nombre, ISIN o categoría"
+              accessibilityLabel="Buscar fondo para comparar"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+            />
 
-          <Button label="Cerrar" variant="secondary" onPress={onClose} />
-        </ScrollView>
-      </View>
+            <View style={styles.listArea}>{renderListContent()}</View>
+          </ScreenBody>
+        }
+        footer={
+          <ScreenFooter>
+            <ThemedText type="caption" themeColor="textSecondary" style={styles.footerSummary}>
+              {selectedIsins.length > 0
+                ? `${selectedIsins.length} de ${MAX_COMPARE_FUNDS} fondos seleccionados`
+                : 'Selecciona al menos dos fondos para comparar'}
+            </ThemedText>
+            <Button label="Listo" onPress={handleClose} />
+          </ScreenFooter>
+        }
+      />
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  content: {
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingTop: Spacing.lg,
-    gap: Spacing.md,
-  },
-  input: {
-    minHeight: 44,
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  row: {
+  selectionChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    borderWidth: 1,
-    borderRadius: Radius.card,
+    alignSelf: 'flex-start',
+    borderRadius: 999,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
-  rowPressed: {
-    opacity: 0.85,
-  },
-  rowCopy: {
+  listArea: {
     flex: 1,
-    gap: 2,
+    minHeight: 0,
+    paddingTop: Spacing.md,
+  },
+  listHeader: {
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  sectionEyebrow: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  limitChip: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+  },
+  listContent: {
+    paddingBottom: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  separator: {
+    height: Spacing.sm,
+  },
+  skeletonList: {
+    gap: Spacing.sm,
+  },
+  footerSummary: {
+    textAlign: 'center',
   },
 });

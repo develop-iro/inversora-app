@@ -9,8 +9,14 @@ export const palette = {
   softTealBackground: '#EAF8F6',
   mintAccent: '#B8F2E6',
   limeAccent: '#D7FF64',
+  /** Accessible teal for chart segments (contrast-safe on light backgrounds). */
+  chartInterestTeal: '#0F766E',
   neutralBackground: '#F8FAF9',
   textPrimary: '#111827',
+  /** Secondary copy — solid gray for WCAG AA on light surfaces (avoid rgba black). */
+  textSecondary: '#475569',
+  /** Secondary copy on deepOcean / dark surfaces. */
+  textSecondaryOnDark: '#B8C5CA',
   warningSoft: '#FACC15',
   dangerSoft: '#FB7185',
   white: '#FFFFFF',

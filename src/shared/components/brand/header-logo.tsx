@@ -22,10 +22,9 @@ export function HeaderLogo() {
 const styles = StyleSheet.create({
   wrapper: {
     height: 40,
-    minWidth: 150,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
   },
   wordmark: {
     color: "#0B2E36",

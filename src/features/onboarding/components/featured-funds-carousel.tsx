@@ -14,7 +14,7 @@ import {
 } from "react-native";
 
 import { FundCard } from "@/features/funds/components/fund-card";
-import type { FeaturedFund } from "@/features/funds/models/fund";
+import type { FeaturedFund } from "@/core/domain/fund";
 import { useTheme } from "@/shared/hooks/use-theme";
 import { Layout, Spacing } from "@/shared/theme/theme";
 
@@ -22,6 +22,9 @@ type FeaturedFundsCarouselProps = {
   funds: FeaturedFund[];
   onFundPress: (fund: FeaturedFund) => void;
 };
+
+/** Matches `FundCard` min height so the carousel is visible inside a vertical scroll. */
+const CAROUSEL_MIN_HEIGHT = 420;
 
 const AUTOPLAY_MS = 6000;
 const ARROW_HIDE_BREAKPOINT = 1024;
@@ -264,6 +267,10 @@ export function FeaturedFundsCarousel({
     );
   }
 
+  if (funds.length === 0) {
+    return null;
+  }
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.trackRow}>
@@ -305,6 +312,7 @@ export function FeaturedFundsCarousel({
           onTouchEnd={resumeAutoplay}
           style={[
             styles.viewport,
+            { minHeight: CAROUSEL_MIN_HEIGHT },
             showNavArrows ? styles.viewportWithSideControls : null,
           ]}
         >
@@ -312,6 +320,7 @@ export function FeaturedFundsCarousel({
             ref={listRef}
             data={funds}
             horizontal
+            nestedScrollEnabled
             pagingEnabled={!useMobilePreviewCarousel}
             snapToInterval={
               useMobilePreviewCarousel ? effectiveItemInterval : undefined
@@ -342,6 +351,7 @@ export function FeaturedFundsCarousel({
                         ? cardGap
                         : 0,
                     width: cardWidth,
+                    minHeight: CAROUSEL_MIN_HEIGHT,
                   },
                   showNavArrows ? { paddingHorizontal: arrowGutter } : null,
                 ]}
@@ -363,7 +373,7 @@ export function FeaturedFundsCarousel({
                 ? { paddingRight: carouselEndPadding }
                 : null
             }
-            style={styles.list}
+            style={[styles.list, { minHeight: CAROUSEL_MIN_HEIGHT }]}
           />
         </View>
 
@@ -462,11 +472,13 @@ const styles = StyleSheet.create({
   },
   trackRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "stretch",
     gap: Spacing.sm,
+    minHeight: CAROUSEL_MIN_HEIGHT,
   },
   viewport: {
     flex: 1,
+    minWidth: 0,
   },
   viewportWithSideControls: {
     minWidth: 0,

@@ -8,9 +8,14 @@ import { useEffect, useMemo } from "react";
 import { Platform, StatusBar, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { HeaderLogo } from "@/shared/components/brand/header-logo";
+import {
+  AppHeaderBrand,
+  AppHeaderLearnAction,
+  useHeaderHorizontalInset,
+} from "@/shared/components/brand/app-header-bar";
 import { FloatingTabBar } from "@/shared/components/navigation/floating-tab-bar";
 import { isFundDetailPath } from "@/shared/navigation/tab-route-state";
+import { semanticColors } from "@/shared/theme/colors";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,6 +30,7 @@ export default function TabLayout() {
 
   const safeBottomInset =
     Platform.OS === "ios" ? Math.min(Math.max(insets.bottom, 8), 28) : 0;
+  const headerHorizontalInset = useHeaderHorizontalInset();
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -46,18 +52,31 @@ export default function TabLayout() {
             height: 0,
           },
           headerShown: true,
-          headerTitle: () => <HeaderLogo />,
-          headerTitleAlign: "center",
+          headerTitle: () => <AppHeaderBrand />,
+          headerTitleAlign: "left",
+          headerRight: () => <AppHeaderLearnAction />,
+          headerTitleContainerStyle: {
+            flexGrow: 1,
+            flexShrink: 1,
+            marginLeft: headerHorizontalInset,
+            paddingHorizontal: 0,
+            alignItems: "flex-start",
+            justifyContent: "center",
+          },
+          headerLeftContainerStyle: {
+            width: 0,
+          },
+          headerRightContainerStyle: {
+            paddingRight: headerHorizontalInset,
+            justifyContent: "center",
+            alignItems: "center",
+          },
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: "#FFFFFF",
+            backgroundColor: semanticColors.light.background,
             borderBottomColor: "rgba(11, 46, 54, 0.06)",
             borderBottomWidth: StyleSheet.hairlineWidth,
-            height: 60,
-          },
-          headerTitleContainerStyle: {
-            minWidth: 230,
-            alignItems: "center",
+            height: 64,
           },
         }}
         tabBar={(props) => (

@@ -1,104 +1,77 @@
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useRouter } from 'expo-router';
+import { useCallback } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getFeaturedFundsForCarousel } from "@/features/funds/services/get-featured-funds";
-import { SoraChatSheet } from "@/features/assistant/components/sora-chat-sheet";
-import type { FeaturedFund } from "@/core/domain/fund";
-import { CATALOG_SEARCH_DEBOUNCE_MS } from "@/features/funds/utils/fund-search";
-import { FeaturedFundsCarousel } from "@/features/onboarding/components/featured-funds-carousel";
-import { HomeDynamicRankingSection } from "@/features/onboarding/components/home-dynamic-ranking-section";
-import { HomeHero } from "@/features/onboarding/components/home-hero";
-import {
-  resolveHomeSearch,
-  type HomeSearchResult,
-} from "@/features/onboarding/services/resolve-home-search";
+import { FeaturedFundsCarousel } from '@/features/onboarding/components/featured-funds-carousel';
+import { HomeDynamicRankingSection } from '@/features/onboarding/components/home-dynamic-ranking-section';
+import { HomeHeroCarousel } from '@/features/onboarding/components/home-hero-carousel';
+import { HomeNewsSection } from '@/features/onboarding/components/home-news-section';
+import { HomeScrollSection } from '@/features/onboarding/components/home-scroll-section';
+import { HomeSectionHeader } from '@/features/onboarding/components/home-section-header';
+import { HomeStarterCard } from '@/features/onboarding/components/home-starter-card';
+import { HomeFeaturedFundsSkeleton } from '@/features/onboarding/components/skeletons/home-featured-funds-skeleton';
+import type { HomeHeroSlideAction } from '@/features/onboarding/constants/home-hero-slides';
+import { useHomeScreenData } from '@/features/onboarding/hooks/use-home-screen-data';
 import {
   FLOATING_TAB_BAR_BOTTOM_GAP,
   FLOATING_TAB_BAR_CONTENT_GAP,
   FLOATING_TAB_BAR_HEIGHT,
-} from "@/shared/components/navigation/floating-tab-bar";
-import { ThemedText } from "@/shared/components/themed-text";
-import { SearchField } from "@/shared/components/ui";
-import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
-import { useMobileLayout } from "@/shared/hooks/use-mobile-layout";
-import { useTheme } from "@/shared/hooks/use-theme";
-import { routes } from "@/shared/navigation/routes";
-import { Layout, Radius, Spacing } from "@/shared/theme/theme";
-
-const SEARCH_SUGGESTIONS = [
-  "¿Qué quieres conseguir?",
-  "Quiero invertir a largo plazo",
-  "MSCI World",
-  "Ayúdame a comparar fondos tranquilos",
-] as const;
+} from '@/shared/components/navigation/floating-tab-bar';
+import { ThemedText } from '@/shared/components/themed-text';
+import { ContentEmptyState, SearchField } from '@/shared/components/ui';
+import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
+import { useTheme } from '@/shared/hooks/use-theme';
+import { routes } from '@/shared/navigation/routes';
+import { Layout, Spacing } from '@/shared/theme/theme';
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { contentWidth } = useMobileLayout();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResult, setSearchResult] = useState<HomeSearchResult | null>(null);
-  const [isSearchLoading, setIsSearchLoading] = useState(true);
-  const [featuredFunds, setFeaturedFunds] = useState<FeaturedFund[]>([]);
-  const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
-  const [isSoraVisible, setIsSoraVisible] = useState(false);
-  const [soraSession, setSoraSession] = useState(0);
+  const {
+    searchQuery,
+    hasQuery,
+    handleSearchChange,
+    featuredFunds,
+    featuredState,
+    newsItems,
+    newsState,
+    activeRanking,
+    rankingState,
+    isRefreshing,
+    refreshHome,
+    retryFeatured,
+    retryNews,
+    retryActiveRanking,
+  } = useHomeScreenData();
 
-  const debouncedQuery = useDebouncedValue(searchQuery, CATALOG_SEARCH_DEBOUNCE_MS);
+  const handleLearnPress = useCallback(() => {
+    router.push(routes.learn);
+  }, [router]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      setIsFeaturedLoading(true);
-
-      try {
-        const funds = await getFeaturedFundsForCarousel();
-
-        if (!cancelled) {
-          setFeaturedFunds(funds);
-        }
-      } catch {
-        if (!cancelled) {
-          setFeaturedFunds([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsFeaturedLoading(false);
+  const handleHeroAction = useCallback(
+    (action: HomeHeroSlideAction) => {
+      switch (action) {
+        case 'learn':
+          router.push(routes.learn);
+          break;
+        case 'funds':
+          router.push(routes.fundsCatalog);
+          break;
+        case 'compare':
+          router.push(routes.compare);
+          break;
+        default: {
+          const exhaustiveCheck: never = action;
+          return exhaustiveCheck;
         }
       }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      setIsSearchLoading(true);
-      const result = await resolveHomeSearch(debouncedQuery);
-
-      if (!cancelled) {
-        setSearchResult(result);
-        setIsSearchLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedQuery]);
-
-  const handleSearchChange = useCallback((query: string) => {
-    setSearchQuery(query);
-  }, []);
+    },
+    [router],
+  );
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
@@ -118,171 +91,151 @@ export default function HomeScreen() {
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-      >
-        <HomeHero
-          onLearnPress={() => {
-            router.push(routes.learn);
-          }}
-        />
-
-        <View style={[styles.contentPanel, { backgroundColor: theme.surface }]}>
-          <View style={styles.featuredHeader}>
-            <ThemedText type="sectionTitle" style={styles.featuredHeaderTitle}>
-              Fondos destacados
-            </ThemedText>
-            <ThemedText
-              type="caption"
-              themeColor="textSecondary"
-              style={styles.featuredHeaderSummary}
-            >
-              Una selección rápida para entender en segundos por qué cada fondo
-              puede aportar valor.
-            </ThemedText>
-          </View>
-
-          <FeaturedFundsCarousel
-            funds={isFeaturedLoading ? [] : featuredFunds}
-            onFundPress={(fund) => {
-              router.push(routes.fundDetail(fund.isin));
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => {
+              void refreshHome();
             }}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+            progressBackgroundColor={theme.surface}
           />
+        }
+      >
+        <HomeHeroCarousel onSlideAction={handleHeroAction} />
 
+        <HomeScrollSection showDivider={false}>
           <View style={styles.searchSection}>
-            <View style={styles.searchBlock}>
-              <ThemedText
-                type="metaLabel"
-                themeColor="deepOcean"
-                style={styles.searchLabel}
-              >
-                Pregunta o busca
-              </ThemedText>
-              <SearchField
-                accessibilityLabel="Pregunta o busca fondos, categorías u objetivos"
-                placeholder="¿Qué quieres conseguir?"
-                value={searchQuery}
-                onChangeText={handleSearchChange}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="search"
-                suggestions={[...SEARCH_SUGGESTIONS]}
+            <SearchField
+              variant="plain"
+              accessibilityLabel="Buscar conceptos o fondos"
+              placeholder="Buscar conceptos o fondos..."
+              value={searchQuery}
+              onChangeText={handleSearchChange}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+            />
+          </View>
+        </HomeScrollSection>
+
+        {!hasQuery ? (
+          <HomeScrollSection>
+            <View style={styles.blockHeader}>
+              <HomeSectionHeader
+                title="Fondos destacados"
+                summary="Una selección rápida para entender en segundos por qué cada fondo puede aportar valor."
               />
             </View>
-          </View>
 
+            {featuredState === 'loading' ? (
+              <HomeFeaturedFundsSkeleton />
+            ) : featuredState === 'error' || featuredState === 'empty' ? (
+              <ContentEmptyState
+                icon="star-four-points-outline"
+                title={
+                  featuredState === 'error'
+                    ? 'Los destacados no han cargado'
+                    : 'Sin fondos destacados ahora mismo'
+                }
+                message={
+                  featuredState === 'error'
+                    ? 'Tira hacia abajo para actualizar o reintenta. Los datos educativos volverán en cuanto la API responda.'
+                    : 'Cuando haya una selección editorial disponible, aparecerá aquí en formato carrusel.'
+                }
+                actionLabel="Reintentar"
+                onAction={() => {
+                  void retryFeatured();
+                }}
+                style={styles.emptyCard}
+              />
+            ) : (
+              <FeaturedFundsCarousel
+                funds={featuredFunds}
+                onFundPress={(fund) => {
+                  router.push(routes.fundDetail(fund.isin));
+                }}
+              />
+            )}
+          </HomeScrollSection>
+        ) : null}
+
+        <HomeScrollSection>
           <HomeDynamicRankingSection
-            result={searchResult}
-            isLoading={isSearchLoading}
-            hasQuery={searchQuery.trim().length > 0}
+            result={activeRanking}
+            loadState={rankingState}
+            hasQuery={hasQuery}
+            onRetry={() => {
+              void retryActiveRanking();
+            }}
           />
+        </HomeScrollSection>
 
-          <View style={styles.soraSection}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="No sabes por dónde empezar, abrir asistente SORA"
-              accessibilityHint="Abre SORA para hacer preguntas educativas antes de comparar fondos"
-              onPress={() => {
-                setSoraSession((current) => current + 1);
-                setIsSoraVisible(true);
-              }}
-              style={({ pressed }) => [
-                styles.soraCard,
-                {
-                  backgroundColor: "rgba(234, 248, 246, 0.66)",
-                  borderColor: "rgba(0, 191, 166, 0.16)",
-                },
-                pressed && styles.soraCardPressed,
-              ]}
-            >
-              <View style={styles.soraHeader}>
-                <View
-                  style={[
-                    styles.soraIconWrap,
-                    { backgroundColor: "rgba(0, 191, 166, 0.14)" },
-                  ]}
-                >
-                  <MaterialCommunityIcons
-                    name="compass-outline"
-                    size={14}
-                    color={theme.deepOcean}
-                  />
-                </View>
-                <ThemedText type="bodyBold" style={styles.soraTitle}>
-                  ¿No sabes por dónde empezar?
-                </ThemedText>
+        {!hasQuery ? (
+          <>
+            <HomeScrollSection>
+              <View style={styles.blockHeader}>
+                <HomeSectionHeader title="Para empezar" />
               </View>
-
-              <ThemedText
-                type="caption"
-                themeColor="textSecondary"
-                style={styles.soraBody}
-              >
-                Sora puede ayudarte a entender conceptos y tu perfil antes de comparar fondos.
-              </ThemedText>
-
-              <View style={styles.soraCtaRow}>
-                <ThemedText type="linkPrimary">Preguntar a SORA</ThemedText>
-                <MaterialCommunityIcons
-                  name="arrow-right"
-                  size={14}
-                  color={theme.primary}
+              <View style={styles.starterRow}>
+                <HomeStarterCard
+                  title="Conceptos básicos"
+                  iconName="book-open-page-variant-outline"
+                  accessibilityLabel="Conceptos básicos, abrir guía educativa"
+                  accessibilityHint="Inicia el cuestionario para conocer tu perfil educativo"
+                  onPress={handleLearnPress}
+                />
+                <HomeStarterCard
+                  title="Ver ranking educativo"
+                  iconName="chart-line"
+                  accessibilityLabel="Ver ranking educativo, abrir catálogo de fondos"
+                  accessibilityHint="Explora el ranking de fondos indexados"
+                  onPress={() => {
+                    router.push(routes.fundsCatalog);
+                  }}
                 />
               </View>
-            </Pressable>
-          </View>
+            </HomeScrollSection>
 
-          <View style={styles.disclaimerSection}>
-            <View
-              accessibilityRole="summary"
-              accessibilityLabel="Información educativa. Inversora no ofrece asesoramiento financiero personalizado. La información mostrada es educativa y orientativa."
-              style={[
-                styles.disclaimerCard,
-                {
-                  backgroundColor: "rgba(234, 248, 246, 0.28)",
-                  borderColor: "rgba(11, 46, 54, 0.04)",
-                },
-              ]}
-            >
-              <View style={styles.disclaimerHeader}>
-                <MaterialCommunityIcons
-                  name="information-outline"
-                  size={14}
-                  color="rgba(11, 46, 54, 0.58)"
-                />
-                <ThemedText
-                  type="caption"
-                  themeColor="textSecondary"
-                  style={styles.disclaimerTitle}
-                >
-                  Información educativa
-                </ThemedText>
-              </View>
-              <ThemedText
-                type="caption"
-                themeColor="textSecondary"
-                style={styles.disclaimerBody}
-              >
-                Inversora no ofrece asesoramiento financiero personalizado. La
-                información mostrada es educativa y orientativa.
-              </ThemedText>
-            </View>
-          </View>
+            <HomeScrollSection>
+              <HomeNewsSection
+                items={newsItems}
+                loadState={newsState}
+                onRetry={() => {
+                  void retryNews();
+                }}
+              />
+            </HomeScrollSection>
+          </>
+        ) : null}
+
+        <View style={styles.scrollHint} accessibilityElementsHidden importantForAccessibility="no">
+          <MaterialCommunityIcons name="gesture-swipe-vertical" size={16} color={theme.textSecondary} />
+          <ThemedText type="caption" themeColor="textSecondary">
+            Desliza para explorar
+          </ThemedText>
+        </View>
+
+        <View style={styles.disclaimerSection}>
+          <MaterialCommunityIcons
+            name="information-outline"
+            size={14}
+            color={theme.textSecondary}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          />
+          <ThemedText
+            type="caption"
+            themeColor="textSecondary"
+            accessibilityRole="text"
+            style={styles.disclaimerText}
+          >
+            Inversora no ofrece asesoramiento financiero personalizado. La
+            información mostrada es educativa y orientativa.
+          </ThemedText>
         </View>
       </ScrollView>
-
-      <SoraChatSheet
-        key={`home-sora-${soraSession}`}
-        visible={isSoraVisible}
-        onClose={() => {
-          setIsSoraVisible(false);
-        }}
-        surface="home"
-        initialMessage="¿Por dónde empiezo a entender los fondos indexados?"
-        quickPrompts={[
-          "¿Qué es el TER?",
-          "¿Cómo comparar fondos?",
-          "¿Qué es el Score Inversora?",
-        ]}
-      />
     </View>
   );
 }
@@ -290,108 +243,49 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   scroll: {
     flex: 1,
-    width: "100%",
+    width: '100%',
   },
   scrollContent: {
     flexGrow: 1,
-    alignSelf: "center",
-  },
-  contentPanel: {
-    alignSelf: "stretch",
-    paddingBottom: Spacing.xl,
-  },
-  featuredHeader: {
-    paddingTop: Spacing["2xl"],
-    paddingBottom: Spacing.sm,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    gap: Spacing.sm,
-  },
-  featuredHeaderTitle: {
-    letterSpacing: -0.2,
-  },
-  featuredHeaderSummary: {
-    maxWidth: 620,
-    lineHeight: 22,
+    alignSelf: 'center',
+    gap: Spacing.md,
+    paddingTop: Spacing.xs,
   },
   searchSection: {
-    alignItems: "center",
     paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing["2xl"],
   },
-  searchBlock: {
-    alignSelf: "center",
-    width: "100%",
-    maxWidth: 600,
+  blockHeader: {
+    paddingHorizontal: Layout.screenPaddingHorizontal,
+  },
+  starterRow: {
+    flexDirection: 'row',
     gap: Spacing.md,
-  },
-  searchLabel: {
-    letterSpacing: 0.96,
-  },
-  soraSection: {
-    paddingTop: Spacing.xl + Spacing.xs,
     paddingHorizontal: Layout.screenPaddingHorizontal,
   },
-  soraCard: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
+  emptyCard: {
+    marginHorizontal: Layout.screenPaddingHorizontal,
+  },
+  scrollHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.xs,
-  },
-  soraCardPressed: {
-    opacity: 0.88,
-  },
-  soraHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-  },
-  soraIconWrap: {
-    width: 24,
-    height: 24,
-    borderRadius: Radius.full,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  soraTitle: {
-    flex: 1,
-  },
-  soraBody: {
-    lineHeight: 18,
-  },
-  soraCtaRow: {
-    minHeight: 32,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
+    paddingTop: Spacing.sm,
+    opacity: 0.7,
   },
   disclaimerSection: {
-    paddingTop: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.xs,
     paddingHorizontal: Layout.screenPaddingHorizontal,
+    paddingTop: Spacing.xs,
   },
-  disclaimerCard: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  disclaimerHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-  },
-  disclaimerTitle: {
-    color: "rgba(11, 46, 54, 0.68)",
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  disclaimerBody: {
+  disclaimerText: {
+    flex: 1,
     fontSize: 12,
     lineHeight: 17,
   },

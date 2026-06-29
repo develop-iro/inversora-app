@@ -1,6 +1,13 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FundCatalogSoraChip } from '@/features/assistant/components/fund-catalog-sora-chip';
@@ -17,14 +24,10 @@ import {
   type FundCatalogFiltersState,
 } from '@/features/funds/components/fund-catalog-filters';
 import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
+import { FundCatalogLoadMoreFooter } from '@/features/funds/components/fund-catalog-load-more-footer';
 import { FundCatalogSearchField } from '@/features/funds/components/fund-catalog-search-field';
-import {
-  getCatalogBrowseIndex,
-  getFunds,
-  resetCatalogBrowseIndex,
-} from '@/features/funds/services/get-funds';
+import { useCatalogFundsPagination } from '@/features/funds/hooks/use-catalog-funds-pagination';
 import { deriveCatalogCategories } from '@/features/funds/utils/derive-catalog-categories';
-import { resolveFundApiErrorMessage } from '@/features/funds/utils/resolve-fund-api-error-message';
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
@@ -34,6 +37,8 @@ import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
 import { BottomTabInset, Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
+
+const SCROLL_LOAD_MORE_THRESHOLD_PX = 320;
 
 function hasActiveSecondaryFilters(filters: FundCatalogFiltersState): boolean {
   return (
@@ -59,34 +64,25 @@ function shouldGroupByCategory(
   );
 }
 
+function isNearScrollEnd(event: NativeSyntheticEvent<NativeScrollEvent>): boolean {
+  const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+  return (
+    layoutMeasurement.height + contentOffset.y >=
+    contentSize.height - SCROLL_LOAD_MORE_THRESHOLD_PX
+  );
+}
+
 export default function FundsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const [filters, setFilters] = useState<FundCatalogFiltersState>(DEFAULT_CATALOG_FILTERS);
-  const [browseIndex, setBrowseIndex] = useState<CatalogFund[]>([]);
-  const [funds, setFunds] = useState<CatalogFund[]>([]);
-  const [isBrowseLoading, setIsBrowseLoading] = useState(true);
-  const [isResultsLoading, setIsResultsLoading] = useState(true);
-  const [browseError, setBrowseError] = useState<string | null>(null);
-  const [resultsError, setResultsError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
   const [isSoraVisible, setIsSoraVisible] = useState(false);
   const [soraSession, setSoraSession] = useState(0);
 
   const debouncedQuery = useDebouncedValue(filters.query, CATALOG_SEARCH_DEBOUNCE_MS);
   const showSoraChip = isQuestionLikeQuery(debouncedQuery);
-
-  const categoryTabs = useMemo(
-    () => [
-      { value: 'all' as const, label: 'Todas' },
-      ...deriveCatalogCategories(browseIndex).map((category) => ({
-        value: category,
-        label: category,
-      })),
-    ],
-    [browseIndex],
-  );
 
   const activeServiceFilters = useMemo(
     () => ({
@@ -96,70 +92,40 @@ export default function FundsScreen() {
     [filters, debouncedQuery],
   );
 
+  const { funds, meta, status, error, hasMore, loadMore, reload } =
+    useCatalogFundsPagination(activeServiceFilters, reloadToken);
+
+  const categoryTabs = useMemo(
+    () => [
+      { value: 'all' as const, label: 'Todas' },
+      ...deriveCatalogCategories(funds).map((category) => ({
+        value: category,
+        label: category,
+      })),
+    ],
+    [funds],
+  );
+
   const groupedFunds = useMemo(() => groupFundsByCategory(funds), [funds]);
   const showGrouped = shouldGroupByCategory(filters, debouncedQuery);
   const hasActiveFilters = hasActiveNonSearchFilters(filters);
-  const isInitialLoading = isBrowseLoading || (isResultsLoading && funds.length === 0);
+  const isInitialLoading = status === 'loading' || status === 'idle';
+  const isLoadingMore = status === 'loading-more';
+  const blockingError = error && funds.length === 0 ? error : null;
+  const footerError = error && funds.length > 0 ? error : null;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      setIsBrowseLoading(true);
-      setBrowseError(null);
-
-      try {
-        const loaded = await getCatalogBrowseIndex();
-
-        if (!cancelled) {
-          setBrowseIndex(loaded);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setBrowseIndex([]);
-          setBrowseError(resolveFundApiErrorMessage(error));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsBrowseLoading(false);
-        }
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!hasMore || isInitialLoading || isLoadingMore) {
+        return;
       }
-    })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadToken]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      setIsResultsLoading(true);
-      setResultsError(null);
-
-      try {
-        const loaded = await getFunds(activeServiceFilters);
-
-        if (!cancelled) {
-          setFunds(loaded);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setFunds([]);
-          setResultsError(resolveFundApiErrorMessage(error));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsResultsLoading(false);
-        }
+      if (isNearScrollEnd(event)) {
+        void loadMore();
       }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeServiceFilters, reloadToken]);
+    },
+    [hasMore, isInitialLoading, isLoadingMore, loadMore],
+  );
 
   const handleQueryChange = useCallback((query: string) => {
     setFilters((current) => ({ ...current, query }));
@@ -182,9 +148,9 @@ export default function FundsScreen() {
   }, []);
 
   const handleRetryLoad = useCallback(() => {
-    resetCatalogBrowseIndex();
     setReloadToken((current) => current + 1);
-  }, []);
+    void reload();
+  }, [reload]);
 
   const handleFundPress = useCallback(
     (fund: CatalogFund) => {
@@ -192,8 +158,6 @@ export default function FundsScreen() {
     },
     [router],
   );
-
-  const blockingError = browseError ?? (resultsError && funds.length === 0 ? resultsError : null);
 
   return (
     <ScrollView
@@ -206,6 +170,8 @@ export default function FundsScreen() {
       ]}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
+      scrollEventThrottle={16}
+      onScroll={handleScroll}
     >
       <View style={styles.inner}>
         <View style={styles.header}>
@@ -216,11 +182,7 @@ export default function FundsScreen() {
           </ThemedText>
         </View>
 
-        <FundCatalogSearchField
-          query={filters.query}
-          catalog={browseIndex}
-          onQueryChange={handleQueryChange}
-        />
+        <FundCatalogSearchField query={filters.query} onQueryChange={handleQueryChange} />
 
         {showSoraChip ? (
           <FundCatalogSoraChip
@@ -258,19 +220,11 @@ export default function FundsScreen() {
           />
         ) : (
           <View style={styles.results}>
-            {isResultsLoading ? (
-              <ActivityIndicator style={styles.inlineLoader} color={theme.primary} />
-            ) : null}
-
-            {resultsError ? (
-              <ThemedText type="caption" themeColor="textSecondary">
-                {resultsError}
-              </ThemedText>
-            ) : null}
-
             {!showGrouped ? (
               <ThemedText type="metaLabel" themeColor="textSecondary">
-                {funds.length} fondo{funds.length === 1 ? '' : 's'}
+                {meta?.total != null
+                  ? `${funds.length} de ${meta.total} fondo${meta.total === 1 ? '' : 's'}`
+                  : `${funds.length} fondo${funds.length === 1 ? '' : 's'}`}
                 {debouncedQuery.trim() ? ` para «${debouncedQuery.trim()}»` : ''}
               </ThemedText>
             ) : null}
@@ -283,6 +237,17 @@ export default function FundsScreen() {
             ) : (
               <FundCatalogGrid funds={funds} onFundPress={handleFundPress} />
             )}
+
+            <FundCatalogLoadMoreFooter
+              loadedCount={funds.length}
+              totalCount={meta?.total ?? null}
+              isLoadingMore={isLoadingMore}
+              hasMore={hasMore}
+              errorMessage={footerError}
+              onLoadMore={() => {
+                void loadMore();
+              }}
+            />
           </View>
         )}
 
@@ -323,9 +288,6 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginVertical: Spacing.xl,
-  },
-  inlineLoader: {
-    alignSelf: 'flex-start',
   },
   results: {
     gap: Spacing.md,

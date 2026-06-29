@@ -16,4 +16,10 @@ export const routes = {
       pathname: '/funds/[isin]',
       params: { isin },
     }) as Href,
+  calculator: '/calculator' as Href,
+  calculatorWithFund: (isin: string): Href =>
+    ({
+      pathname: '/calculator',
+      params: { isin: isin.trim().toUpperCase() },
+    }) as Href,
 };

@@ -24,6 +24,9 @@ export function parseFeaturedFund(value: unknown): FeaturedFund | null {
   const {
     id,
     isin,
+    symbol,
+    issuer,
+    logoUrl,
     name,
     categoryLabel,
     themeLabel,
@@ -44,6 +47,9 @@ export function parseFeaturedFund(value: unknown): FeaturedFund | null {
   if (
     typeof id !== 'string' ||
     typeof isin !== 'string' ||
+    typeof symbol !== 'string' ||
+    (typeof issuer !== 'string' && issuer !== null) ||
+    (typeof logoUrl !== 'string' && logoUrl !== null) ||
     typeof name !== 'string' ||
     typeof categoryLabel !== 'string' ||
     typeof themeLabel !== 'string' ||
@@ -68,6 +74,9 @@ export function parseFeaturedFund(value: unknown): FeaturedFund | null {
   return {
     id,
     isin,
+    symbol,
+    issuer: issuer ?? null,
+    logoUrl: logoUrl ?? null,
     name,
     categoryLabel,
     themeLabel,

@@ -1,8 +1,10 @@
 import type { FundDetail } from '@/core/domain/catalog';
 
 import { apiGet } from '@/core/api/client';
+import { shouldUseMockData } from '@/core/config/app-environment';
 import { parseFundDetailResponse } from '@/core/api/parse-fund-detail-response';
 import { AppError } from '@/core/errors/app-error';
+import { getFundDetailMock } from '@/features/funds/mocks/get-fund-detail-mock';
 
 /**
  * Fetches the aggregated fund detail for a given ISIN from `GET /funds/:isin`.
@@ -18,6 +20,10 @@ export async function getFundByIsin(
 
   if (!normalizedIsin) {
     return null;
+  }
+
+  if (shouldUseMockData()) {
+    return getFundDetailMock(normalizedIsin);
   }
 
   try {

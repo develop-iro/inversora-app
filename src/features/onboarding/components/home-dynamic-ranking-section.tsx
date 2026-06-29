@@ -1,25 +1,30 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { HomeRankingRow } from '@/features/onboarding/components/home-ranking-row';
 import { HomeSearchAnswerCard } from '@/features/onboarding/components/home-search-answer-card';
+import { HomeRankingSkeleton } from '@/features/onboarding/components/skeletons/home-ranking-skeleton';
+import type { HomeSectionLoadState } from '@/features/onboarding/hooks/use-home-screen-data';
 import type { HomeSearchResult } from '@/features/onboarding/services/resolve-home-search';
 import { ThemedText } from '@/shared/components/themed-text';
+import { ContentEmptyState } from '@/shared/components/ui/content-empty-state';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
 import { Layout, Radius, Spacing } from '@/shared/theme/theme';
 
 export type HomeDynamicRankingSectionProps = {
   result: HomeSearchResult | null;
-  isLoading: boolean;
+  loadState: HomeSectionLoadState;
   hasQuery: boolean;
+  onRetry?: () => void;
 };
 
 export function HomeDynamicRankingSection({
   result,
-  isLoading,
+  loadState,
   hasQuery,
+  onRetry,
 }: HomeDynamicRankingSectionProps) {
   const router = useRouter();
   const theme = useTheme();
@@ -34,6 +39,25 @@ export function HomeDynamicRankingSection({
   const highlightLabel =
     result?.kind === 'fund-match' ? 'Mejor coincidencia' : 'Top fondo';
 
+  if (loadState === 'loading') {
+    return <HomeRankingSkeleton rows={hasQuery ? 2 : 3} />;
+  }
+
+  if (loadState === 'error') {
+    return (
+      <View style={styles.section}>
+        <ContentEmptyState
+          icon="chart-timeline-variant-shimmer"
+          title="El ranking no ha podido cargarse"
+          message="Puede ser un problema temporal de conexión. Inténtalo de nuevo en unos segundos."
+          actionLabel="Reintentar"
+          onAction={onRetry}
+          style={styles.emptyCard}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.section}>
       {result?.kind === 'answer' ? (
@@ -46,17 +70,25 @@ export function HomeDynamicRankingSection({
           'Descubre los fondos mejor puntuados según el Score Inversora.'}
       </ThemedText>
 
-      {isLoading && hasQuery ? (
-        <ActivityIndicator style={styles.loader} color={theme.primary} />
-      ) : null}
-
-      {!isLoading && result && result.funds.length === 0 ? (
-        <View style={styles.empty}>
-          <ThemedText type="bodyBold">Sin coincidencias en el ranking</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            Prueba con el nombre completo, el ISIN o formula una pregunta educativa.
-          </ThemedText>
-        </View>
+      {loadState === 'empty' || (result && result.funds.length === 0) ? (
+        <ContentEmptyState
+          icon={hasQuery ? 'magnify-close' : 'finance'}
+          title={hasQuery ? 'Sin coincidencias en el ranking' : 'Ranking vacío por ahora'}
+          message={
+            hasQuery
+              ? 'Prueba con el nombre completo, el ISIN o formula una pregunta educativa.'
+              : 'Aún no hay fondos disponibles para mostrar en esta sección.'
+          }
+          actionLabel={hasQuery ? undefined : 'Explorar catálogo'}
+          onAction={
+            hasQuery
+              ? undefined
+              : () => {
+                  router.push(routes.fundsCatalog);
+                }
+          }
+          style={styles.emptyCardCompact}
+        />
       ) : null}
 
       {result && result.funds.length > 0 ? (
@@ -105,12 +137,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     maxWidth: 620,
   },
-  loader: {
-    marginVertical: Spacing.md,
+  emptyCard: {
+    alignSelf: 'stretch',
   },
-  empty: {
-    gap: Spacing.xs,
-    paddingVertical: Spacing.md,
+  emptyCardCompact: {
+    alignSelf: 'stretch',
+    paddingVertical: Spacing.lg,
   },
   list: {
     gap: Spacing.sm,

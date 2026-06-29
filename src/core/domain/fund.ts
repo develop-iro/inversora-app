@@ -6,6 +6,9 @@ export type QuarterTag = `Q${1 | 2 | 3 | 4} ${number}`;
 export type FeaturedFund = {
   id: string;
   isin: string;
+  symbol: string;
+  issuer: string | null;
+  logoUrl: string | null;
   name: string;
   categoryLabel: string;
   /** Investment theme shown on summary cards (e.g. renovables, tecnología). */
