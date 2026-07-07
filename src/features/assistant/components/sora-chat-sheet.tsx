@@ -1,26 +1,28 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SoraAnswerCard } from '@/features/assistant/components/sora-answer-card';
+import { SoraChatComposer } from '@/features/assistant/components/sora-chat-composer';
+import { SoraChatEmptyState } from '@/features/assistant/components/sora-chat-empty-state';
+import { SoraChatTypingRow } from '@/features/assistant/components/sora-chat-typing-row';
+import {
+  resolveSoraContextChips,
+  resolveSoraDefaultPrompts,
+} from '@/features/assistant/components/sora-chat.utils';
 import { useAssistantChat } from '@/features/assistant/hooks/use-assistant-chat';
 import { useAssistantExplain } from '@/features/assistant/hooks/use-assistant-explain';
 import type { AssistantSurface } from '@/features/assistant/types/assistant-context';
-import { ThemedText } from '@/shared/components/themed-text';
-import { Button } from '@/shared/components/ui/button';
+import { AppModalShell } from '@/shared/components/overlay';
+import { TextParagraph } from '@/shared/components/text';
 import { routes } from '@/shared/navigation/routes';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Layout, Radius, Spacing } from '@/shared/theme/theme';
+import { Layout, Spacing } from '@/shared/theme/theme';
 
 export type SoraChatSheetProps = {
   visible: boolean;
@@ -73,11 +75,45 @@ export function SoraChatSheet({
   const explainState = useAssistantExplain();
   const chatState = useAssistantChat();
   const [message, setMessage] = useState(initialMessage);
+  const scrollRef = useRef<ScrollView>(null);
 
   const isLoading = conversationMode ? chatState.isLoading : explainState.isLoading;
   const errorMessage = conversationMode
     ? chatState.errorMessage
     : explainState.errorMessage;
+
+  const contextChips = useMemo(
+    () => resolveSoraContextChips(surface, fundIsin, fundIsins),
+    [surface, fundIsin, fundIsins],
+  );
+
+  const resolvedPrompts = useMemo(() => {
+    if (quickPrompts.length > 0) {
+      return quickPrompts;
+    }
+
+    return resolveSoraDefaultPrompts(surface);
+  }, [quickPrompts, surface]);
+
+  const hasConversationContent = conversationMode
+    ? chatState.turns.length > 0
+    : Boolean(explainState.response);
+
+  const showEmptyState = conversationMode && chatState.turns.length === 0 && !isLoading;
+
+  const scrollToBottom = useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+
+    scrollToBottom();
+  }, [visible, chatState.turns.length, explainState.response, isLoading, scrollToBottom]);
 
   const handleRelatedFundPress = (isin: string) => {
     onClose();
@@ -91,89 +127,60 @@ export function SoraChatSheet({
       return;
     }
 
-    setMessage(trimmed);
     const fundPayload = resolveFundPayload(fundIsin, fundIsins);
 
-    if (conversationMode) {
-      await chatState.sendMessage({
+    try {
+      if (conversationMode) {
+        setMessage('');
+        await chatState.sendMessage({
+          surface,
+          message: trimmed,
+          locale: 'es',
+          ...fundPayload,
+        });
+        return;
+      }
+
+      setMessage(trimmed);
+      await explainState.explain({
         surface,
         message: trimmed,
         locale: 'es',
         ...fundPayload,
       });
-      return;
+    } catch {
+      // The assistant hooks own the user-facing error state.
     }
-
-    await explainState.explain({
-      surface,
-      message: trimmed,
-      locale: 'es',
-      ...fundPayload,
-    });
   };
 
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <View style={[styles.screen, { backgroundColor: theme.background }]}>
-        <View
-          style={[
-            styles.header,
-            {
-              paddingTop: insets.top + Spacing.sm,
-              borderBottomColor: theme.border,
-            },
-          ]}
-        >
-          <View style={styles.headerCopy}>
-            <ThemedText type="sectionTitle">SORA</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              {conversationMode
-                ? 'Conversación educativa con contexto de pantalla'
-                : 'Asistente educativo de Inversora'}
-            </ThemedText>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Cerrar asistente SORA"
-            onPress={onClose}
-            style={({ pressed }) => [styles.closeButton, pressed && styles.closeButtonPressed]}
-          >
-            <MaterialCommunityIcons name="close" size={20} color={theme.text} />
-          </Pressable>
-        </View>
+  const composerSuggestedPrompts =
+    showEmptyState || hasConversationContent ? [] : resolvedPrompts.slice(0, 2);
 
+  return (
+    <AppModalShell
+      visible={visible}
+      onClose={onClose}
+      title="SORA"
+      subtitle="Asistente educativo · contexto de pantalla activo"
+      keyboardAvoiding
+      body={
         <ScrollView
+          ref={scrollRef}
+          style={[styles.messages, { backgroundColor: theme.backgroundSoft }]}
           contentContainerStyle={[
-            styles.content,
-            { paddingBottom: insets.bottom + Spacing.lg },
+            styles.messagesContent,
+            showEmptyState && styles.messagesContentEmpty,
           ]}
           keyboardShouldPersistTaps="handled"
+          onContentSizeChange={scrollToBottom}
         >
-          {quickPrompts.length > 0 ? (
-            <View style={styles.quickPrompts}>
-              {quickPrompts.map((prompt) => (
-                <Pressable
-                  key={prompt}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Preguntar a SORA: ${prompt}`}
-                  onPress={() => {
-                    void handleSubmit(prompt);
-                  }}
-                  style={({ pressed }) => [
-                    styles.promptChip,
-                    { borderColor: theme.border, backgroundColor: theme.surface },
-                    pressed && styles.promptChipPressed,
-                  ]}
-                >
-                  <ThemedText type="caption">{prompt}</ThemedText>
-                </Pressable>
-              ))}
-            </View>
+          {showEmptyState ? (
+            <SoraChatEmptyState
+              prompts={resolvedPrompts}
+              onPromptPress={(prompt) => {
+                void handleSubmit(prompt);
+              }}
+            />
           ) : null}
 
           {conversationMode
@@ -181,9 +188,16 @@ export function SoraChatSheet({
                 turn.role === 'user' ? (
                   <View
                     key={turn.id}
-                    style={[styles.userBubble, { backgroundColor: theme.surface }]}
+                    style={[
+                      styles.userBubble,
+                      {
+                        backgroundColor: theme.deepOcean,
+                      },
+                    ]}
                   >
-                    <ThemedText type="caption">{turn.message}</ThemedText>
+                    <TextParagraph variant="secondary" themeColor="textOnDark">
+                      {turn.message}
+                    </TextParagraph>
                   </View>
                 ) : turn.response ? (
                   <SoraAnswerCard
@@ -195,130 +209,91 @@ export function SoraChatSheet({
                     disclaimer={turn.response.disclaimer}
                     relatedFundIsin={turn.response.relatedFundIsin}
                     onRelatedFundPress={handleRelatedFundPress}
+                    variant="message"
                   />
                 ) : null,
               )
             : null}
 
-          <View style={styles.inputBlock}>
-            <TextInput
-              accessibilityLabel="Escribe tu pregunta para SORA"
-              placeholder="Pregunta sobre conceptos, score o comparación..."
-              placeholderTextColor={theme.textSecondary}
-              value={message}
-              onChangeText={setMessage}
-              multiline
-              style={[
-                styles.input,
-                {
-                  color: theme.text,
-                  borderColor: theme.border,
-                  backgroundColor: theme.surface,
-                },
-              ]}
-            />
-            <Button
-              label={isLoading ? 'Consultando...' : 'Preguntar a SORA'}
-              onPress={() => {
-                void handleSubmit(message);
-              }}
-              disabled={isLoading || message.trim().length === 0}
-            />
-          </View>
-
-          {isLoading ? (
-            <ActivityIndicator color={theme.primary} style={styles.loader} />
+          {!conversationMode && explainState.response ? (
+            <>
+              <View
+                style={[
+                  styles.userBubble,
+                  {
+                    backgroundColor: theme.deepOcean,
+                  },
+                ]}
+              >
+                <TextParagraph variant="secondary" themeColor="textOnDark">
+                  {message}
+                </TextParagraph>
+              </View>
+              <SoraAnswerCard
+                query={message}
+                title={explainState.response.title ?? 'Respuesta de SORA'}
+                body={explainState.response.text}
+                source={explainState.response.source}
+                disclaimer={explainState.response.disclaimer}
+                relatedFundIsin={explainState.response.relatedFundIsin}
+                onRelatedFundPress={handleRelatedFundPress}
+                variant="message"
+              />
+            </>
           ) : null}
+
+          {isLoading ? <SoraChatTypingRow /> : null}
 
           {errorMessage ? (
-            <ThemedText type="caption" themeColor="textSecondary">
+            <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.error}>
               {errorMessage}
-            </ThemedText>
-          ) : null}
-
-          {!conversationMode && explainState.response ? (
-            <SoraAnswerCard
-              query={message}
-              title={explainState.response.title ?? 'Respuesta de SORA'}
-              body={explainState.response.text}
-              source={explainState.response.source}
-              disclaimer={explainState.response.disclaimer}
-              relatedFundIsin={explainState.response.relatedFundIsin}
-              onRelatedFundPress={handleRelatedFundPress}
-            />
+            </TextParagraph>
           ) : null}
         </ScrollView>
-      </View>
-    </Modal>
+      }
+      footer={
+        <View style={{ paddingBottom: insets.bottom }}>
+          <SoraChatComposer
+            value={message}
+            onChangeText={setMessage}
+            onSubmit={() => {
+              void handleSubmit(message);
+            }}
+            contextChips={contextChips}
+            suggestedPrompts={composerSuggestedPrompts}
+            onSuggestedPromptPress={(prompt) => {
+              void handleSubmit(prompt);
+            }}
+            isLoading={isLoading}
+          />
+        </View>
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  messages: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  messagesContent: {
     paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
     gap: Spacing.md,
   },
-  headerCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeButtonPressed: {
-    opacity: 0.75,
-  },
-  content: {
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingTop: Spacing.lg,
-    gap: Spacing.md,
-  },
-  quickPrompts: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  promptChip: {
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    maxWidth: '100%',
-  },
-  promptChipPressed: {
-    opacity: 0.85,
+  messagesContentEmpty: {
+    flexGrow: 1,
   },
   userBubble: {
     alignSelf: 'flex-end',
-    maxWidth: '92%',
-    borderRadius: Radius.card,
+    maxWidth: '88%',
+    borderRadius: 18,
+    borderBottomRightRadius: 6,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
-  inputBlock: {
-    gap: Spacing.sm,
-  },
-  input: {
-    minHeight: 96,
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    textAlignVertical: 'top',
-  },
-  loader: {
-    marginVertical: Spacing.sm,
+  error: {
+    lineHeight: 20,
   },
 });

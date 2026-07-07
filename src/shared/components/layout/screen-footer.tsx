@@ -21,7 +21,7 @@ export function ScreenFooter({ children, style }: ScreenFooterProps) {
         styles.footer,
         {
           backgroundColor: theme.surface,
-          borderTopColor: 'rgba(11, 46, 54, 0.08)',
+          borderTopColor: theme.border,
         },
         style,
       ]}

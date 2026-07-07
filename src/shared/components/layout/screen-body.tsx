@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text/text-paragraph';
 import { Layout, Spacing } from '@/shared/theme/theme';
 
 export type ScreenBodyIntroProps = {
@@ -17,9 +17,9 @@ export function ScreenBodyIntro({ description, children, style }: ScreenBodyIntr
   return (
     <View style={[styles.intro, style]}>
       {description ? (
-        <ThemedText type="caption" themeColor="textSecondary">
+        <TextParagraph variant="secondary" themeColor="textSecondary">
           {description}
-        </ThemedText>
+        </TextParagraph>
       ) : null}
       {children}
     </View>

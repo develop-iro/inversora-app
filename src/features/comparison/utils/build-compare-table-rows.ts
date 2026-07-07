@@ -1,17 +1,13 @@
 import type { FundDetail } from '@/core/domain/catalog';
 
 import type { CompareMetricRow, CompareMetricValue } from '@/features/comparison/models/compare-fund-entry';
+import { formatReturnPercent } from '@/shared/utils/format-return-percent';
 import { getRiskLabel } from '@/shared/utils/fund-risk';
 
 const MISSING_VALUE = '—';
 
 function formatTer(value: number): string {
   return `${value.toFixed(2).replace('.', ',')} %`;
-}
-
-function formatReturnPercent(value: number): string {
-  const prefix = value > 0 ? '+' : '';
-  return `${prefix}${value.toFixed(1).replace('.', ',')} %`;
 }
 
 function buildValue(
@@ -57,8 +53,11 @@ function findTrackingError(detail: FundDetail): string {
   return trackingRow.value;
 }
 
-function findReturn1Y(detail: FundDetail): CompareMetricValue {
-  const period = detail.profile.returnsByPeriod.find((entry) => entry.id === '1y');
+function findReturnByPeriod(
+  detail: FundDetail,
+  periodId: 'ytd' | '1y' | '3y',
+): CompareMetricValue {
+  const period = detail.profile.returnsByPeriod.find((entry) => entry.id === periodId);
 
   if (period === undefined || period.percent === null) {
     return buildValue(detail, MISSING_VALUE, { isMissing: true });
@@ -101,7 +100,15 @@ export function buildCompareTableRows(details: readonly FundDetail[]): CompareMe
     buildRow('category', 'Categoría', details, (detail) =>
       buildValue(detail, detail.fund.categoryLabel),
     ),
-    buildRow('return1y', 'Rentab. 1 año', details, (detail) => findReturn1Y(detail)),
+    buildRow('returnYtd', 'Rentab. YTD', details, (detail) =>
+      findReturnByPeriod(detail, 'ytd'),
+    ),
+    buildRow('return1y', 'Rentab. 1 año', details, (detail) =>
+      findReturnByPeriod(detail, '1y'),
+    ),
+    buildRow('return3y', 'Rentab. 3 años', details, (detail) =>
+      findReturnByPeriod(detail, '3y'),
+    ),
     buildRow('tracking', 'Tracking error', details, (detail) => {
       const value = findTrackingError(detail);
 

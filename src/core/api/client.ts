@@ -11,9 +11,47 @@ type ApiPostOptions<TBody> = ApiRequestOptions & {
   body: TBody;
 };
 
+type ApiErrorPayload = {
+  message?: string | string[];
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function parseApiErrorMessage(payload: unknown): string | null {
+  if (!isRecord(payload)) {
+    return null;
+  }
+
+  const { message } = payload as ApiErrorPayload;
+
+  if (typeof message === 'string' && message.trim().length > 0) {
+    return message;
+  }
+
+  if (Array.isArray(message)) {
+    const joined = message
+      .filter((entry): entry is string => typeof entry === 'string')
+      .join(' ');
+
+    return joined.trim().length > 0 ? joined : null;
+  }
+
+  return null;
+}
+
 async function parseApiResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const message =
+    let apiMessage: string | null = null;
+
+    try {
+      apiMessage = parseApiErrorMessage(await response.json());
+    } catch {
+      apiMessage = null;
+    }
+
+    const fallbackMessage =
       response.status === 404
         ? 'El recurso solicitado no existe en la API.'
         : response.status === 503
@@ -21,6 +59,7 @@ async function parseApiResponse<T>(response: Response): Promise<T> {
           : response.status === 400
             ? 'La petición no es válida para el asistente SORA.'
             : `La API respondió con estado ${response.status}.`;
+    const message = apiMessage ?? fallbackMessage;
 
     throw new AppError('API_REQUEST_FAILED', message, undefined, response.status);
   }

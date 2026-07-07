@@ -1,8 +1,9 @@
 import type { CatalogFund, CatalogVisibility } from '@/core/domain/catalog';
 import type { FeaturedFund, RiskLevel } from '@/core/domain/fund';
+import type { InvestmentTheme } from '@/core/domain/investment-theme';
+import { parseInvestmentTheme } from '@/core/domain/investment-theme';
 
 import { resolveCurrentQuarterMetadata } from '@/core/api/quarter-metadata';
-
 export type ApiFundMetrics = {
   ter: number | null;
   aum: number | null;
@@ -28,11 +29,15 @@ export type ApiFund = {
   issuer: string | null;
   logoUrl: string | null;
   benchmark: string | null;
+  investmentTheme: InvestmentTheme | null;
+  assetClass: string | null;
+  domicile: string | null;
   metrics: ApiFundMetrics;
   riskLevel: number | null;
   score: number | null;
   editorial: ApiFundEditorial;
   catalogVisibility: CatalogVisibility;
+  returns: FeaturedFund['returns'];
 };
 
 const CATALOG_VISIBILITY = new Set<CatalogVisibility>(['visible', 'quarantined', 'blocked']);
@@ -70,6 +75,30 @@ export function buildApiCategoryLabel(fund: ApiFund): string {
 
   return 'Fondo indexado';
 }
+
+const INVESTMENT_THEME_LABELS: Record<InvestmentTheme, string> = {
+  'global-equity': 'Renta variable global',
+  'us-equity': 'Renta variable USA',
+  'europe-equity': 'Renta variable Europa',
+  'emerging-equity': 'Mercados emergentes',
+  'fixed-income': 'Renta fija',
+  'multi-asset': 'Multiactivo',
+  technology: 'Tecnología',
+  esg: 'ESG y sostenibilidad',
+  'sector-other': 'Sectorial',
+  unclassified: 'Sin clasificar',
+};
+
+/**
+ * Resolves the Spanish label for a canonical investment theme code.
+ *
+ * @param theme - Canonical investment theme from the API.
+ */
+export function buildApiThemeLabel(theme: InvestmentTheme): string {
+  return INVESTMENT_THEME_LABELS[theme];
+}
+
+export { parseInvestmentTheme };
 
 function hasPersistedEditorialContent(fund: ApiFund): boolean {
   return fund.editorial.badge.trim() !== '' || fund.editorial.themeLabel.trim() !== '';
@@ -133,7 +162,13 @@ export function mapApiFundToFeaturedFields(
     logoUrl: fund.logoUrl,
     name: fund.name,
     categoryLabel: buildApiCategoryLabel(fund),
-    themeLabel: fund.editorial.themeLabel,
+    investmentTheme: fund.investmentTheme,
+    themeLabel:
+      fund.editorial.themeLabel.trim().length > 0
+        ? fund.editorial.themeLabel
+        : fund.investmentTheme !== null
+          ? buildApiThemeLabel(fund.investmentTheme)
+          : '',
     badge: fund.editorial.badge || 'En catálogo',
     idealForBeginners: resolveIdealForBeginners(fund),
     efficiencyScore: score,
@@ -147,5 +182,6 @@ export function mapApiFundToFeaturedFields(
       'Fondo indexado disponible en el catálogo educativo de Inversora.',
     featuredReason: 'Incluido en el ranking por criterios objetivos',
     isFeatured: false,
+    returns: fund.returns,
   };
 }

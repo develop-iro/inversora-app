@@ -2,7 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -35,8 +35,8 @@ export function ScreenQuickAction({
       iconColor: theme.deepOcean,
     },
     accent: {
-      backgroundColor: 'rgba(0, 191, 166, 0.12)',
-      borderColor: 'rgba(0, 191, 166, 0.24)',
+      backgroundColor: theme.primarySurface,
+      borderColor: theme.primaryBorder,
       iconColor: theme.deepOcean,
     },
     deep: {
@@ -70,9 +70,9 @@ export function ScreenQuickAction({
       >
         <MaterialCommunityIcons name={icon} size={22} color={circleColors.iconColor} />
       </View>
-      <ThemedText type="caption" themeColor="textSecondary" numberOfLines={2} style={styles.label}>
+      <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={2} style={styles.label}>
         {label}
-      </ThemedText>
+      </TextParagraph>
     </Pressable>
   );
 }

@@ -9,7 +9,7 @@ Qué usa **este repositorio** frente a opciones mencionadas en el documento ofic
 | Cliente | Expo SDK 56 + React Native 0.85 + React 19 | Mobile-first; web vía `react-native-web` |
 | Lenguaje | TypeScript | |
 | Navegación | Expo Router | Rutas en `src/app` |
-| UI / estilo | Theme propio en `shared/theme` | Componentes en `shared/components/ui` |
+| UI / estilo | Theme propio en `shared/theme` + **NativeWind** (utilidades Tailwind) | Tokens en JSON → `global.css` + `tailwind.config.js`; layout con `className`, variantes en componentes UI |
 | Fuentes | DM Sans, Nunito (`@expo-google-fonts`) | |
 | Estado cliente | Zustand | Planificado; aún no en `package.json` |
 | Validación | Zod | Planificado en boundaries API |
@@ -21,7 +21,7 @@ Qué usa **este repositorio** frente a opciones mencionadas en el documento ofic
 
 | Opción en doc oficial | Motivo |
 |----------------------|--------|
-| NativeWind / Tamagui | Theme y componentes propios ya iniciados |
+| Tamagui | Theme + NativeWind cubren utilidades y componentes propios |
 | Victory Native / react-native-svg-charts | Sin gráficas complejas en MVP actual |
 | Next.js / NestJS como API principal | Supabase Edge Functions como camino único planificado |
 | Login / cuentas | Fuera de alcance MVP |
@@ -37,6 +37,13 @@ npm run typecheck  # TypeScript
 ```
 
 Documentación Expo: https://docs.expo.dev/versions/v56.0.0/
+
+## Convención NativeWind
+
+- **Layout y espaciado** en pantallas y wrappers: `className` (`px-lg`, `gap-sm`, `rounded-card`).
+- **Variantes y lógica de tema** (pressed, dark mode, sombras): componentes en `shared/components/ui` con `StyleSheet` + `useTheme()`.
+- Tras cambiar `palette.primitives.json` o `spacing.primitives.json`, ejecutar `pnpm run generate:theme`.
+- Arrancar con caché limpia si las clases no aplican: `pnpm start -- --clear`.
 
 ## Ver también
 

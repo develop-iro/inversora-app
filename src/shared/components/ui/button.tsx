@@ -12,7 +12,7 @@ import {
 } from "react-native";
 
 import { useTheme } from "@/shared/hooks/use-theme";
-import { Radius, Spacing, Typography } from "@/shared/theme/theme";
+import { Radius, Size, Spacing, Typography } from "@/shared/theme/theme";
 
 export type ButtonVariant =
   | "primary"
@@ -207,13 +207,13 @@ const styles = StyleSheet.create({
   },
   sizeSm: {
     paddingHorizontal: Spacing.xl,
-    paddingVertical: 11,
-    minHeight: 40,
+    paddingVertical: Spacing.sm + Spacing.threeQuarter,
+    minHeight: Size.buttonSmMin,
   },
   sizeMd: {
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
-    minHeight: 48,
+    minHeight: Size.buttonMdMin,
   },
   fullWidth: {
     alignSelf: "stretch",

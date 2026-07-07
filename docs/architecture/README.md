@@ -7,6 +7,7 @@ Documentación técnica del repositorio Inversora.
 | Documento | Contenido |
 |-----------|-----------|
 | [adr-001-domain-boundaries.md](./adr-001-domain-boundaries.md) | Scoring, favoritos, asistente, imports entre features |
+| [adr-003-component-naming.md](./adr-003-component-naming.md) | Nombres y carpetas del design system (`TabHeader`, `TextParagraph`, …) |
 | [mvp-feature-map.md](./mvp-feature-map.md) | Estado de implementación por feature y ruta |
 | [stack-decisions.md](./stack-decisions.md) | Stack adoptado vs alternativas del doc oficial |
 

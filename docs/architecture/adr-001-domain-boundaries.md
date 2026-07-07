@@ -128,14 +128,14 @@ El backend valida el contexto y rechaza peticiones que pidan alterar rankings.
 
 ### 4. Contratos compartidos y acoplamiento entre features
 
-**Problema actual:** `onboarding` importa `FundCard`, mocks y tipos de `funds`.
+**Problema actual:** `onboarding` importa `CardFund`, mocks y tipos de `funds`.
 
 **Decisión:**
 
 | Tipo de artefacto | Ubicación |
 |-------------------|-----------|
 | Tipos de dominio (`Fund`, `FeaturedFund`, `ScoreBreakdown`) | `core/domain/fund.ts` o `shared/types/fund.ts` cuando no dependan de infra |
-| Componentes de presentación de fondo usados en 2+ features | `shared/components/fund/` (p. ej. mover `FundCard`) **o** mantener en `funds` y exponer vía barrel solo si es el único dueño visual |
+| Componentes de presentación de fondo usados en 2+ features | `features/funds/components/card-fund.tsx` **o** `shared/components/fund/` si crece el uso cross-feature |
 | Mocks de desarrollo | `features/funds/mocks` o `core/fixtures` — consumidos por servicios, no importados en pantallas como arrays inline |
 
 **Regla de imports (aplicar en lint/review):**
@@ -147,7 +147,7 @@ app/*       →  features/*, shared/*
 core/*      ↛  features/*, shared/components/*
 ```
 
-**Excepción temporal:** `onboarding → funds` hasta mover `FundCard` a `shared` o exponer `getFeaturedFunds()` desde un servicio.
+**Excepción temporal:** `onboarding → funds` hasta exponer `getFeaturedFunds()` desde un servicio o mover `CardFund` a `shared`.
 
 ---
 
@@ -175,13 +175,13 @@ core/*      ↛  features/*, shared/components/*
 
 ### Negativas / coste
 
-- Refactor inicial: extraer `RANKING_FUNDS` de `home-screen.tsx`, mover o compartir `FundCard`.
+- Refactor inicial: extraer `RANKING_FUNDS` de `home-screen.tsx`, consolidar `CardFund` en `features/funds`.
 - Backend necesario antes de asistente en producción.
 - Más archivos que un prototipo monolítico.
 
 ### No hacer (explícito)
 
-- No poner prompts del asistente dentro de `fund-card.tsx` o del scoring.
+- No poner prompts del asistente dentro de `card-fund.tsx` o del scoring.
 - No usar favoritos como señal de ranking personalizado en MVP.
 - No añadir Zustand global hasta tener 2+ consumidores (favoritos + comparación); entonces store en `core` o feature `favorites` exportando hook.
 

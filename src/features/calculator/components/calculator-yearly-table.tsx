@@ -2,7 +2,6 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useState } from 'react';
 import {
-  Alert,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
@@ -11,6 +10,8 @@ import {
   View,
 } from 'react-native';
 
+import { toast } from '@/core/overlay';
+
 import type {
   CompoundInterestInput,
   CompoundInterestResult,
@@ -18,10 +19,10 @@ import type {
 } from '@/features/calculator/models/compound-interest.engine';
 import { formatCalculatorCurrency } from '@/features/calculator/models/compound-interest.engine';
 import { exportCalculatorSimulation } from '@/features/calculator/services/export-calculator-simulation';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { Button } from '@/shared/components/ui/button';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { palette } from '@/shared/theme/palette';
+import { useThemeGradients } from '@/shared/hooks/use-theme-gradients';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type CalculatorYearlyTableProps = {
@@ -45,6 +46,8 @@ const SCROLL_EDGE_THRESHOLD = 8;
  */
 export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyTableProps) {
   const theme = useTheme();
+  const gradients = useThemeGradients();
+  const scrollFade = gradients.scrollFadeHorizontal;
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -92,10 +95,9 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
       const exportResult = await exportCalculatorSimulation(input, result);
 
       if (exportResult.status === 'downloaded') {
-        Alert.alert(
-          'Simulación exportada',
-          'Se ha descargado un archivo CSV compatible con Excel.',
-        );
+        toast.success('Se ha descargado un archivo CSV compatible con Excel.', {
+          title: 'Simulación exportada',
+        });
         return;
       }
 
@@ -104,14 +106,18 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
       }
 
       if (exportResult.status === 'copied') {
-        Alert.alert(
-          'Simulación copiada',
+        toast.info(
           'No pudimos abrir el menú de compartir. Los datos se copiaron al portapapeles para pegarlos en Excel o Google Sheets.',
+          {
+            title: 'Simulación copiada',
+          },
         );
         return;
       }
 
-      Alert.alert('Exportación no disponible', exportResult.message);
+      toast.error(exportResult.message, {
+        title: 'Exportación no disponible',
+      });
     } finally {
       setIsExporting(false);
     }
@@ -123,7 +129,7 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
     <View style={styles.wrapper}>
       <View style={styles.headerRow}>
         <View style={styles.titleBlock}>
-          <ThemedText type="bodyBold">Detalle anual</ThemedText>
+          <TextParagraph variant="emphasis">Detalle anual</TextParagraph>
           {showScrollHint ? (
             <View style={styles.scrollHintRow}>
               <MaterialCommunityIcons
@@ -131,9 +137,9 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
                 size={14}
                 color={theme.textSecondary}
               />
-              <ThemedText type="caption" themeColor="textSecondary">
+              <TextParagraph variant="secondary" themeColor="textSecondary">
                 Desliza horizontalmente para ver todas las columnas
-              </ThemedText>
+              </TextParagraph>
             </View>
           ) : null}
         </View>
@@ -169,7 +175,7 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
           }}
           contentContainerStyle={styles.scrollContent}
         >
-          <View style={[styles.table, { borderColor: theme.border }]}>
+          <View style={[styles.table, { borderColor: theme.border, backgroundColor: theme.surface }]}>
             <View
               style={[
                 styles.tableHeaderRow,
@@ -180,14 +186,14 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
               ]}
             >
               {COLUMNS.map((column) => (
-                <ThemedText
+                <TextLabel
                   key={column.key}
-                  type="metaLabel"
+                  variant="meta"
                   themeColor="textSecondary"
                   style={[styles.cell, styles.headerCell, { flex: column.flex }]}
                 >
                   {column.label}
-                </ThemedText>
+                </TextLabel>
               ))}
             </View>
 
@@ -200,26 +206,26 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
                   style={[
                     styles.dataRow,
                     {
-                      backgroundColor: isEvenRow ? theme.surface : palette.softTealBackground,
+                      backgroundColor: isEvenRow ? theme.surface : theme.backgroundSoft,
                       borderTopColor: theme.border,
                     },
                   ]}
                 >
-                  <ThemedText type="caption" style={[styles.cell, { flex: COLUMNS[0].flex }]}>
+                  <TextParagraph variant="secondary" style={[styles.cell, { flex: COLUMNS[0].flex }]}>
                     {row.year}
-                  </ThemedText>
-                  <ThemedText type="caption" style={[styles.cell, { flex: COLUMNS[1].flex }]}>
+                  </TextParagraph>
+                  <TextParagraph variant="secondary" style={[styles.cell, { flex: COLUMNS[1].flex }]}>
                     {formatCalculatorCurrency(row.periodicDepositsThisYear)}
-                  </ThemedText>
-                  <ThemedText type="caption" style={[styles.cell, { flex: COLUMNS[2].flex }]}>
+                  </TextParagraph>
+                  <TextParagraph variant="secondary" style={[styles.cell, { flex: COLUMNS[2].flex }]}>
                     {formatCalculatorCurrency(row.cumulativeDeposits)}
-                  </ThemedText>
-                  <ThemedText type="caption" style={[styles.cell, { flex: COLUMNS[3].flex }]}>
+                  </TextParagraph>
+                  <TextParagraph variant="secondary" style={[styles.cell, { flex: COLUMNS[3].flex }]}>
                     {formatCalculatorCurrency(row.interestThisYear)}
-                  </ThemedText>
-                  <ThemedText type="bodyBold" style={[styles.cell, { flex: COLUMNS[4].flex }]}>
+                  </TextParagraph>
+                  <TextParagraph variant="emphasis" style={[styles.cell, { flex: COLUMNS[4].flex }]}>
                     {formatCalculatorCurrency(row.balance)}
-                  </ThemedText>
+                  </TextParagraph>
                 </View>
               );
             })}
@@ -229,12 +235,12 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
         {canScrollRight ? (
           <View pointerEvents="none" style={styles.fadeEdge} accessibilityElementsHidden>
             <LinearGradient
-              colors={['rgba(248, 250, 249, 0)', 'rgba(248, 250, 249, 0.92)', palette.neutralBackground]}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
+              colors={[...scrollFade.colors]}
+              start={scrollFade.start}
+              end={scrollFade.end}
               style={styles.fadeGradient}
             />
-            <View style={[styles.fadeChevron, { borderColor: theme.border }]}>
+            <View style={[styles.fadeChevron, { borderColor: theme.border, backgroundColor: theme.surface }]}>
               <MaterialCommunityIcons name="chevron-right" size={16} color={theme.deepOcean} />
             </View>
           </View>
@@ -274,7 +280,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     overflow: 'hidden',
     minWidth: 560,
-    backgroundColor: palette.white,
   },
   tableHeaderRow: {
     flexDirection: 'row',
@@ -311,7 +316,6 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: Radius.full,
     borderWidth: 1,
-    backgroundColor: palette.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.xs,

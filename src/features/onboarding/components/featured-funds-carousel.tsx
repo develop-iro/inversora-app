@@ -1,29 +1,31 @@
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
-    AccessibilityInfo,
-    Animated,
-    FlatList,
-    Platform,
-    Pressable,
-    StyleSheet,
-    useWindowDimensions,
-    View,
-    type NativeScrollEvent,
-    type NativeSyntheticEvent,
+  FlatList,
+  Platform,
+  useWindowDimensions,
+  View,
 } from "react-native";
 
-import { FundCard } from "@/features/funds/components/fund-card";
+import { CardFund } from "@/features/funds/components/card-fund";
 import type { FeaturedFund } from "@/core/domain/fund";
-import { useTheme } from "@/shared/hooks/use-theme";
+import { CarouselControls, CarouselNavButton, useCarouselAutoplay } from "@/shared/components/carousels";
+import { SkeletonBone, SkeletonShimmerProvider } from "@/shared/components/ui";
+import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
 import { Layout, Spacing } from "@/shared/theme/theme";
+import type { WithLoading } from "@/shared/types/component-loading";
 
-type FeaturedFundsCarouselProps = {
+type FeaturedFundsCarouselContentProps = {
   funds: FeaturedFund[];
   onFundPress: (fund: FeaturedFund) => void;
 };
 
-/** Matches `FundCard` min height so the carousel is visible inside a vertical scroll. */
+export type FeaturedFundsCarouselProps = WithLoading<FeaturedFundsCarouselContentProps>;
+
+/** Horizontal inset when rendered inside `HomeSectionCard` with `bleedContent`. */
+const SECTION_CARD_HORIZONTAL_INSET =
+  Layout.screenPaddingHorizontal * 2 + Spacing.lg * 2;
+
+/** Matches `CardFund` min height so the carousel is visible inside a vertical scroll. */
 const CAROUSEL_MIN_HEIGHT = 420;
 
 const AUTOPLAY_MS = 6000;
@@ -32,41 +34,67 @@ const MOBILE_CAROUSEL_BREAKPOINT = 768;
 const MOBILE_CARD_WIDTH_RATIO = 0.86;
 const STATIC_GRID_BREAKPOINT = 1024;
 
-export function FeaturedFundsCarousel({
+function FeaturedFundsCarouselLoading() {
+  return (
+    <SkeletonShimmerProvider>
+      <View
+        className="gap-md px-lg pb-lg pt-sm"
+        accessibilityLabel="Cargando fondos destacados"
+      >
+        <View className="min-h-[420px] gap-lg">
+          <View className="flex-row items-center gap-md">
+            <SkeletonBone width={40} height={40} borderRadius={9999} />
+            <View className="flex-1 gap-sm">
+              <SkeletonBone width="72%" height={18} />
+              <SkeletonBone width="48%" height={14} />
+            </View>
+          </View>
+          <SkeletonBone width="100%" height={5} borderRadius={9999} />
+          <SkeletonBone width={140} height={52} borderRadius={56} />
+          <View className="mt-sm flex-row gap-md">
+            <SkeletonBone width={72} height={36} />
+            <SkeletonBone width={88} height={28} borderRadius={16} />
+          </View>
+          <SkeletonBone width="55%" height={14} />
+        </View>
+        <View className="flex-row justify-center gap-sm">
+          <SkeletonBone width={22} height={8} borderRadius={9999} />
+          <SkeletonBone width={8} height={8} borderRadius={9999} />
+          <SkeletonBone width={8} height={8} borderRadius={9999} />
+        </View>
+      </View>
+    </SkeletonShimmerProvider>
+  );
+}
+
+export function FeaturedFundsCarousel(props: FeaturedFundsCarouselProps) {
+  if (props.loading) {
+    return <FeaturedFundsCarouselLoading />;
+  }
+
+  return <FeaturedFundsCarouselContent funds={props.funds} onFundPress={props.onFundPress} />;
+}
+
+function FeaturedFundsCarouselContent({
   funds,
   onFundPress,
-}: FeaturedFundsCarouselProps) {
-  const listRef = useRef<FlatList<FeaturedFund>>(null);
-  const theme = useTheme();
+}: FeaturedFundsCarouselContentProps) {
   const { width: windowWidth } = useWindowDimensions();
+  const isReduceMotionEnabled = useReducedMotion();
   const [slideWidth, setSlideWidth] = useState(0);
-  const [isReduceMotionEnabled, setIsReduceMotionEnabled] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isInteractionPaused, setIsInteractionPaused] = useState(false);
-  const dotProgress = useMemo(
-    () =>
-      Array.from(
-        { length: funds.length },
-        (_, index) => new Animated.Value(index === 0 ? 1 : 0),
-      ),
-    [funds.length],
-  );
-  const deadlineRef = useRef(0);
-  const remainingMsRef = useRef(AUTOPLAY_MS);
-  const currentIndexRef = useRef(0);
 
+  const useStaticGrid = windowWidth >= STATIC_GRID_BREAKPOINT;
+  const useMobilePreviewCarousel =
+    !useStaticGrid && windowWidth < MOBILE_CAROUSEL_BREAKPOINT;
   const fallbackWidth = useMemo(
     () =>
       Math.max(
         280,
         Math.min(windowWidth, Layout.maxContentWidth) -
-          Layout.screenPaddingHorizontal * 2,
+          SECTION_CARD_HORIZONTAL_INSET,
       ),
     [windowWidth],
   );
-  const useStaticGrid = windowWidth >= STATIC_GRID_BREAKPOINT;
-  const useMobilePreviewCarousel =
-    !useStaticGrid && windowWidth < MOBILE_CAROUSEL_BREAKPOINT;
   const viewportWidth = slideWidth > 0 ? slideWidth : fallbackWidth;
   const mobileCardWidth = Math.min(
     Math.max(0, viewportWidth - Spacing.sm),
@@ -87,6 +115,23 @@ export function FeaturedFundsCarousel({
     !useMobilePreviewCarousel &&
     !(Platform.OS === "web" && windowWidth >= ARROW_HIDE_BREAKPOINT);
 
+  const {
+    listRef,
+    currentIndex,
+    currentIndexRef,
+    pauseAutoplay,
+    resumeAutoplay,
+    syncToIndex,
+    handleScrollEvent,
+    handleScrollToIndexFailed,
+    interactionHandlers,
+  } = useCarouselAutoplay<FeaturedFund>({
+    itemCount: funds.length,
+    autoplayMs: AUTOPLAY_MS,
+    enabled: !useStaticGrid && funds.length > 1,
+    reduceMotion: isReduceMotionEnabled,
+  });
+
   const arrowGutter = useMemo(() => {
     if (!showNavArrows) {
       return 0;
@@ -97,169 +142,44 @@ export function FeaturedFundsCarousel({
     return 40;
   }, [showNavArrows, windowWidth]);
 
-  useEffect(() => {
-    currentIndexRef.current = currentIndex;
-  }, [currentIndex]);
-
-  const pauseAutoplay = useCallback(() => {
-    if (!isInteractionPaused) {
-      if (deadlineRef.current === 0) {
-        deadlineRef.current = Date.now() + AUTOPLAY_MS;
-      }
-      remainingMsRef.current = Math.max(300, deadlineRef.current - Date.now());
-      setIsInteractionPaused(true);
-    }
-  }, [isInteractionPaused]);
-
-  const resumeAutoplay = useCallback(() => {
-    if (isInteractionPaused) {
-      deadlineRef.current = Date.now() + remainingMsRef.current;
-      setIsInteractionPaused(false);
-    }
-  }, [isInteractionPaused]);
-
-  const syncToIndex = useCallback(
-    (nextIndex: number, animate = true) => {
-      if (funds.length === 0) {
-        return;
-      }
-
-      const boundedIndex = Math.max(0, Math.min(nextIndex, funds.length - 1));
-
-      if (boundedIndex !== currentIndexRef.current) {
-        setCurrentIndex(boundedIndex);
-        currentIndexRef.current = boundedIndex;
-      }
-
-      remainingMsRef.current = AUTOPLAY_MS;
-      deadlineRef.current = Date.now() + AUTOPLAY_MS;
-      listRef.current?.scrollToIndex({
-        index: boundedIndex,
-        animated: animate,
-      });
+  const handleScroll = useCallback(
+    (event: Parameters<typeof handleScrollEvent>[0]) => {
+      handleScrollEvent(event, effectiveItemInterval);
     },
-    [funds.length],
+    [effectiveItemInterval, handleScrollEvent],
   );
 
-  useEffect(() => {
-    let mounted = true;
+  const handleScrollIndexFailed = useCallback(() => {
+    handleScrollToIndexFailed(effectiveItemInterval);
+  }, [effectiveItemInterval, handleScrollToIndexFailed]);
 
-    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
-      if (mounted) {
-        setIsReduceMotionEnabled(enabled);
-      }
-    });
+  const goToPrevious = useCallback(() => {
+    pauseAutoplay();
+    syncToIndex((currentIndexRef.current - 1 + funds.length) % funds.length, true);
+  }, [currentIndexRef, funds.length, pauseAutoplay, syncToIndex]);
 
-    const subscription = AccessibilityInfo.addEventListener(
-      "reduceMotionChanged",
-      (enabled) => {
-        setIsReduceMotionEnabled(enabled);
-      },
-    );
-
-    return () => {
-      mounted = false;
-      subscription.remove();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (
-      useStaticGrid ||
-      isReduceMotionEnabled ||
-      funds.length <= 1 ||
-      isInteractionPaused
-    ) {
-      return;
-    }
-
-    if (deadlineRef.current === 0) {
-      deadlineRef.current = Date.now() + remainingMsRef.current;
-    }
-
-    const delay = Math.max(300, deadlineRef.current - Date.now());
-
-    const timeout = setTimeout(() => {
-      const nextIndex = (currentIndex + 1) % funds.length;
-      syncToIndex(nextIndex, true);
-    }, delay);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [
-    currentIndex,
-    funds.length,
-    isInteractionPaused,
-    isReduceMotionEnabled,
-    syncToIndex,
-    useStaticGrid,
-  ]);
-
-  useEffect(() => {
-    if (useStaticGrid || dotProgress.length === 0) {
-      return;
-    }
-
-    if (isReduceMotionEnabled) {
-      dotProgress.forEach((value, index) => {
-        value.setValue(index === currentIndex ? 1 : 0);
-      });
-      return;
-    }
-
-    Animated.parallel(
-      dotProgress.map((value, index) =>
-        Animated.timing(value, {
-          toValue: index === currentIndex ? 1 : 0,
-          duration: 260,
-          useNativeDriver: false,
-        }),
-      ),
-    ).start();
-  }, [currentIndex, dotProgress, isReduceMotionEnabled, useStaticGrid]);
-
-  const syncIndexFromOffset = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (effectiveItemInterval <= 0 || funds.length === 0) {
-        return;
-      }
-
-      const rawIndex = Math.round(
-        event.nativeEvent.contentOffset.x / effectiveItemInterval,
-      );
-      const boundedIndex = Math.max(0, Math.min(rawIndex, funds.length - 1));
-      if (boundedIndex !== currentIndexRef.current) {
-        setCurrentIndex(boundedIndex);
-        currentIndexRef.current = boundedIndex;
-        remainingMsRef.current = AUTOPLAY_MS;
-        deadlineRef.current = Date.now() + AUTOPLAY_MS;
-      }
-    },
-    [effectiveItemInterval, funds.length],
-  );
-
-  const handleScrollToIndexFailed = useCallback(() => {
-    requestAnimationFrame(() => {
-      listRef.current?.scrollToOffset({
-        offset: currentIndex * effectiveItemInterval,
-        animated: false,
-      });
-    });
-  }, [currentIndex, effectiveItemInterval]);
+  const goToNext = useCallback(() => {
+    pauseAutoplay();
+    syncToIndex((currentIndexRef.current + 1) % funds.length, true);
+  }, [currentIndexRef, funds.length, pauseAutoplay, syncToIndex]);
 
   if (useStaticGrid) {
     return (
-      <View style={[styles.wrapper, styles.staticWrapper]}>
-        <View style={styles.staticGrid}>
+      <View className="gap-md px-lg pb-xl pt-sm">
+        <View className="flex-row flex-wrap items-stretch gap-md">
           {funds.map((item) => (
-            <FundCard
+            <CardFund
               fund={item}
               key={item.id}
               onPress={() => {
                 onFundPress(item);
               }}
-              style={styles.staticCard}
+              style={{
+                flexBasis: '48%',
+                flexGrow: 1,
+                minWidth: 300,
+                alignSelf: 'stretch',
+              }}
             />
           ))}
         </View>
@@ -272,49 +192,28 @@ export function FeaturedFundsCarousel({
   }
 
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.trackRow}>
+    <View className="gap-md px-lg pb-lg pt-sm">
+      <View className="min-h-[420px] flex-row items-stretch gap-sm">
         {showNavArrows ? (
-          <Pressable
-            accessibilityRole="button"
+          <CarouselNavButton
+            direction="previous"
             accessibilityLabel="Ir al fondo destacado anterior"
             accessibilityHint="Mueve el carrusel a la tarjeta anterior"
             onHoverIn={pauseAutoplay}
             onHoverOut={resumeAutoplay}
             onFocus={pauseAutoplay}
             onBlur={resumeAutoplay}
-            onPress={() => {
-              pauseAutoplay();
-              syncToIndex(
-                (currentIndexRef.current - 1 + funds.length) % funds.length,
-                true,
-              );
-            }}
-            style={({ pressed }) => [
-              styles.navButton,
-              { backgroundColor: theme.surface },
-              pressed ? styles.navButtonPressed : null,
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="chevron-left"
-              size={24}
-              color={theme.deepOcean}
-            />
-          </Pressable>
+            onPress={goToPrevious}
+          />
         ) : null}
 
         <View
           onLayout={(event) => {
             setSlideWidth(event.nativeEvent.layout.width);
           }}
-          onTouchStart={pauseAutoplay}
-          onTouchEnd={resumeAutoplay}
-          style={[
-            styles.viewport,
-            { minHeight: CAROUSEL_MIN_HEIGHT },
-            showNavArrows ? styles.viewportWithSideControls : null,
-          ]}
+          {...interactionHandlers}
+          className="min-w-0 flex-1"
+          style={{ minHeight: CAROUSEL_MIN_HEIGHT }}
         >
           <FlatList
             ref={listRef}
@@ -330,10 +229,10 @@ export function FeaturedFundsCarousel({
             disableIntervalMomentum={useMobilePreviewCarousel}
             showsHorizontalScrollIndicator={false}
             onScrollBeginDrag={pauseAutoplay}
-            onScroll={syncIndexFromOffset}
-            onScrollEndDrag={syncIndexFromOffset}
-            onMomentumScrollEnd={syncIndexFromOffset}
-            onScrollToIndexFailed={handleScrollToIndexFailed}
+            onScroll={handleScroll}
+            onScrollEndDrag={handleScroll}
+            onMomentumScrollEnd={handleScroll}
+            onScrollToIndexFailed={handleScrollIndexFailed}
             scrollEventThrottle={16}
             getItemLayout={(_, index) => ({
               length: effectiveItemInterval,
@@ -343,8 +242,8 @@ export function FeaturedFundsCarousel({
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => (
               <View
+                className="self-stretch"
                 style={[
-                  styles.slide,
                   {
                     marginRight:
                       useMobilePreviewCarousel && index < funds.length - 1
@@ -356,9 +255,9 @@ export function FeaturedFundsCarousel({
                   showNavArrows ? { paddingHorizontal: arrowGutter } : null,
                 ]}
               >
-                <FundCard
+                <CardFund
                   fund={item}
-                  style={styles.card}
+                  style={{ width: '100%', flex: 1 }}
                   onInteractionStart={pauseAutoplay}
                   onInteractionEnd={resumeAutoplay}
                   onPress={() => {
@@ -373,155 +272,43 @@ export function FeaturedFundsCarousel({
                 ? { paddingRight: carouselEndPadding }
                 : null
             }
-            style={[styles.list, { minHeight: CAROUSEL_MIN_HEIGHT }]}
+            className="w-full"
+            style={{ minHeight: CAROUSEL_MIN_HEIGHT }}
           />
         </View>
 
         {showNavArrows ? (
-          <Pressable
-            accessibilityRole="button"
+          <CarouselNavButton
+            direction="next"
             accessibilityLabel="Ir al siguiente fondo destacado"
             accessibilityHint="Mueve el carrusel a la tarjeta siguiente"
             onHoverIn={pauseAutoplay}
             onHoverOut={resumeAutoplay}
             onFocus={pauseAutoplay}
             onBlur={resumeAutoplay}
-            onPress={() => {
-              pauseAutoplay();
-              syncToIndex((currentIndexRef.current + 1) % funds.length, true);
-            }}
-            style={({ pressed }) => [
-              styles.navButton,
-              { backgroundColor: theme.surface },
-              pressed ? styles.navButtonPressed : null,
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={24}
-              color={theme.deepOcean}
-            />
-          </Pressable>
+            onPress={goToNext}
+          />
         ) : null}
       </View>
 
-      <View
-        accessibilityRole="text"
-        accessibilityLabel={`Posicion ${currentIndex + 1} de ${funds.length}`}
-        style={styles.indicators}
-      >
-        {funds.map((fund, index) => (
-          <Animated.View
-            accessible={false}
-            key={fund.id}
-            style={[
-              styles.dot,
-              {
-                width:
-                  dotProgress[index]?.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [8, 22],
-                  }) ?? 8,
-                transform: [
-                  {
-                    scale:
-                      dotProgress[index]?.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [1, 1.08],
-                      }) ?? 1,
-                  },
-                ],
-                backgroundColor:
-                  dotProgress[index]?.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [
-                      "rgba(0, 0, 0, 0.2)",
-                      "rgba(0, 191, 166, 0.9)",
-                    ],
-                  }) ?? "rgba(0, 0, 0, 0.2)",
-              },
-            ]}
-          />
-        ))}
-      </View>
+      <CarouselControls
+        activeIndex={currentIndex}
+        count={funds.length}
+        counterLabel={(index, count) => `${index + 1} de ${count}`}
+        counterAccessibilityLabel={(index, count) =>
+          `Fondo destacado ${index + 1} de ${count}`
+        }
+        previousAccessibilityLabel="Ir al fondo destacado anterior"
+        previousAccessibilityHint="Mueve el carrusel a la tarjeta anterior"
+        nextAccessibilityLabel="Ir al siguiente fondo destacado"
+        nextAccessibilityHint="Mueve el carrusel a la tarjeta siguiente"
+        onPrevious={goToPrevious}
+        onNext={goToNext}
+        onPreviousInteractionStart={pauseAutoplay}
+        onPreviousInteractionEnd={resumeAutoplay}
+        onNextInteractionStart={pauseAutoplay}
+        onNextInteractionEnd={resumeAutoplay}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.lg,
-    gap: Spacing.md,
-  },
-  staticWrapper: {
-    paddingBottom: Spacing.xl,
-  },
-  staticGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "stretch",
-    gap: Spacing.md,
-  },
-  staticCard: {
-    flexBasis: "48%",
-    flexGrow: 1,
-    minWidth: 300,
-    alignSelf: "stretch",
-  },
-  trackRow: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    gap: Spacing.sm,
-    minHeight: CAROUSEL_MIN_HEIGHT,
-  },
-  viewport: {
-    flex: 1,
-    minWidth: 0,
-  },
-  viewportWithSideControls: {
-    minWidth: 0,
-  },
-  list: {
-    width: "100%",
-  },
-  slide: {
-    paddingHorizontal: 0,
-    alignSelf: "stretch",
-  },
-  card: {
-    width: "100%",
-    flex: 1,
-  },
-  indicators: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.sm,
-  },
-  dot: {
-    height: 8,
-    borderRadius: 999,
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
-  },
-  navButton: {
-    flexShrink: 0,
-    width: 38,
-    height: 38,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.08)",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  navButtonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.96 }],
-  },
-});

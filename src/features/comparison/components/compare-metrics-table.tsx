@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
 
 import type { FundDetail } from '@/core/domain/catalog';
 import type { CompareMetricRow } from '@/features/comparison/models/compare-fund-entry';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { palette } from '@/shared/theme/palette';
 import { Radius, Spacing } from '@/shared/theme/theme';
@@ -53,9 +53,9 @@ function CompareTableHeader({ details }: { details: readonly FundDetail[] }) {
             key={detail.fund.isin}
             style={[styles.fundCell, { width: COMPARE_TABLE_FUND_COLUMN_WIDTH }]}
           >
-            <ThemedText type="bodyBold" numberOfLines={1}>
+            <TextParagraph variant="emphasis" numberOfLines={1}>
               {shortLabel}
-            </ThemedText>
+            </TextParagraph>
           </View>
         );
       })}
@@ -70,9 +70,9 @@ function CompareTableRow({ row }: { row: CompareMetricRow }) {
   return (
     <View style={[styles.dataRow, { borderTopColor: theme.border }]}>
       <View style={[styles.labelCell, { width: COMPARE_TABLE_LABEL_WIDTH }]}>
-        <ThemedText type="caption" themeColor="textSecondary" numberOfLines={2}>
+        <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={2}>
           {row.label}
-        </ThemedText>
+        </TextParagraph>
       </View>
 
       {row.values.map((value) => {
@@ -87,13 +87,23 @@ function CompareTableRow({ row }: { row: CompareMetricRow }) {
               isEmphasized && styles.emphasizedCell,
             ]}
           >
-            <ThemedText
-              type={row.id === 'score' ? 'bodyBold' : 'caption'}
-              themeColor={value.isMissing ? 'textSecondary' : 'text'}
-              numberOfLines={2}
-            >
-              {value.displayValue}
-            </ThemedText>
+            {row.id === 'score' ? (
+              <TextParagraph
+                variant="emphasis"
+                themeColor={value.isMissing ? 'textSecondary' : 'text'}
+                numberOfLines={2}
+              >
+                {value.displayValue}
+              </TextParagraph>
+            ) : (
+              <TextParagraph
+                variant="secondary"
+                themeColor={value.isMissing ? 'textSecondary' : 'text'}
+                numberOfLines={2}
+              >
+                {value.displayValue}
+              </TextParagraph>
+            )}
           </View>
         );
       })}

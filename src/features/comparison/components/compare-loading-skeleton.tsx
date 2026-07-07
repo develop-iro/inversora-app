@@ -1,9 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 
-import { SkeletonBone } from '@/shared/components/ui/skeleton-bone';
-import { SkeletonFundCard } from '@/shared/components/ui/skeleton-fund-card';
-import { SkeletonPanel } from '@/shared/components/ui/skeleton-panel';
-import { SkeletonTextBlock } from '@/shared/components/ui/skeleton-text-block';
+import { SectionCard } from '@/shared/components/layout';
+import { CardFund } from '@/features/funds/components/card-fund';
+import { SkeletonBone, SkeletonPanel, SkeletonShimmerProvider } from '@/shared/components/ui';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
 const METRIC_ROW_COUNT = 5;
@@ -23,47 +22,32 @@ function SkeletonMetricRow() {
  */
 export function CompareLoadingSkeleton() {
   return (
-    <View style={styles.wrapper} accessibilityLabel="Cargando comparación">
-      <View style={styles.versusRow}>
-        <SkeletonFundCard />
-        <SkeletonBone width={28} height={28} borderRadius={Radius.full} />
-        <SkeletonFundCard />
-      </View>
-
-      <SkeletonPanel>
-        <SkeletonBone width="38%" height={14} />
-        {Array.from({ length: METRIC_ROW_COUNT }, (_, index) => (
-          <SkeletonMetricRow key={`metric-row-${index}`} />
-        ))}
-      </SkeletonPanel>
-
-      <SkeletonPanel>
-        <View style={styles.soraHeader}>
-          <SkeletonBone width={24} height={24} borderRadius={Radius.full} />
-          <View style={styles.soraCopy}>
-            <SkeletonTextBlock
-              gap={Spacing.xs}
-              lines={[
-                { width: '48%', height: 14 },
-                { width: '92%', height: 10 },
-                { width: '76%', height: 10 },
-              ]}
-            />
+    <SkeletonShimmerProvider>
+      <View style={styles.wrapper} accessibilityLabel="Cargando comparación">
+        <SectionCard title="Fondos seleccionados">
+          <View style={styles.versusRow}>
+            <CardFund loading layout="compact" />
+            <SkeletonBone width={28} height={28} borderRadius={Radius.full} />
+            <CardFund loading layout="compact" />
           </View>
-        </View>
-        <View style={styles.promptRow}>
-          <SkeletonBone width="58%" height={32} borderRadius={Radius.full} />
-          <SkeletonBone width="72%" height={32} borderRadius={Radius.full} />
-        </View>
-        <SkeletonBone height={48} borderRadius={Radius.field} />
-      </SkeletonPanel>
-    </View>
+        </SectionCard>
+
+        <SectionCard title="Resultados comparativos" borderless>
+          <SkeletonPanel>
+            <SkeletonBone width="38%" height={14} />
+            {Array.from({ length: METRIC_ROW_COUNT }, (_, index) => (
+              <SkeletonMetricRow key={`metric-row-${index}`} />
+            ))}
+          </SkeletonPanel>
+        </SectionCard>
+      </View>
+    </SkeletonShimmerProvider>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
-    gap: Spacing.md,
+    gap: Spacing.lg,
   },
   versusRow: {
     flexDirection: 'row',
@@ -75,16 +59,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.sm,
-  },
-  soraHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-  },
-  soraCopy: {
-    flex: 1,
-  },
-  promptRow: {
-    gap: Spacing.xs,
   },
 });

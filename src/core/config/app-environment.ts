@@ -1,5 +1,5 @@
 /** Supported Inversora mobile deployment environments. */
-export const APP_ENVIRONMENTS = ['local', 'ei', 'qa', 'pro'] as const;
+export const APP_ENVIRONMENTS = ['local', 'qa', 'pro'] as const;
 
 /** Parsed mobile deployment environment. */
 export type AppEnvironment = (typeof APP_ENVIRONMENTS)[number];
@@ -22,9 +22,8 @@ export type AppEnvironmentConfig = {
 
 const DEFAULT_API_BASE_URLS: Readonly<Record<AppEnvironment, string>> = {
   local: 'http://localhost:3000',
-  ei: '',
   qa: 'https://inversora-api-qa.up.railway.app',
-  pro: 'https://api.inversora.app',
+  pro: 'https://inversora-api-production.up.railway.app',
 };
 
 const ENVIRONMENT_DEFAULTS: Readonly<
@@ -39,12 +38,6 @@ const ENVIRONMENT_DEFAULTS: Readonly<
   local: {
     dataSource: 'api',
     allowMockFallback: true,
-    enableDevDiagnostics: true,
-    isProductionRelease: false,
-  },
-  ei: {
-    dataSource: 'mock',
-    allowMockFallback: false,
     enableDevDiagnostics: true,
     isProductionRelease: false,
   },
@@ -65,7 +58,10 @@ const ENVIRONMENT_DEFAULTS: Readonly<
 let cachedConfig: AppEnvironmentConfig | null = null;
 
 /**
- * Parses `EXPO_PUBLIC_APP_ENV` into a supported environment id.
+ * Parses the active deployment environment from `EXPO_PUBLIC_APP_ENV`.
+ *
+ * Set by `scripts/load-env.mjs` / `npm run start:<profile>` before Metro starts.
+ * Selector priority when loading: `INVERSORA_ENV` → `EXPO_PUBLIC_APP_ENV` → `ENV`.
  *
  * @param raw - Raw environment variable value.
  */
@@ -85,15 +81,11 @@ export function parseAppEnvironment(raw: string | undefined): AppEnvironment {
 /**
  * Resolves the API base URL for the active environment.
  *
- * `EXPO_PUBLIC_API_URL` overrides defaults for every environment except `ei`.
+ * `EXPO_PUBLIC_API_URL` overrides profile defaults when set.
  *
  * @param env - Active deployment environment.
  */
 export function resolveApiBaseUrl(env: AppEnvironment): string {
-  if (env === 'ei') {
-    return '';
-  }
-
   const configured = process.env.EXPO_PUBLIC_API_URL?.trim();
 
   if (configured !== undefined && configured.length > 0) {
@@ -126,7 +118,7 @@ export function getAppEnvironmentConfig(): AppEnvironmentConfig {
   return cachedConfig;
 }
 
-/** Active deployment environment (`local`, `ei`, `qa`, `pro`). */
+/** Active deployment environment (`local`, `qa`, `pro`). */
 export function getAppEnvironment(): AppEnvironment {
   return getAppEnvironmentConfig().env;
 }

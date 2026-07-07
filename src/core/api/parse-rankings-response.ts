@@ -1,6 +1,11 @@
 import { mapApiRiskLevelToApp } from '@/core/api/map-api-fund';
+import {
+  EMPTY_FUND_HISTORICAL_RETURNS,
+  parseFundReturnSnapshot,
+} from '@/core/api/parse-fund-return-snapshot';
 import { AppError } from '@/core/errors/app-error';
-import type { RankedFund } from '@/core/scoring/types';
+import type { FundHistoricalReturns, RankedFund } from '@/core/scoring/types';
+type ApiFundReturnSnapshot = FundHistoricalReturns;
 
 type ApiRankedFundEntry = {
   rank: number;
@@ -13,6 +18,7 @@ type ApiRankedFundEntry = {
   currency: string;
   riskLevel: number | null;
   ter: number;
+  returns?: ApiFundReturnSnapshot;
 };
 
 type ApiBenchmarkRankingGroup = {
@@ -46,6 +52,7 @@ function parseRankedFundEntry(value: unknown): ApiRankedFundEntry | null {
     currency,
     riskLevel,
     ter,
+    returns,
   } = value;
 
   if (
@@ -63,7 +70,14 @@ function parseRankedFundEntry(value: unknown): ApiRankedFundEntry | null {
     return null;
   }
 
-  return {
+  const parsedReturns =
+    returns === undefined ? undefined : parseFundReturnSnapshot(returns);
+
+  if (returns !== undefined && parsedReturns === null) {
+    return null;
+  }
+
+  const entry: ApiRankedFundEntry = {
     rank,
     id,
     symbol,
@@ -75,6 +89,12 @@ function parseRankedFundEntry(value: unknown): ApiRankedFundEntry | null {
     riskLevel,
     ter,
   };
+
+  if (parsedReturns !== undefined && parsedReturns !== null) {
+    entry.returns = parsedReturns;
+  }
+
+  return entry;
 }
 
 function parseBenchmarkRankingGroup(value: unknown): ApiBenchmarkRankingGroup | null {
@@ -158,5 +178,6 @@ export function flattenRankingsToRankedFunds(
     status: 'ok',
     breakdown: [],
     rank: index + 1,
+    returns: entry.returns ?? EMPTY_FUND_HISTORICAL_RETURNS,
   }));
 }

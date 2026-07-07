@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import type { CompoundInterestResult } from '@/features/calculator/models/compound-interest.engine';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -44,7 +44,7 @@ export function CalculatorGrowthChart({ result }: CalculatorGrowthChartProps) {
       accessibilityLabel="Gráfico de evolución del balance por año"
       style={styles.wrapper}
     >
-      <ThemedText type="bodyBold">Evolución anual</ThemedText>
+      <TextParagraph variant="emphasis">Evolución anual</TextParagraph>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -82,9 +82,9 @@ export function CalculatorGrowthChart({ result }: CalculatorGrowthChartProps) {
                   />
                 </View>
               </View>
-              <ThemedText type="caption" themeColor="textSecondary" style={styles.yearLabel}>
+              <TextParagraph variant="secondary" themeColor="textSecondary">
                 {bar.year}
-              </ThemedText>
+              </TextParagraph>
             </View>
           ))}
         </View>
@@ -122,8 +122,5 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     flexDirection: 'column-reverse',
     justifyContent: 'flex-start',
-  },
-  yearLabel: {
-    fontSize: 11,
   },
 });

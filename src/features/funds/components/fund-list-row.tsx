@@ -10,20 +10,44 @@ import {
   getFundScore,
 } from '@/features/funds/utils/fund-summary';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
-import { ThemedText } from '@/shared/components/themed-text';
-import { Badge, InfoHintTrigger, ScorePill } from '@/shared/components/ui';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
+import { Badge, InfoHintTrigger, ScorePill, SkeletonBone, SkeletonPanel, SkeletonShimmerProvider, SkeletonTextBlock } from '@/shared/components/ui';
 import { InfoHintHost } from '@/shared/components/ui/info-hint-host';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { isWeb } from '@/shared/platform/capabilities';
 import { getEfficiencyBadgeVariant, getEfficiencyLabel } from '@/shared/utils/fund-efficiency';
 import { getRiskBadgeVariant, getRiskLabel } from '@/shared/utils/fund-risk';
 import { Radius, Spacing } from '@/shared/theme/theme';
+import type { WithLoading } from '@/shared/types/component-loading';
 
-export type FundListRowProps = {
+type FundListRowContentProps = {
   fund: CatalogFund;
   onPress?: () => void;
 };
 
+export type FundListRowProps = WithLoading<FundListRowContentProps>;
+
+function FundListRowLoading() {
+  return (
+    <SkeletonShimmerProvider>
+      <View accessibilityLabel="Cargando fila del catálogo">
+        <SkeletonPanel style={styles.loadingRow}>
+          <SkeletonBone width={40} height={40} borderRadius={Radius.image} />
+          <SkeletonTextBlock
+            gap={Spacing.xs}
+            lines={[
+              { width: '72%', height: 14 },
+              { width: '48%', height: 10 },
+            ]}
+          />
+          <SkeletonBone width={44} height={28} borderRadius={Radius.full} />
+        </SkeletonPanel>
+      </View>
+    </SkeletonShimmerProvider>
+  );
+}
+
+/** Compact list card aligned with CardFund design tokens. */
 const rowPressableA11y = (fund: CatalogFund, efficiencyLabel: string) => ({
   accessibilityRole: 'button' as const,
   accessibilityLabel: buildFundCardA11yLabel(fund, efficiencyLabel),
@@ -55,16 +79,16 @@ function FundListRowContent({
         <View style={styles.header}>
           <View style={styles.titleBlock}>
             {fund.rank != null ? (
-              <ThemedText type="metaLabel" themeColor="deepOcean">
+              <TextLabel variant="meta" themeColor="deepOcean">
                 #{fund.rank}
-              </ThemedText>
+              </TextLabel>
             ) : null}
-            <ThemedText type="bodyBold" numberOfLines={2}>
+            <TextParagraph variant="emphasis" numberOfLines={2}>
               {fund.name}
-            </ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+            </TextParagraph>
+            <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={1}>
               {fund.categoryLabel}
-            </ThemedText>
+            </TextParagraph>
           </View>
         </View>
 
@@ -100,9 +124,9 @@ function FundListRowContent({
           onToggle={onToggleFavorite}
         />
         <View style={styles.detailCue}>
-          <ThemedText type="metaLabel" style={{ color: theme.primary }}>
+          <TextLabel variant="meta" style={{ color: theme.primary }}>
             Ver detalle
-          </ThemedText>
+          </TextLabel>
           <MaterialCommunityIcons name="chevron-right" size={18} color={theme.primary} />
         </View>
       </View>
@@ -110,8 +134,15 @@ function FundListRowContent({
   );
 }
 
-/** Compact list card aligned with FundCard design tokens. */
-export function FundListRow({ fund, onPress }: FundListRowProps) {
+export function FundListRow(props: FundListRowProps) {
+  if (props.loading) {
+    return <FundListRowLoading />;
+  }
+
+  return <FundListRowLoaded fund={props.fund} onPress={props.onPress} />;
+}
+
+function FundListRowLoaded({ fund, onPress }: FundListRowContentProps) {
   const theme = useTheme();
   const { isFavorite, isLoading: isFavoriteLoading, toggle } = useFavorite(fund.isin);
   const score = getFundScore(fund);
@@ -198,7 +229,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   titleBlock: {
-    gap: 2,
+    gap: Spacing.half,
   },
   scoreRow: {
     flexDirection: 'row',
@@ -225,5 +256,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
   },
 });

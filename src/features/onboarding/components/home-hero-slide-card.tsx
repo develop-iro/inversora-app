@@ -2,10 +2,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image, StyleSheet, View } from 'react-native';
 
 import type { HomeHeroSlide } from '@/features/onboarding/constants/home-hero-slides';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { Button } from '@/shared/components/ui/button';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { useThemeGradients } from '@/shared/hooks/use-theme-gradients';
+import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
 
 const ILLUSTRATION_HEIGHT = 140;
 
@@ -20,19 +21,27 @@ export type HomeHeroSlideCardProps = {
  */
 export function HomeHeroSlideCard({ slide, onCtaPress }: HomeHeroSlideCardProps) {
   const theme = useTheme();
+  const gradients = useThemeGradients();
+  const shadows = useThemeShadows();
+  const illustrationFade = gradients.heroSlideIllustrationFade;
 
   return (
     <View
       accessibilityLabel={`${slide.headline}. ${slide.subtitle}`}
+      className="flex-1 overflow-hidden rounded-card border"
       style={[
         styles.card,
         {
-          backgroundColor: theme.backgroundSoft,
-          borderColor: 'rgba(0, 191, 166, 0.12)',
+          backgroundColor: theme.surface,
+          borderColor: theme.border,
         },
+        shadows.card,
       ]}
     >
-      <View style={styles.illustrationWrap}>
+      <View
+        className="w-full overflow-hidden"
+        style={{ height: ILLUSTRATION_HEIGHT, backgroundColor: theme.backgroundSoft }}
+      >
         <Image
           source={slide.illustration}
           style={styles.illustrationImage}
@@ -40,30 +49,38 @@ export function HomeHeroSlideCard({ slide, onCtaPress }: HomeHeroSlideCardProps)
           accessibilityRole="image"
           accessibilityLabel={slide.illustrationLabel}
         />
-        <View style={styles.illustrationScrim} pointerEvents="none" />
+        <View
+          style={[styles.illustrationScrim, { backgroundColor: theme.borderSubtle }]}
+          pointerEvents="none"
+        />
         <LinearGradient
-          colors={['rgba(234, 248, 246, 0)', theme.backgroundSoft]}
-          locations={[0.35, 1]}
+          colors={[...illustrationFade.colors]}
+          locations={illustrationFade.locations ? [...illustrationFade.locations] : undefined}
           style={styles.illustrationFade}
           pointerEvents="none"
         />
       </View>
 
-      <View style={styles.body}>
-        <ThemedText type="cardTitle" style={styles.headline}>
+      <View className="flex-1 justify-center gap-sm px-lg pb-xl pt-md">
+        <TextHeading variant="card" className="max-w-[320px] tracking-[-0.36px]">
           {slide.headline}
-        </ThemedText>
-        <ThemedText type="body" themeColor="textSecondary" style={styles.subtitle}>
+        </TextHeading>
+        <TextParagraph
+          variant="secondary"
+          themeColor="textSecondary"
+          className="max-w-[340px] leading-6"
+        >
           {slide.subtitle}
-        </ThemedText>
-        <Button
-          variant="primary"
-          size="md"
-          label={slide.ctaLabel}
-          accessibilityLabel={`${slide.ctaLabel}, ${slide.headline}`}
-          onPress={onCtaPress}
-          style={styles.cta}
-        />
+        </TextParagraph>
+        <View className="mt-sm self-start">
+          <Button
+            variant="primary"
+            size="md"
+            label={slide.ctaLabel}
+            accessibilityLabel={`${slide.ctaLabel}, ${slide.headline}`}
+            onPress={onCtaPress}
+          />
+        </View>
       </View>
     </View>
   );
@@ -71,26 +88,15 @@ export function HomeHeroSlideCard({ slide, onCtaPress }: HomeHeroSlideCardProps)
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    overflow: 'hidden',
     minHeight: 320,
   },
-  illustrationWrap: {
-    width: '100%',
-    height: ILLUSTRATION_HEIGHT,
-    overflow: 'hidden',
-    backgroundColor: '#D4F0EB',
-  },
   illustrationImage: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
   },
   illustrationScrim: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(11, 46, 54, 0.06)',
+    ...StyleSheet.absoluteFillObject,
   },
   illustrationFade: {
     position: 'absolute',
@@ -98,25 +104,5 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: 64,
-  },
-  body: {
-    flex: 1,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xl,
-    gap: Spacing.sm,
-    justifyContent: 'center',
-  },
-  headline: {
-    letterSpacing: -0.36,
-    maxWidth: 320,
-  },
-  subtitle: {
-    lineHeight: 24,
-    maxWidth: 340,
-  },
-  cta: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.sm,
   },
 });

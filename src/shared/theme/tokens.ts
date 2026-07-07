@@ -1,9 +1,16 @@
-import { Platform, type TextStyle, type ViewStyle } from "react-native";
+import { Platform, type TextStyle } from "react-native";
 
-import { palette } from "@/shared/theme/palette";
+import { semanticColors } from "@/shared/theme/colors";
+import { Size } from "@/shared/theme/sizes";
+import { SPACING_UNIT, Spacing } from "@/shared/theme/spacing";
+import { getThemeShadows } from "@/shared/theme/shadows";
 
-/**
- * Figma: DM Sans (UI) + Nunito (compact labels / chips).
+export { SPACING_UNIT, Spacing };
+export type { SpacingToken } from "@/shared/theme/spacing";
+export { Size };
+export type { SizeToken } from "@/shared/theme/sizes";
+
+/** * Figma: DM Sans (UI) + Nunito (compact labels / chips).
  * Native faces are registered in `src/app/_layout.tsx` via expo-font.
  */
 export const FontFamily = {
@@ -28,6 +35,13 @@ export const FontFamily = {
     ios: "ui-monospace",
     default: "monospace",
     web: "var(--font-mono)",
+  }),
+  /** Serif wordmark used in header, splash, and other brand surfaces. */
+  brandSerif: Platform.select({
+    ios: "Georgia",
+    android: "serif",
+    web: "Georgia, Times New Roman, serif",
+    default: "serif",
   }),
 } as const;
 
@@ -93,32 +107,130 @@ export const Typography = {
     fontSize: 11,
     lineHeight: 15,
   },
+  brandWordmark: {
+    fontFamily: FontFamily.brandSerif,
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+  brandWordmarkSplash: {
+    fontFamily: FontFamily.brandSerif,
+    fontSize: 40,
+    lineHeight: 44,
+    fontWeight: "700",
+    letterSpacing: -0.4,
+  },
+  brandWordmarkCompact: {
+    fontFamily: FontFamily.brandSerif,
+    fontSize: 22,
+    lineHeight: 26,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+  brandSectionTitle: {
+    fontFamily: FontFamily.brandSerif,
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+  code: {
+    fontFamily: FontFamily.mono,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
+  },
+  chartAxis: {
+    fontFamily: FontFamily.display,
+    fontSize: 10,
+    lineHeight: 12,
+  },
+  chartLabel: {
+    fontFamily: FontFamily.displayBold,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "700",
+  },
+  micro: {
+    fontFamily: FontFamily.displayBold,
+    fontSize: 10,
+    lineHeight: 13,
+    letterSpacing: 0.48,
+    textTransform: "uppercase",
+  },
+  captionDense: {
+    fontFamily: FontFamily.display,
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  listMeta: {
+    fontFamily: FontFamily.display,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  scoreDisplay: {
+    fontFamily: FontFamily.displayBold,
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: -0.3,
+  },
+  scoreHero: {
+    fontFamily: FontFamily.displayBold,
+    fontSize: 22,
+    lineHeight: 26,
+    letterSpacing: -0.24,
+  },
+  scoreHeroCompact: {
+    fontFamily: FontFamily.displayBold,
+    fontSize: 26,
+    lineHeight: 30,
+  },
+  tabLabel: {
+    fontFamily: FontFamily.display,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "500",
+  },
+  tabLabelActive: {
+    fontFamily: FontFamily.displayBold,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  legal: {
+    fontFamily: FontFamily.display,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  segment: {
+    fontFamily: FontFamily.displayBold,
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  inputNumeric: {
+    fontFamily: FontFamily.display,
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  iconSymbolSm: {
+    fontFamily: FontFamily.displayBold,
+    fontSize: 16,
+    lineHeight: 18,
+  },
+  iconSymbolMd: {
+    fontFamily: FontFamily.displayBold,
+    fontSize: 18,
+    lineHeight: 20,
+  },
 } as const satisfies Record<string, TextStyle>;
 
-export const Spacing = {
-  half: 2,
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  "2xl": 32,
-  "3xl": 40,
-  /** @deprecated Use named scale (xs, sm, lg, …). */
-  one: 4,
-  /** @deprecated Use named scale. */
-  two: 8,
-  /** @deprecated Use named scale. */
-  three: 16,
-  /** @deprecated Use named scale. */
-  four: 24,
-  /** @deprecated Use named scale. */
-  five: 32,
-  /** @deprecated Use named scale. */
-  six: 64,
-} as const;
+export type TypographyToken = keyof typeof Typography;
 
 export const Radius = {
+  hairline: 1,
+  xs: 3,
+  tabBar: 28,
   image: 6,
   card: 12,
   field: 16,
@@ -127,28 +239,11 @@ export const Radius = {
   full: 9999,
 } as const;
 
-export const Shadows = {
-  card: {
-    shadowColor: palette.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 7,
-    elevation: 3,
-  },
-  heroText: {
-    textShadowColor: "rgba(0, 0, 0, 0.08)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-} as const satisfies Record<string, ViewStyle | TextStyle>;
-
-/** Hero header gradient (Primary Teal → Deep Ocean). */
-export const Gradients = {
-  hero: [palette.primaryTeal, palette.deepOcean] as const,
-} as const;
-
+/** @deprecated Use `getThemeShadows(theme)` or `useThemeShadows()`. Light-theme defaults. */
+export const Shadows = getThemeShadows(semanticColors.light);
 export const Layout = {
   screenPaddingHorizontal: Spacing.lg,
   maxContentWidth: 760,
+  contentSummaryMaxWidth: Size.contentNarrow,
   bottomTabInset: Platform.select({ ios: 50, android: 80 }) ?? 0,
 } as const;

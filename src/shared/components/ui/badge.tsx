@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 import { useTheme } from "@/shared/hooks/use-theme";
-import { Radius, Spacing, Typography } from "@/shared/theme/theme";
+import { Radius, Size, Spacing, Typography } from "@/shared/theme/theme";
 
 export type BadgeVariant = "soft" | "muted" | "warning" | "danger" | "mint";
 
@@ -31,11 +31,11 @@ export function Badge({
   ...pressableProps
 }: BadgeProps) {
   const theme = useTheme();
-  const containerStyle = getVariantContainer(variant, theme);
+  const variantStyles = getVariantStyles(variant, theme);
 
   const content = (
     <>
-      <Text style={[styles.label, { color: theme.text }]} numberOfLines={1}>
+      <Text style={[styles.label, { color: variantStyles.labelColor }]} numberOfLines={1}>
         {label}
       </Text>
       {icon ? <View style={styles.icon}>{icon}</View> : null}
@@ -50,7 +50,7 @@ export function Badge({
         onPress={onPress}
         style={({ pressed }) => [
           styles.base,
-          containerStyle,
+          { backgroundColor: variantStyles.backgroundColor },
           pressed && styles.pressed,
           disabled && styles.disabled,
           style,
@@ -65,29 +65,54 @@ export function Badge({
   return (
     <View
       accessibilityRole="text"
-      style={[styles.base, containerStyle, disabled && styles.disabled, style]}
+      style={[
+        styles.base,
+        { backgroundColor: variantStyles.backgroundColor },
+        disabled && styles.disabled,
+        style,
+      ]}
     >
       {content}
     </View>
   );
 }
 
-function getVariantContainer(
+type BadgeVariantStyles = {
+  backgroundColor: string;
+  labelColor: string;
+};
+
+function getVariantStyles(
   variant: BadgeVariant,
   theme: ReturnType<typeof useTheme>,
-) {
+): BadgeVariantStyles {
   switch (variant) {
     case "muted":
-      return { backgroundColor: theme.surfaceMuted };
+      return {
+        backgroundColor: theme.surfaceMuted,
+        labelColor: theme.text,
+      };
     case "warning":
-      return { backgroundColor: theme.warning };
+      return {
+        backgroundColor: theme.surfaceMuted,
+        labelColor: theme.warningBadgeLabel,
+      };
     case "danger":
-      return { backgroundColor: theme.danger };
+      return {
+        backgroundColor: theme.surfaceMuted,
+        labelColor: theme.dangerBadgeLabel,
+      };
     case "mint":
-      return { backgroundColor: theme.accentMint };
+      return {
+        backgroundColor: theme.surfaceMuted,
+        labelColor: theme.deepOcean,
+      };
     case "soft":
     default:
-      return { backgroundColor: theme.backgroundSoft };
+      return {
+        backgroundColor: theme.surfaceMuted,
+        labelColor: theme.deepOcean,
+      };
   }
 }
 
@@ -97,17 +122,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start",
     gap: Spacing.xs,
-    minHeight: 28,
+    minHeight: Size.badgeMinHeight,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 5,
+    paddingVertical: Spacing.smPlus,
     borderRadius: Radius.chip,
   },
   label: {
     ...Typography.metaLabel,
   },
   icon: {
-    width: 16,
-    height: 16,
+    width: Size.iconXs,
+    height: Size.iconXs,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -5,8 +5,8 @@ import type { ExposureTabId, FundDetailProfile } from '@/core/domain/fund-detail
 import { FundDetailSectionEmptyState } from '@/features/funds/components/detail/fund-detail-section-empty-state';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
-import { ThemedText } from '@/shared/components/themed-text';
-import { AllocationBarList, SegmentTabs } from '@/shared/components/ui';
+import { TextParagraph } from '@/shared/components/text';
+import { AllocationBarList, TabHeader } from '@/shared/components/ui';
 import { getExposureTabsWithData } from '@/features/funds/utils/fund-detail-presentation';
 import { Spacing } from '@/shared/theme/theme';
 
@@ -50,16 +50,16 @@ export function FundDetailExposureSection({ profile }: FundDetailExposureSection
       hintTerm={FUND_GLOSSARY.sectorExposure.term}
       hintExplanation={FUND_GLOSSARY.sectorExposure.explanation}
     >
-      <SegmentTabs
+      <TabHeader
         tabs={exposureTabs}
         value={activeTab}
         onChange={setTab}
         accessibilityLabel="Tipo de exposición del fondo"
       />
 
-      <ThemedText type="bodyBold" style={styles.subtitle}>
+      <TextParagraph variant="emphasis" style={styles.subtitle}>
         {EXPOSURE_SUBTITLES[activeTab]}
-      </ThemedText>
+      </TextParagraph>
 
       <View style={styles.panel}>
         {slices.length > 0 ? (

@@ -1,36 +1,49 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FeaturedFundsCarousel } from '@/features/onboarding/components/featured-funds-carousel';
+import {
+  HomeExploreAnswerSection,
+  HomeExploreFundMatchPrompt,
+} from '@/features/onboarding/components/home-explore-search-results';
 import { HomeDynamicRankingSection } from '@/features/onboarding/components/home-dynamic-ranking-section';
 import { HomeHeroCarousel } from '@/features/onboarding/components/home-hero-carousel';
 import { HomeNewsSection } from '@/features/onboarding/components/home-news-section';
-import { HomeScrollSection } from '@/features/onboarding/components/home-scroll-section';
-import { HomeSectionHeader } from '@/features/onboarding/components/home-section-header';
+import { HomeSectionCard } from '@/features/onboarding/components/home-section-card';
 import { HomeStarterCard } from '@/features/onboarding/components/home-starter-card';
-import { HomeFeaturedFundsSkeleton } from '@/features/onboarding/components/skeletons/home-featured-funds-skeleton';
-import type { HomeHeroSlideAction } from '@/features/onboarding/constants/home-hero-slides';
-import { useHomeScreenData } from '@/features/onboarding/hooks/use-home-screen-data';
 import {
-  FLOATING_TAB_BAR_BOTTOM_GAP,
-  FLOATING_TAB_BAR_CONTENT_GAP,
-  FLOATING_TAB_BAR_HEIGHT,
-} from '@/shared/components/navigation/floating-tab-bar';
-import { ThemedText } from '@/shared/components/themed-text';
-import { ContentEmptyState, SearchField } from '@/shared/components/ui';
+  HOME_CONTENT_TABS,
+  type HomeContentTab,
+  type HomeHeroSlideAction,
+} from '@/features/onboarding/constants/home-hero-slides';
+import { useHomeScreenData } from '@/features/onboarding/hooks/use-home-screen-data';
+import type { HomeSearchResult } from '@/features/onboarding/services/resolve-home-search';
+import {
+  buildRankingThemeOptions,
+  filterRankingByTheme,
+  formatRankingThemeLabel,
+} from '@/features/onboarding/utils/build-ranking-theme-options';
+import { LegalNotice } from '@/shared/components/legal/legal-notice';
+import {
+  NAV_TAB_BAR_BOTTOM_GAP,
+  NAV_TAB_BAR_CONTENT_GAP,
+  NAV_TAB_BAR_HEIGHT,
+} from '@/shared/components/navigation/nav-tab-bar';
+import { ContentEmptyState, SearchField, TabPill } from '@/shared/components/ui';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
-import { Layout, Spacing } from '@/shared/theme/theme';
+import { Spacing } from '@/shared/theme/theme';
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { contentWidth } = useMobileLayout();
+  const [activeTab, setActiveTab] = useState<HomeContentTab>('explore');
+  const [selectedRankingTheme, setSelectedRankingTheme] = useState<string | 'all'>('all');
   const {
     searchQuery,
     hasQuery,
@@ -47,6 +60,10 @@ export default function HomeScreen() {
     retryNews,
     retryActiveRanking,
   } = useHomeScreenData();
+
+  const handleOpenLegal = useCallback(() => {
+    router.push(routes.legal);
+  }, [router]);
 
   const handleLearnPress = useCallback(() => {
     router.push(routes.learn);
@@ -73,22 +90,59 @@ export default function HomeScreen() {
     [router],
   );
 
+  const handleOpenRankingTab = useCallback(() => {
+    setActiveTab('ranking');
+  }, []);
+
+  const effectiveRankingTheme =
+    hasQuery || activeTab !== 'ranking' ? 'all' : selectedRankingTheme;
+
+  const rankingThemeOptions = useMemo(
+    () => buildRankingThemeOptions(activeRanking?.funds ?? []),
+    [activeRanking?.funds],
+  );
+
+  const filteredRankingResult = useMemo((): HomeSearchResult | null => {
+    if (!activeRanking) {
+      return null;
+    }
+
+    if (effectiveRankingTheme === 'all' || hasQuery) {
+      return activeRanking;
+    }
+
+    const filteredFunds = filterRankingByTheme(activeRanking.funds, effectiveRankingTheme).map(
+      (fund, index) => ({
+        ...fund,
+        displayRank: index + 1,
+        isHighlighted: index === 0,
+      }),
+    );
+
+    return {
+      ...activeRanking,
+      funds: filteredFunds,
+      subtitle: `Observa el ranking de ${formatRankingThemeLabel(effectiveRankingTheme)} según el Score Inversora.`,
+    };
+  }, [activeRanking, effectiveRankingTheme, hasQuery]);
+
+  const showExploreDefault = activeTab === 'explore' && !hasQuery;
+  const showExploreSearchResults = activeTab === 'explore' && hasQuery && activeRanking;
+
   return (
-    <View style={[styles.screen, { backgroundColor: theme.background }]}>
+    <View className="flex-1 items-center" style={{ backgroundColor: theme.background }}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            width: contentWidth,
-            maxWidth: contentWidth,
-            paddingBottom:
-              FLOATING_TAB_BAR_HEIGHT +
-              FLOATING_TAB_BAR_BOTTOM_GAP +
-              FLOATING_TAB_BAR_CONTENT_GAP +
-              insets.bottom,
-          },
-        ]}
+        className="w-full flex-1"
+        contentContainerClassName="flex-grow gap-lg self-center pt-xs"
+        contentContainerStyle={{
+          width: contentWidth,
+          maxWidth: contentWidth,
+          paddingBottom:
+            NAV_TAB_BAR_HEIGHT +
+            NAV_TAB_BAR_BOTTOM_GAP +
+            NAV_TAB_BAR_CONTENT_GAP +
+            insets.bottom,
+        }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={
@@ -105,188 +159,145 @@ export default function HomeScreen() {
       >
         <HomeHeroCarousel onSlideAction={handleHeroAction} />
 
-        <HomeScrollSection showDivider={false}>
-          <View style={styles.searchSection}>
-            <SearchField
-              variant="plain"
-              accessibilityLabel="Buscar conceptos o fondos"
-              placeholder="Buscar conceptos o fondos..."
-              value={searchQuery}
-              onChangeText={handleSearchChange}
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="search"
-            />
-          </View>
-        </HomeScrollSection>
+        <HomeSectionCard contentClassName="py-md">
+          <SearchField
+            variant="plain"
+            accessibilityLabel="Buscar conceptos o fondos"
+            placeholder="Buscar conceptos o fondos..."
+            value={searchQuery}
+            onChangeText={handleSearchChange}
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
+          />
+        </HomeSectionCard>
 
-        {!hasQuery ? (
-          <HomeScrollSection>
-            <View style={styles.blockHeader}>
-              <HomeSectionHeader
-                title="Fondos destacados"
-                summary="Una selección rápida para entender en segundos por qué cada fondo puede aportar valor."
-              />
-            </View>
+        <View className="px-lg">
+          <TabPill
+            tabs={HOME_CONTENT_TABS}
+            value={activeTab}
+            onChange={setActiveTab}
+            accessibilityLabel="Secciones del inicio"
+          />
+        </View>
 
-            {featuredState === 'loading' ? (
-              <HomeFeaturedFundsSkeleton />
-            ) : featuredState === 'error' || featuredState === 'empty' ? (
-              <ContentEmptyState
-                icon="star-four-points-outline"
-                title={
-                  featuredState === 'error'
-                    ? 'Los destacados no han cargado'
-                    : 'Sin fondos destacados ahora mismo'
-                }
-                message={
-                  featuredState === 'error'
-                    ? 'Tira hacia abajo para actualizar o reintenta. Los datos educativos volverán en cuanto la API responda.'
-                    : 'Cuando haya una selección editorial disponible, aparecerá aquí en formato carrusel.'
-                }
-                actionLabel="Reintentar"
-                onAction={() => {
-                  void retryFeatured();
-                }}
-                style={styles.emptyCard}
-              />
-            ) : (
-              <FeaturedFundsCarousel
-                funds={featuredFunds}
-                onFundPress={(fund) => {
-                  router.push(routes.fundDetail(fund.isin));
-                }}
-              />
-            )}
-          </HomeScrollSection>
-        ) : null}
+        {activeTab === 'explore' ? (
+          <>
+            {showExploreSearchResults && activeRanking.kind === 'answer' ? (
+              <HomeSectionCard
+                title="Respuesta educativa"
+                summary="Contexto sobre tu consulta, sin recomendaciones personalizadas."
+              >
+                <HomeExploreAnswerSection result={activeRanking} />
+              </HomeSectionCard>
+            ) : null}
 
-        <HomeScrollSection>
+            {showExploreSearchResults && activeRanking.kind === 'fund-match' ? (
+              <HomeSectionCard title="Coincidencias en el ranking">
+                <HomeExploreFundMatchPrompt
+                  result={activeRanking}
+                  onOpenRanking={handleOpenRankingTab}
+                />
+              </HomeSectionCard>
+            ) : null}
+
+            {showExploreDefault ? (
+              <>
+                <HomeSectionCard title="Para empezar" borderless contentClassName="p-0">
+                  <View style={styles.starterRow}>
+                    <HomeStarterCard
+                      title="Conceptos básicos"
+                      iconName="book-open-page-variant-outline"
+                      accessibilityLabel="Conceptos básicos, abrir guía educativa"
+                      accessibilityHint="Inicia el cuestionario para aprender sobre fondos indexados"
+                      onPress={handleLearnPress}
+                    />
+                    <HomeStarterCard
+                      title="Ver ranking educativo"
+                      iconName="chart-line"
+                      accessibilityLabel="Ver ranking educativo, abrir pestaña Ranking"
+                      accessibilityHint="Muestra el ranking observacional del Score Inversora"
+                      onPress={handleOpenRankingTab}
+                    />
+                  </View>
+                </HomeSectionCard>
+
+                <HomeSectionCard
+                  title="Fondos destacados"
+                  summary="Una selección rápida para entender en segundos por qué cada fondo puede aportar valor."
+                  bleedContent
+                  contentClassName="pt-md"
+                >
+                  {featuredState === 'loading' ? (
+                    <FeaturedFundsCarousel loading />
+                  ) : featuredState === 'error' || featuredState === 'empty' ? (
+                    <ContentEmptyState
+                      icon="star-four-points-outline"
+                      title={
+                        featuredState === 'error'
+                          ? 'Los destacados no han cargado'
+                          : 'Sin fondos destacados ahora mismo'
+                      }
+                      message={
+                        featuredState === 'error'
+                          ? 'Tira hacia abajo para actualizar o reintenta. Los datos educativos volverán en cuanto la API responda.'
+                          : 'Cuando haya una selección editorial disponible, aparecerá aquí en formato carrusel.'
+                      }
+                      actionLabel="Reintentar"
+                      onAction={() => {
+                        void retryFeatured();
+                      }}
+                    />
+                  ) : (
+                    <FeaturedFundsCarousel
+                      funds={featuredFunds}
+                      onFundPress={(fund) => {
+                        router.push(routes.fundDetail(fund.isin));
+                      }}
+                    />
+                  )}
+                </HomeSectionCard>
+
+                <HomeNewsSection
+                  items={newsItems}
+                  loadState={newsState}
+                  onRetry={() => {
+                    void retryNews();
+                  }}
+                />
+              </>
+            ) : null}
+          </>
+        ) : (
           <HomeDynamicRankingSection
-            result={activeRanking}
+            result={filteredRankingResult}
             loadState={rankingState}
             hasQuery={hasQuery}
+            isFullRanking
+            rankingThemes={rankingThemeOptions}
+            selectedRankingTheme={effectiveRankingTheme}
+            onRankingThemeChange={setSelectedRankingTheme}
             onRetry={() => {
               void retryActiveRanking();
             }}
           />
-        </HomeScrollSection>
+        )}
 
-        {!hasQuery ? (
-          <>
-            <HomeScrollSection>
-              <View style={styles.blockHeader}>
-                <HomeSectionHeader title="Para empezar" />
-              </View>
-              <View style={styles.starterRow}>
-                <HomeStarterCard
-                  title="Conceptos básicos"
-                  iconName="book-open-page-variant-outline"
-                  accessibilityLabel="Conceptos básicos, abrir guía educativa"
-                  accessibilityHint="Inicia el cuestionario para conocer tu perfil educativo"
-                  onPress={handleLearnPress}
-                />
-                <HomeStarterCard
-                  title="Ver ranking educativo"
-                  iconName="chart-line"
-                  accessibilityLabel="Ver ranking educativo, abrir catálogo de fondos"
-                  accessibilityHint="Explora el ranking de fondos indexados"
-                  onPress={() => {
-                    router.push(routes.fundsCatalog);
-                  }}
-                />
-              </View>
-            </HomeScrollSection>
-
-            <HomeScrollSection>
-              <HomeNewsSection
-                items={newsItems}
-                loadState={newsState}
-                onRetry={() => {
-                  void retryNews();
-                }}
-              />
-            </HomeScrollSection>
-          </>
-        ) : null}
-
-        <View style={styles.scrollHint} accessibilityElementsHidden importantForAccessibility="no">
-          <MaterialCommunityIcons name="gesture-swipe-vertical" size={16} color={theme.textSecondary} />
-          <ThemedText type="caption" themeColor="textSecondary">
-            Desliza para explorar
-          </ThemedText>
-        </View>
-
-        <View style={styles.disclaimerSection}>
-          <MaterialCommunityIcons
-            name="information-outline"
-            size={14}
-            color={theme.textSecondary}
-            accessibilityElementsHidden
-            importantForAccessibility="no"
-          />
-          <ThemedText
-            type="caption"
-            themeColor="textSecondary"
-            accessibilityRole="text"
-            style={styles.disclaimerText}
-          >
-            Inversora no ofrece asesoramiento financiero personalizado. La
-            información mostrada es educativa y orientativa.
-          </ThemedText>
-        </View>
+        <LegalNotice
+          body="Inversora no ofrece asesoramiento financiero personalizado. La información mostrada es educativa y orientativa."
+          onLearnMorePress={handleOpenLegal}
+          className="mx-lg"
+        />
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  scroll: {
-    flex: 1,
-    width: '100%',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    alignSelf: 'center',
-    gap: Spacing.md,
-    paddingTop: Spacing.xs,
-  },
-  searchSection: {
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-  },
-  blockHeader: {
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-  },
   starterRow: {
     flexDirection: 'row',
+    alignItems: 'stretch',
     gap: Spacing.md,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-  },
-  emptyCard: {
-    marginHorizontal: Layout.screenPaddingHorizontal,
-  },
-  scrollHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-    paddingTop: Spacing.sm,
-    opacity: 0.7,
-  },
-  disclaimerSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.xs,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingTop: Spacing.xs,
-  },
-  disclaimerText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 17,
+    width: '100%',
   },
 });

@@ -15,9 +15,11 @@ import {
   pickAxisLabelIndices,
   type ChartCoordinate,
 } from '@/features/funds/utils/fund-performance';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { useThemeGradients } from '@/shared/hooks/use-theme-gradients';
+import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
+import { Radius, Size, Spacing, Typography } from '@/shared/theme/theme';
 
 const CHART_HEIGHT = 176;
 const Y_AXIS_WIDTH = 40;
@@ -108,6 +110,9 @@ export function FundPerformanceChart({
   accessibilityLabel,
 }: FundPerformanceChartProps) {
   const theme = useTheme();
+  const gradients = useThemeGradients();
+  const shadows = useThemeShadows();
+  const chartAreaFill = gradients.chartAreaFill;
   const [plotWidth, setPlotWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
@@ -193,14 +198,14 @@ export function FundPerformanceChart({
         <View style={[styles.yAxis, { width: Y_AXIS_WIDTH, height: CHART_HEIGHT }]}>
           {hasChart
             ? yAxisNavTicks.map((tick) => (
-                <ThemedText
+                <TextLabel
                   key={tick}
-                  type="metaLabel"
+                  variant="meta"
                   themeColor="textSecondary"
                   style={styles.yAxisLabel}
                 >
                   {tick.toFixed(1).replace('.', ',')}
-                </ThemedText>
+                </TextLabel>
               ))
             : null}
         </View>
@@ -220,7 +225,7 @@ export function FundPerformanceChart({
             <View style={[styles.canvas, { width: plotWidth, height: CHART_HEIGHT }]}>
               <LinearGradient
                 pointerEvents="none"
-                colors={['rgba(0, 191, 166, 0.22)', 'rgba(0, 191, 166, 0.02)']}
+                colors={[...chartAreaFill.colors]}
                 style={styles.areaFill}
               />
               {chartGeometry.coordinates.slice(1).map((end, index) => {
@@ -246,7 +251,7 @@ export function FundPerformanceChart({
                       {
                         left: activeCoordinate.x - CROSSHAIR_WIDTH / 2,
                         height: CHART_HEIGHT - CHART_PADDING,
-                        backgroundColor: 'rgba(11, 46, 54, 0.2)',
+                        backgroundColor: theme.chartCrosshair,
                       },
                     ]}
                   />
@@ -266,6 +271,7 @@ export function FundPerformanceChart({
                     pointerEvents="none"
                     style={[
                       styles.valueTooltip,
+                      shadows.tooltip,
                       {
                         left: Math.min(
                           Math.max(activeCoordinate.x - 72, Spacing.xs),
@@ -277,12 +283,12 @@ export function FundPerformanceChart({
                       },
                     ]}
                   >
-                    <ThemedText type="metaLabel" themeColor="textSecondary">
+                    <TextLabel variant="meta" themeColor="textSecondary">
                       Valor liquidativo
-                    </ThemedText>
-                    <ThemedText type="bodyBold" style={{ color: theme.deepOcean }}>
+                    </TextLabel>
+                    <TextParagraph variant="emphasis" style={{ color: theme.deepOcean }}>
                       {formatNavCurrency(activeNav ?? 0)}
-                    </ThemedText>
+                    </TextParagraph>
                   </View>
                 </>
               ) : null}
@@ -298,14 +304,14 @@ export function FundPerformanceChart({
           {xAxisLabels.map(({ index, label }) => {
             const ratio = index / Math.max(renderPoints.length - 1, 1);
             return (
-              <ThemedText
+              <TextLabel
                 key={`${label}-${index}`}
-                type="metaLabel"
+                variant="meta"
                 themeColor="textSecondary"
                 style={[styles.xAxisLabel, { left: `${ratio * 100}%` }]}
               >
                 {label}
-              </ThemedText>
+              </TextLabel>
             );
           })}
         </View>
@@ -322,14 +328,14 @@ export function FundPerformanceChart({
             },
           ]}
         >
-          <ThemedText type="metaLabel" style={{ color: theme.surface }}>
+          <TextLabel variant="meta" style={{ color: theme.surface }}>
             {formatChartTooltipDate(activePoint.date)}
-          </ThemedText>
+          </TextLabel>
         </View>
       ) : (
-        <ThemedText type="metaLabel" themeColor="textSecondary" style={styles.hint}>
+        <TextLabel variant="meta" themeColor="textSecondary" style={styles.hint}>
           Valores liquidativos en EUR · Toca o desliza el gráfico para explorar
-        </ThemedText>
+        </TextLabel>
       )}
     </View>
   );
@@ -353,8 +359,7 @@ const styles = StyleSheet.create({
     paddingRight: Spacing.xs,
   },
   yAxisLabel: {
-    fontSize: 10,
-    lineHeight: 12,
+    ...Typography.chartAxis,
     textAlign: 'right',
   },
   plotArea: {
@@ -391,12 +396,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
     borderRadius: Radius.chip,
     borderWidth: 1,
-    gap: 2,
-    shadowColor: '#0B2E36',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    gap: Spacing.half,
   },
   placeholder: {
     flex: 1,
@@ -411,10 +411,9 @@ const styles = StyleSheet.create({
   },
   xAxisLabel: {
     position: 'absolute',
-    fontSize: 10,
-    lineHeight: 12,
-    transform: [{ translateX: -16 }],
-    minWidth: 32,
+    ...Typography.chartAxis,
+    transform: [{ translateX: -Size.iconLg }],
+    minWidth: Size.iconLg,
     textAlign: 'center',
   },
   dateChip: {

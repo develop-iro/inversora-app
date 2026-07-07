@@ -2,7 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { StyleSheet, View } from 'react-native';
 
 import type { CompareFairnessResult } from '@/features/comparison/models/compare-fund-entry';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -26,28 +26,28 @@ export function CompareFairnessBanner({ fairness }: CompareFairnessBannerProps) 
       style={[
         styles.banner,
         {
-          backgroundColor: 'rgba(250, 204, 21, 0.14)',
-          borderColor: 'rgba(245, 158, 11, 0.35)',
+          backgroundColor: theme.warningBannerSurface,
+          borderColor: theme.warningBannerBorder,
         },
       ]}
     >
       <MaterialCommunityIcons name="information-outline" size={20} color={theme.deepOcean} />
       <View style={styles.copy}>
-        <ThemedText type="bodyBold">
+        <TextParagraph variant="emphasis">
           {fairness.warnings.length === 1
             ? fairness.warnings[0]
             : 'Comparación con matices'}
-        </ThemedText>
+        </TextParagraph>
         {fairness.warnings.length > 1
           ? fairness.warnings.map((warning) => (
-              <ThemedText key={warning} type="caption" themeColor="textSecondary">
+              <TextParagraph key={warning} variant="secondary" themeColor="textSecondary">
                 {warning}
-              </ThemedText>
+              </TextParagraph>
             ))
           : (
-            <ThemedText type="caption" themeColor="textSecondary">
+            <TextParagraph variant="secondary" themeColor="textSecondary">
               Interpreta los resultados con cautela.
-            </ThemedText>
+            </TextParagraph>
           )}
       </View>
     </View>

@@ -4,6 +4,8 @@ import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { useAuroraBorder } from "@/shared/components/ui/search/hooks/use-aurora-border";
+import { useThemeGradients } from "@/shared/hooks/use-theme-gradients";
+import { useThemeShadows } from "@/shared/hooks/use-theme-shadows";
 import { Radius, Spacing } from "@/shared/theme/theme";
 
 type AuroraBorderProps = {
@@ -23,6 +25,9 @@ export function AuroraBorder({
   borderColor,
   surfaceColor,
 }: AuroraBorderProps) {
+  const gradients = useThemeGradients();
+  const shadows = useThemeShadows();
+  const auroraSweep = gradients.searchAuroraSweep;
   const { auraStyle } = useAuroraBorder({
     focused,
     paused,
@@ -30,17 +35,12 @@ export function AuroraBorder({
   });
 
   return (
-    <View style={[styles.frame, { borderColor }]}>
+    <View style={[styles.frame, shadows.focusAura, { borderColor }]}>
       <Animated.View pointerEvents="none" style={[styles.auraLayer, auraStyle]}>
         <LinearGradient
-          colors={[
-            "rgba(0, 191, 166, 0.02)",
-            "rgba(0, 191, 166, 0.18)",
-            "rgba(11, 46, 54, 0.08)",
-            "rgba(0, 191, 166, 0.02)",
-          ]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
+          colors={[...auroraSweep.colors]}
+          start={auroraSweep.start}
+          end={auroraSweep.end}
           style={styles.auraGradient}
         />
       </Animated.View>
@@ -57,13 +57,8 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     width: "100%",
     borderWidth: 1,
-    borderRadius: Radius.field + 2,
+    borderRadius: Radius.field + Spacing.half,
     overflow: "hidden",
-    shadowColor: "rgba(11, 46, 54, 0.45)",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 3,
   },
   auraLayer: {
     ...StyleSheet.absoluteFill,
@@ -75,7 +70,7 @@ const styles = StyleSheet.create({
   },
   content: {
     borderRadius: Radius.field,
-    margin: 1,
+    margin: Spacing['2xs'],
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },

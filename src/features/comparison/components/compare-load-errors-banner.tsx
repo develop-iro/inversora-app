@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -34,10 +34,10 @@ export function CompareLoadErrorsBanner({ notFoundIsins }: CompareLoadErrorsBann
         },
       ]}
     >
-      <ThemedText type="bodyBold">Carga incompleta</ThemedText>
-      <ThemedText type="caption" themeColor="textSecondary">
+      <TextParagraph variant="emphasis">Carga incompleta</TextParagraph>
+      <TextParagraph variant="secondary" themeColor="textSecondary">
         {label} Puedes quitarlos o intentar añadirlos de nuevo.
-      </ThemedText>
+      </TextParagraph>
     </View>
   );
 }

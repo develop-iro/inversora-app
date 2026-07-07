@@ -23,6 +23,9 @@ export type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-fil
 /** Default page size for catalog infinite scroll (`GET /funds`). */
 export const CATALOG_PAGE_SIZE = 20;
 
+/** Wider slice used only to build category filter cards in the catalog. */
+export const CATALOG_CATEGORY_INDEX_LIMIT = 100;
+
 /**
  * Fetches a single page from `GET /funds`.
  *
@@ -127,6 +130,31 @@ export async function getFundsPage(
       data: applyClientOnlyCatalogFilters(response.data, filters),
       meta: response.meta,
     };
+  } catch (error) {
+    throw toFundsFetchError(error);
+  }
+}
+
+/**
+ * Loads a wider first page to derive category filter options without coupling
+ * them to the paginated results list.
+ *
+ * @param signal - Optional abort signal.
+ */
+export async function getCatalogCategoryIndex(signal?: AbortSignal): Promise<CatalogFund[]> {
+  if (shouldUseMockData()) {
+    return applyClientOnlyCatalogFilters(CATALOG_FUNDS_MOCK);
+  }
+
+  try {
+    const apiQuery: FundListApiQuery = {
+      sortBy: 'score',
+      sortOrder: 'desc',
+      page: 1,
+      limit: CATALOG_CATEGORY_INDEX_LIMIT,
+    };
+    const response = await fetchFundListPage(apiQuery, signal);
+    return response.data;
   } catch (error) {
     throw toFundsFetchError(error);
   }

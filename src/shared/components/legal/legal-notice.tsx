@@ -1,19 +1,24 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLegal } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type LegalNoticeProps = {
   title?: string;
   body: string;
+  learnMoreLabel?: string;
+  onLearnMorePress?: () => void;
+  className?: string;
   style?: StyleProp<ViewStyle>;
 };
 
 export function LegalNotice({
   title = 'Información educativa',
   body,
+  learnMoreLabel = 'Más información legal',
+  onLearnMorePress,
+  className,
   style,
 }: LegalNoticeProps) {
   const theme = useTheme();
@@ -22,8 +27,8 @@ export function LegalNotice({
     <View
       accessibilityRole="summary"
       accessibilityLabel={`${title}. ${body}`}
+      className={['gap-xs rounded-card border px-md py-sm', className].filter(Boolean).join(' ')}
       style={[
-        styles.card,
         {
           backgroundColor: theme.backgroundSoft,
           borderColor: theme.border,
@@ -31,42 +36,25 @@ export function LegalNotice({
         style,
       ]}
     >
-      <View style={styles.header}>
-        <MaterialCommunityIcons
-          name="information-outline"
-          size={14}
-          color={theme.textSecondary}
-        />
-        <ThemedText type="caption" themeColor="textSecondary" style={styles.title}>
-          {title}
-        </ThemedText>
+      <View className="flex-row items-center gap-xs">
+        <MaterialCommunityIcons name="information-outline" size={14} color={theme.textSecondary} />
+        <TextLegal themeColor="textSecondary">{title}</TextLegal>
       </View>
-      <ThemedText type="caption" themeColor="textSecondary" style={styles.body}>
-        {body}
-      </ThemedText>
+
+      <TextLegal themeColor="textSecondary">{body}</TextLegal>
+
+      {onLearnMorePress ? (
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={learnMoreLabel}
+          onPress={onLearnMorePress}
+          className="mt-xs self-start active:opacity-75"
+        >
+          <TextLegal themeColor="primary" className="underline">
+            {learnMoreLabel}
+          </TextLegal>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  title: {
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  body: {
-    fontSize: 12,
-    lineHeight: 17,
-  },
-});

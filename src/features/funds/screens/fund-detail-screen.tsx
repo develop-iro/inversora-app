@@ -3,8 +3,6 @@ import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -25,15 +23,23 @@ import { FundDetailRatiosSection } from '@/features/funds/components/detail/fund
 import { FundDetailReturnsSection } from '@/features/funds/components/detail/fund-detail-returns-section';
 import { FundDetailSectionEmptyState } from '@/features/funds/components/detail/fund-detail-section-empty-state';
 import { FundDetailHeroIsin } from '@/features/funds/components/detail/fund-detail-hero-isin';
+import { FundDetailLiveQuote } from '@/features/funds/components/detail/fund-detail-live-quote';
 import { FundDetailScoreSection } from '@/features/funds/components/detail/fund-detail-score-section';
 import { FundDetailSheetFreshness } from '@/features/funds/components/detail/fund-detail-sheet-freshness';
+import { useFundLiveMarketSnapshot } from '@/features/funds/hooks/use-fund-live-market-snapshot';
 import { FavoriteToggleButton } from '@/features/funds/components/favorite-toggle-button';
 import { FundMetricsGrid } from '@/features/funds/components/fund-metrics-grid';
 import { FundPerformanceChart } from '@/features/funds/components/fund-performance-chart';
-import { TimeframeSegmentedControl } from '@/features/funds/components/timeframe-segmented-control';
+import { TabChipFund } from '@/features/funds/components/tabs/tab-chip-fund';
 import { useFavorite } from '@/features/funds/hooks/use-favorite';
 import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
-import { getRegionMetricsForGrid, shouldShowRegionSummary } from '@/features/funds/utils/fund-detail-presentation';
+import {
+  getRegionMetricsForGrid,
+  hasPerformanceHistory,
+  hasSheetFreshness,
+  isMissingProfileValue,
+  shouldShowRegionSummary,
+} from '@/features/funds/utils/fund-detail-presentation';
 import { resolveFundApiErrorMessage } from '@/features/funds/utils/resolve-fund-api-error-message';
 import {
   buildPerformanceA11yLabel,
@@ -43,8 +49,10 @@ import {
   getPerformancePeriodLabel,
 } from '@/features/funds/utils/fund-performance';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
-import { ThemedText } from '@/shared/components/themed-text';
-import { Button } from '@/shared/components/ui';
+import { ScreenShell } from '@/shared/components/layout';
+import { Header } from '@/shared/components/headers';
+import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
+import { Button, Spinner } from '@/shared/components/ui';
 import { routes } from '@/shared/navigation/routes';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useTheme } from '@/shared/hooks/use-theme';
@@ -52,55 +60,30 @@ import { getDiversificationLabel } from '@/shared/utils/fund-diversification';
 import { getRiskLabel } from '@/shared/utils/fund-risk';
 import { Layout, Spacing } from '@/shared/theme/theme';
 
-const DETAIL_HEADER_HEIGHT = 60;
-
-type FundDetailScreenChromeProps = {
+type FundDetailShellProps = {
   children: ReactNode;
   bodyStyle?: StyleProp<ViewStyle>;
+  onSoraPress?: () => void;
 };
 
-function FundDetailScreenChrome({ children, bodyStyle }: FundDetailScreenChromeProps) {
+function FundDetailShell({ children, bodyStyle, onSoraPress }: FundDetailShellProps) {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const theme = useTheme();
-  const { contentWidth } = useMobileLayout();
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.background, paddingTop: insets.top }]}>
-      <View
-        style={[
-          styles.screenHeader,
-          {
-            backgroundColor: theme.surface,
-            borderBottomColor: 'rgba(11, 46, 54, 0.06)',
-          },
-        ]}
-      >
-        <View
-          style={[
-            styles.screenHeaderInner,
-            {
-              width: contentWidth,
-              maxWidth: contentWidth,
-            },
-          ]}
-        >
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Volver"
-            onPress={() => router.back()}
-            style={styles.navButton}
-          >
-            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.deepOcean} />
-          </Pressable>
-          <ThemedText type="navTitle" style={styles.navTitle}>
-            Detalle del fondo
-          </ThemedText>
-          <View style={styles.navSpacer} />
-        </View>
-      </View>
-      <View style={[styles.body, bodyStyle]}>{children}</View>
-    </View>
+    <ScreenShell
+      header={
+        <Header
+          title="Detalle del fondo"
+          leadingActions={['back']}
+          trailingActions={onSoraPress ? ['sora'] : []}
+          onAction={{
+            back: () => router.back(),
+            ...(onSoraPress ? { sora: onSoraPress } : {}),
+          }}
+        />
+      }
+      body={<View style={[styles.body, bodyStyle]}>{children}</View>}
+    />
   );
 }
 
@@ -135,6 +118,10 @@ export default function FundDetailScreen() {
 
   const resolvedIsin = typeof isin === 'string' ? isin : '';
   const { isFavorite, isLoading: isFavoriteLoading, toggle } = useFavorite(resolvedIsin);
+  const {
+    snapshot: liveMarketSnapshot,
+    isLoading: isLiveMarketLoading,
+  } = useFundLiveMarketSnapshot(resolvedIsin);
 
   useEffect(() => {
     let cancelled = false;
@@ -235,7 +222,7 @@ export default function FundDetailScreen() {
         value: market.stabilityLabel,
         hint: stabilityHint,
       },
-    ];
+    ].filter((metric) => !isMissingProfileValue(metric.value));
   }, [detail]);
 
   const regionMetrics = useMemo(() => {
@@ -246,40 +233,46 @@ export default function FundDetailScreen() {
     return getRegionMetricsForGrid(detail);
   }, [detail]);
 
+  const handleOpenSora = () => {
+    setSoraSession((current) => current + 1);
+    setIsSoraVisible(true);
+  };
+
   if (isLoading) {
     return (
-      <FundDetailScreenChrome bodyStyle={styles.centered}>
-        <ActivityIndicator color={theme.primary} />
-      </FundDetailScreenChrome>
+      <FundDetailShell bodyStyle={styles.centered}>
+        <Spinner fullscreen size="lg" accessibilityLabel="Cargando ficha del fondo" />
+      </FundDetailShell>
     );
   }
 
   if (loadError) {
     return (
-      <FundDetailScreenChrome bodyStyle={[styles.centered, styles.notFound]}>
+      <FundDetailShell bodyStyle={[styles.centered, styles.notFound]}>
         <FundApiErrorState
           title="No se pudo cargar la ficha"
           message={loadError}
           onRetry={handleRetryLoad}
         />
         <Button label="Volver al catálogo" variant="outline" onPress={() => router.back()} />
-      </FundDetailScreenChrome>
+      </FundDetailShell>
     );
   }
 
   if (notFound || !detail) {
     return (
-      <FundDetailScreenChrome bodyStyle={[styles.centered, styles.notFound]}>
-        <ThemedText type="sectionTitle">Fondo no encontrado</ThemedText>
+      <FundDetailShell bodyStyle={[styles.centered, styles.notFound]}>
+        <TextHeading variant="section">Fondo no encontrado</TextHeading>
         <Button label="Volver al catálogo" variant="outline" onPress={() => router.back()} />
-      </FundDetailScreenChrome>
+      </FundDetailShell>
     );
   }
 
   const { fund } = detail;
+  const showPerformanceHistory = hasPerformanceHistory(detail);
 
   return (
-    <FundDetailScreenChrome>
+    <FundDetailShell onSoraPress={handleOpenSora}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -300,118 +293,135 @@ export default function FundDetailScreen() {
           ]}
         >
           <View style={styles.hero}>
-          {detail.rank != null ? (
-            <ThemedText type="metaLabel" themeColor="deepOcean">
-              Ranking #{detail.rank}
-            </ThemedText>
-          ) : null}
-          <View style={styles.heroMain}>
-            <View style={styles.titleBlock}>
-              <ThemedText type="cardTitle" style={styles.fundName} numberOfLines={3}>
-                {fund.name}
-              </ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary">
-                {fund.categoryLabel}
-              </ThemedText>
-              <FundDetailHeroIsin isin={fund.isin} />
+            {detail.rank != null ? (
+              <TextLabel variant="meta" themeColor="deepOcean">
+                Ranking #{detail.rank}
+              </TextLabel>
+            ) : null}
+            <View style={styles.heroMain}>
+              <View style={styles.titleBlock}>
+                <TextHeading variant="card" style={styles.fundName} numberOfLines={3}>
+                  {fund.name}
+                </TextHeading>
+                <TextParagraph variant="secondary" themeColor="textSecondary">
+                  {fund.categoryLabel}
+                </TextParagraph>
+                <FundDetailHeroIsin isin={fund.isin} />
+                <FundDetailLiveQuote
+                  snapshot={liveMarketSnapshot}
+                  isLoading={isLiveMarketLoading}
+                />
+              </View>
+              <View style={styles.favoriteSlot}>
+                <FavoriteToggleButton
+                  isin={fund.isin}
+                  isFavorite={isFavorite}
+                  isLoading={isFavoriteLoading}
+                  onToggle={toggle}
+                />
+              </View>
             </View>
-            <View style={styles.favoriteSlot}>
-              <FavoriteToggleButton
-                isin={fund.isin}
-                isFavorite={isFavorite}
-                isLoading={isFavoriteLoading}
-                onToggle={toggle}
-              />
-            </View>
+
+            {performanceSeries && performanceSeries.points.length >= 2 ? (
+              <View style={styles.performanceRow}>
+                <MaterialCommunityIcons
+                  name={performanceTrendUp ? 'trending-up' : 'trending-down'}
+                  size={18}
+                  color={theme.primary}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                />
+                <TextParagraph variant="emphasis" style={{ color: theme.primary }}>
+                  {formatPerformanceChange(performanceChange)}
+                </TextParagraph>
+                <TextParagraph variant="secondary" themeColor="textSecondary">
+                  {getPerformancePeriodLabel(timeframe)}
+                </TextParagraph>
+              </View>
+            ) : null}
           </View>
 
-          {performanceSeries ? (
-            <View style={styles.performanceRow}>
-              <MaterialCommunityIcons
-                name={performanceTrendUp ? 'trending-up' : 'trending-down'}
-                size={18}
-                color={theme.primary}
-                accessibilityElementsHidden
-                importantForAccessibility="no"
-              />
-              <ThemedText type="bodyBold" style={{ color: theme.primary }}>
-                {formatPerformanceChange(performanceChange)}
-              </ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary">
-                {getPerformancePeriodLabel(timeframe)}
-              </ThemedText>
+          {hasSheetFreshness(detail.profile.asOf) ? (
+            <FundDetailSheetFreshness asOf={detail.profile.asOf} />
+          ) : null}
+
+          <FundDetailScoreSection
+            score={detail.inversoraScore}
+            breakdown={detail.scoredBreakdown}
+            fund={fund}
+          />
+
+          <FundDataQualityBanner status={detail.scoringStatus} />
+
+          <View style={styles.actionsRow}>
+            <Button
+              label="Pregúntale a Sora"
+              variant="primary"
+              style={styles.actionButton}
+              accessibilityLabel="Pregúntale a Sora, asistente educativo"
+              accessibilityHint="Abre el asistente educativo con contexto de este fondo"
+              onPress={handleOpenSora}
+            />
+            <Button
+              label="Comparar"
+              variant="primary"
+              style={[styles.actionButton, { backgroundColor: theme.deepOcean }]}
+              accessibilityLabel={`Comparar ${fund.name} con otros fondos`}
+              onPress={() => router.push(routes.compareWithIsins([fund.isin]))}
+            />
+          </View>
+
+          <Button
+            label="Simular inversión"
+            variant="secondary"
+            fullWidth
+            accessibilityLabel={`Simular inversión con ${fund.name} en la calculadora`}
+            accessibilityHint="Abre la calculadora de interés compuesto con este fondo como referencia"
+            onPress={() => router.push(routes.calculatorWithFund(fund.isin))}
+          />
+
+          {showPerformanceHistory ? (
+            <View style={styles.performanceSection}>
+              <TabChipFund value={timeframe} onChange={setTimeframe} />
+
+              {performanceSeries && performanceSeries.points.length > 1 ? (
+                <FundPerformanceChart
+                  points={performanceSeries.points}
+                  navBase={getIllustrativeNavBase(fund.isin)}
+                  accessibilityLabel={chartA11yLabel}
+                />
+              ) : (
+                <FundDetailSectionEmptyState message="Todavía no hay suficiente histórico para mostrar la evolución en este periodo." />
+              )}
+
+              <TextParagraph variant="secondary" themeColor="textSecondary">
+                {performanceSeries?.sourceLabel}. Valores liquidativos ilustrativos en EUR. El
+                rendimiento pasado no garantiza resultados futuros.
+              </TextParagraph>
             </View>
           ) : null}
-        </View>
 
-        <FundDetailSheetFreshness asOf={detail.profile.asOf} />
+          <FundDetailInformationSection profile={detail.profile} />
 
-        <FundDetailScoreSection
-          score={detail.inversoraScore}
-          breakdown={detail.scoredBreakdown}
-          fund={fund}
-        />
+          <FundDetailReturnsSection profile={detail.profile} fundName={fund.name} />
 
-        <FundDataQualityBanner status={detail.scoringStatus} />
+          <FundMetricsGrid title="Métricas clave" metrics={keyMetrics} />
 
-        <View style={styles.actionsRow}>
-          <Button
-            label="Pregúntale a Sora"
-            variant="primary"
-            style={styles.actionButton}
-            accessibilityLabel="Pregúntale a Sora, asistente educativo"
-            accessibilityHint="Abre el asistente educativo con contexto de este fondo"
-            onPress={() => {
-              setSoraSession((current) => current + 1);
-              setIsSoraVisible(true);
-            }}
+          {regionMetrics.length > 0 ? (
+            <FundMetricsGrid title="Región y reparto (resumen)" metrics={regionMetrics} />
+          ) : null}
+
+          <FundDetailRatiosSection profile={detail.profile} fundName={fund.name} />
+
+          <FundDetailExposureSection profile={detail.profile} />
+
+          <FundDetailDistributorsSection profile={detail.profile} />
+
+          <LegalNotice
+            title="Aviso legal"
+            body="Información educativa. Inversora no ofrece asesoramiento financiero personalizado. Los gráficos son series ilustrativas del MVP y no sustituyen la ficha oficial del gestor."
+            onLearnMorePress={() => router.push(routes.legal)}
           />
-          <Button
-            label="Comparar"
-            variant="primary"
-            style={[styles.actionButton, { backgroundColor: theme.deepOcean }]}
-            accessibilityLabel={`Comparar ${fund.name} con otros fondos`}
-            onPress={() => router.push(routes.compareWithIsins([fund.isin]))}
-          />
-        </View>
-
-        <TimeframeSegmentedControl value={timeframe} onChange={setTimeframe} />
-
-        {performanceSeries && performanceSeries.points.length > 1 ? (
-          <FundPerformanceChart
-            points={performanceSeries.points}
-            navBase={getIllustrativeNavBase(fund.isin)}
-            accessibilityLabel={chartA11yLabel}
-          />
-        ) : (
-          <FundDetailSectionEmptyState message="Todavía no hay suficiente histórico para mostrar la evolución en este periodo." />
-        )}
-
-        <ThemedText type="caption" themeColor="textSecondary">
-          {performanceSeries?.sourceLabel}. Valores liquidativos ilustrativos en EUR. El rendimiento
-          pasado no garantiza resultados futuros.
-        </ThemedText>
-
-        <FundDetailInformationSection profile={detail.profile} />
-
-        <FundDetailReturnsSection profile={detail.profile} fundName={fund.name} />
-
-        <FundMetricsGrid title="Métricas clave" metrics={keyMetrics} />
-
-        {regionMetrics.length > 0 ? (
-          <FundMetricsGrid title="Región y reparto (resumen)" metrics={regionMetrics} />
-        ) : null}
-
-        <FundDetailRatiosSection profile={detail.profile} fundName={fund.name} />
-
-        <FundDetailExposureSection profile={detail.profile} />
-
-        <FundDetailDistributorsSection profile={detail.profile} />
-
-        <LegalNotice
-          title="Aviso legal"
-          body="Información educativa. Inversora no ofrece asesoramiento financiero personalizado. Los gráficos son series ilustrativas del MVP y no sustituyen la ficha oficial del gestor."
-        />
         </View>
       </ScrollView>
 
@@ -430,30 +440,16 @@ export default function FundDetailScreen() {
           '¿Por qué aparece en el ranking?',
         ]}
       />
-    </FundDetailScreenChrome>
+    </FundDetailShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
   body: {
     flex: 1,
   },
   scroll: {
     flex: 1,
-  },
-  screenHeader: {
-    alignItems: 'center',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  screenHeaderInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: DETAIL_HEADER_HEIGHT,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    alignSelf: 'center',
   },
   content: {
     alignItems: 'center',
@@ -461,7 +457,8 @@ const styles = StyleSheet.create({
   inner: {
     alignSelf: 'center',
     paddingHorizontal: Layout.screenPaddingHorizontal,
-    gap: Spacing.lg,
+    gap: Spacing.md,
+    paddingTop: Spacing.sm,
   },
   centered: {
     flex: 1,
@@ -471,20 +468,6 @@ const styles = StyleSheet.create({
   notFound: {
     gap: Spacing.lg,
     paddingHorizontal: Layout.screenPaddingHorizontal,
-  },
-  navButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: -Spacing.sm,
-  },
-  navTitle: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  navSpacer: {
-    width: 44,
   },
   hero: {
     gap: Spacing.xs,
@@ -501,7 +484,7 @@ const styles = StyleSheet.create({
   },
   favoriteSlot: {
     flexShrink: 0,
-    marginTop: 2,
+    marginTop: Spacing.half,
   },
   fundName: {
     letterSpacing: -0.36,
@@ -515,6 +498,10 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     gap: Spacing.sm,
+  },
+  performanceSection: {
+    gap: Spacing.sm,
+    alignSelf: 'stretch',
   },
   actionButton: {
     flex: 1,

@@ -2,10 +2,12 @@ import type { CatalogFund } from '@/core/domain/catalog';
 import { AppError } from '@/core/errors/app-error';
 import {
   mapApiFundToCatalogFund,
+  parseInvestmentTheme,
   type ApiFund,
   type ApiFundEditorial,
   type ApiFundMetrics,
 } from '@/core/api/map-api-fund';
+import { resolveFundReturnSnapshotFromApi } from '@/core/api/parse-fund-return-snapshot';
 
 export type FundListMeta = {
   page: number;
@@ -75,11 +77,15 @@ function parseApiFund(value: unknown): ApiFund | null {
     issuer,
     logoUrl,
     benchmark,
+    investmentTheme,
+    assetClass,
+    domicile,
     metrics,
     riskLevel,
     score,
     editorial,
     catalogVisibility,
+    returns,
   } = value;
 
   const parsedMetrics = parseApiFundMetrics(metrics);
@@ -112,11 +118,15 @@ function parseApiFund(value: unknown): ApiFund | null {
     issuer: issuer ?? null,
     logoUrl: logoUrl ?? null,
     benchmark,
+    investmentTheme: parseInvestmentTheme(investmentTheme),
+    assetClass: typeof assetClass === 'string' ? assetClass : assetClass === null ? null : null,
+    domicile: typeof domicile === 'string' ? domicile : domicile === null ? null : null,
     metrics: parsedMetrics,
     riskLevel,
     score,
     editorial: parsedEditorial,
     catalogVisibility,
+    returns: resolveFundReturnSnapshotFromApi(returns),
   };
 }
 

@@ -8,12 +8,19 @@ import {
   COMPARE_METRIC_TIPS,
   COMPARE_SUGGESTED_PAIRS,
 } from '@/features/comparison/constants/compare-suggested-pairs.config';
-import { ScreenQuickAction } from '@/shared/components/layout/screen-quick-action';
-import { ThemedText } from '@/shared/components/themed-text';
+import {
+  ScreenQuickAction,
+  ScreenQuickActionsRow,
+  SectionCard,
+} from '@/shared/components/layout';
 import { InvestmentCard } from '@/shared/components/ui/card';
+import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { routes } from '@/shared/navigation/routes';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Spacing } from '@/shared/theme/theme';
+import { Radius, Spacing } from '@/shared/theme/theme';
+
+/** Switch suggested pairs from horizontal scroll to a wrapped grid. */
+const COMPARE_PAIR_GRID_BREAKPOINT = 640;
 
 export type CompareEmptyBodyProps = {
   favoriteIsins: readonly string[];
@@ -31,21 +38,16 @@ export function CompareEmptyBody({
 }: CompareEmptyBodyProps) {
   const theme = useTheme();
   const router = useRouter();
+  const { contentWidth } = useMobileLayout();
+  const usePairGrid = contentWidth >= COMPARE_PAIR_GRID_BREAKPOINT;
   const canCompareFavorites = favoriteIsins.length >= 2;
 
   return (
     <View style={styles.wrapper}>
       <CompareHeroCard />
 
-      <View style={styles.section}>
-        <ThemedText type="metaLabel" themeColor="textSecondary" style={styles.eyebrow}>
-          Nueva comparación
-        </ThemedText>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.quickActions}
-        >
+      <SectionCard title="Nueva comparación" borderless contentStyle={styles.sectionContent}>
+        <ScreenQuickActionsRow>
           <ScreenQuickAction
             icon="magnify-plus-outline"
             label="Buscar fondo"
@@ -61,7 +63,7 @@ export function CompareEmptyBody({
           />
           <ScreenQuickAction
             icon="heart-outline"
-            label="Desde favoritos"
+            label="Favoritos"
             accessibilityLabel={
               canCompareFavorites
                 ? 'Comparar fondos guardados en favoritos'
@@ -76,37 +78,46 @@ export function CompareEmptyBody({
           />
           <ScreenQuickAction
             icon="view-grid-outline"
-            label="Ir al catálogo"
+            label="Catálogo"
             accessibilityLabel="Abrir catálogo de fondos"
             onPress={() => router.push(routes.fundsCatalog)}
             variant="deep"
           />
-        </ScrollView>
-      </View>
+        </ScreenQuickActionsRow>
+      </SectionCard>
 
-      <View style={styles.section}>
-        <ThemedText type="metaLabel" themeColor="textSecondary" style={styles.eyebrow}>
-          Comparaciones sugeridas
-        </ThemedText>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pairScroll}
-        >
-          {COMPARE_SUGGESTED_PAIRS.map((pair) => (
-            <CompareSuggestedPairCard
-              key={pair.id}
-              pair={pair}
-              onPress={() => onApplyPair(pair.isins)}
-            />
-          ))}
-        </ScrollView>
-      </View>
+      <SectionCard
+        title="Comparaciones sugeridas"
+        borderless
+        contentStyle={styles.sectionContent}
+      >
+        {usePairGrid ? (
+          <View style={styles.pairGrid}>
+            {COMPARE_SUGGESTED_PAIRS.map((pair) => (
+              <View key={pair.id} style={styles.pairGridItem}>
+                <CompareSuggestedPairCard pair={pair} onPress={() => onApplyPair(pair.isins)} />
+              </View>
+            ))}
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.pairScroll}
+          >
+            {COMPARE_SUGGESTED_PAIRS.map((pair) => (
+              <CompareSuggestedPairCard
+                key={pair.id}
+                pair={pair}
+                style={styles.pairScrollCard}
+                onPress={() => onApplyPair(pair.isins)}
+              />
+            ))}
+          </ScrollView>
+        )}
+      </SectionCard>
 
-      <View style={styles.section}>
-        <ThemedText type="metaLabel" themeColor="textSecondary" style={styles.eyebrow}>
-          Qué vas a comparar
-        </ThemedText>
+      <SectionCard title="Qué vas a comparar" borderless contentStyle={styles.sectionContent}>
         <View style={styles.tipsGrid}>
           {COMPARE_METRIC_TIPS.map((tip) => (
             <InvestmentCard
@@ -122,7 +133,7 @@ export function CompareEmptyBody({
             />
           ))}
         </View>
-      </View>
+      </SectionCard>
     </View>
   );
 }
@@ -131,20 +142,28 @@ const styles = StyleSheet.create({
   wrapper: {
     gap: Spacing.lg,
   },
-  section: {
+  sectionContent: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
     gap: Spacing.sm,
   },
-  eyebrow: {
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  quickActions: {
-    gap: Spacing.md,
-    paddingVertical: Spacing.xs,
+  pairGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
   },
   pairScroll: {
     gap: Spacing.sm,
     paddingVertical: Spacing.xs,
+  },
+  pairGridItem: {
+    flexGrow: 1,
+    flexBasis: 220,
+    maxWidth: '100%',
+  },
+  pairScrollCard: {
+    width: 220,
   },
   tipsGrid: {
     flexDirection: 'row',
@@ -152,15 +171,15 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   tipCard: {
-    width: '31%',
-    minWidth: 100,
     flexGrow: 1,
+    flexBasis: 160,
+    minWidth: 140,
     minHeight: 132,
   },
   tipIcon: {
     width: 32,
     height: 32,
-    borderRadius: 999,
+    borderRadius: Radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },

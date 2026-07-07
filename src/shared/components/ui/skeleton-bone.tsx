@@ -1,10 +1,11 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
 import { useSkeletonShimmerSweep } from '@/shared/components/ui/skeleton-shimmer-provider';
-import { skeletonTokens } from '@/shared/components/ui/skeleton-tokens';
+import { getSkeletonTokens } from '@/shared/components/ui/skeleton-tokens';
+import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius } from '@/shared/theme/theme';
 
 export type SkeletonBoneProps = {
@@ -31,6 +32,8 @@ export function SkeletonBone({
   borderRadius,
   style,
 }: SkeletonBoneProps) {
+  const theme = useTheme();
+  const skeletonTokens = useMemo(() => getSkeletonTokens(theme), [theme]);
   const { progress, reducedMotionEnabled } = useSkeletonShimmerSweep();
   const [layoutWidth, setLayoutWidth] = useState(0);
   const resolvedRadius = resolveBorderRadius(height, borderRadius);

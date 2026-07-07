@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { ChartMetrics } from '@/shared/theme/chart-metrics';
+import { Radius, Size, Spacing, Typography } from '@/shared/theme/theme';
 
 export type HorizontalBarDatum = {
   id: string;
@@ -17,8 +18,6 @@ export type HorizontalBarChartProps = {
   maxValue?: number;
 };
 
-const CHART_HEIGHT = 200;
-const BAR_MAX_HEIGHT = 160;
 const Y_AXIS_STEPS = [0, 5, 10, 15, 20, 25, 30];
 
 function formatBarValue(value: number): string {
@@ -53,9 +52,9 @@ export function HorizontalBarChart({
         <View style={styles.yAxis}>
           {[...Y_AXIS_STEPS].reverse().map((step) =>
             step <= scaleMax ? (
-              <ThemedText key={step} type="caption" themeColor="textSecondary" style={styles.yLabel}>
+              <TextParagraph key={step} variant="secondary" themeColor="textSecondary" style={styles.yLabel}>
                 {step}
-              </ThemedText>
+              </TextParagraph>
             ) : null,
           )}
         </View>
@@ -67,7 +66,7 @@ export function HorizontalBarChart({
               style={[
                 styles.gridLine,
                 {
-                  bottom: (step / scaleMax) * BAR_MAX_HEIGHT,
+                  bottom: (step / scaleMax) * ChartMetrics.barMaxHeight,
                   backgroundColor: theme.border,
                 },
               ]}
@@ -77,15 +76,15 @@ export function HorizontalBarChart({
             {data.map((datum) => {
               const hasValue = datum.value != null;
               const height = hasValue
-                ? Math.max(4, (datum.value! / scaleMax) * BAR_MAX_HEIGHT)
+                ? Math.max(ChartMetrics.barMinHeight, (datum.value! / scaleMax) * ChartMetrics.barMaxHeight)
                 : 0;
 
               return (
                 <View key={datum.id} style={styles.barColumn}>
                   {hasValue ? (
-                    <ThemedText type="caption" style={styles.barValue}>
+                    <TextParagraph variant="secondary" style={styles.barValue}>
                       {formatBarValue(datum.value!)}
-                    </ThemedText>
+                    </TextParagraph>
                   ) : (
                     <View style={styles.barValuePlaceholder} />
                   )}
@@ -102,14 +101,14 @@ export function HorizontalBarChart({
                       />
                     ) : null}
                   </View>
-                  <ThemedText
-                    type="caption"
+                  <TextParagraph
+                    variant="secondary"
                     themeColor="textSecondary"
                     style={styles.xLabel}
                     numberOfLines={2}
                   >
                     {datum.label}
-                  </ThemedText>
+                  </TextParagraph>
                 </View>
               );
             })}
@@ -122,7 +121,7 @@ export function HorizontalBarChart({
 
 const styles = StyleSheet.create({
   wrapper: {
-    minHeight: CHART_HEIGHT,
+    minHeight: ChartMetrics.height,
     alignSelf: 'stretch',
   },
   chartRow: {
@@ -130,15 +129,14 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   yAxis: {
-    width: 28,
-    height: BAR_MAX_HEIGHT + 48,
+    width: ChartMetrics.yAxisWidth,
+    height: ChartMetrics.barMaxHeight + ChartMetrics.yAxisPaddingTop + ChartMetrics.yAxisPaddingBottom,
     justifyContent: 'space-between',
-    paddingTop: 20,
-    paddingBottom: 40,
+    paddingTop: ChartMetrics.yAxisPaddingTop,
+    paddingBottom: ChartMetrics.yAxisPaddingBottom,
   },
   yLabel: {
-    fontSize: 10,
-    lineHeight: 12,
+    ...Typography.chartAxis,
   },
   plot: {
     flex: 1,
@@ -156,8 +154,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     gap: Spacing.xs,
-    paddingTop: 20,
-    minHeight: BAR_MAX_HEIGHT + 56,
+    paddingTop: ChartMetrics.yAxisPaddingTop,
+    minHeight: ChartMetrics.barMaxHeight + ChartMetrics.labelAreaHeight,
   },
   barColumn: {
     flex: 1,
@@ -166,18 +164,16 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   barValue: {
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: '700',
+    ...Typography.chartLabel,
     textAlign: 'center',
   },
   barValuePlaceholder: {
-    height: 14,
+    height: Size.chartBarValue,
   },
   barTrack: {
-    height: BAR_MAX_HEIGHT,
+    height: ChartMetrics.barMaxHeight,
     width: '72%',
-    maxWidth: 44,
+    maxWidth: ChartMetrics.barTrackMaxWidth,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
@@ -185,11 +181,11 @@ const styles = StyleSheet.create({
     width: '100%',
     borderTopLeftRadius: Radius.image,
     borderTopRightRadius: Radius.image,
-    minWidth: 12,
+    minWidth: ChartMetrics.barMinWidth,
   },
   xLabel: {
-    fontSize: 10,
-    lineHeight: 13,
+    ...Typography.chartAxis,
+    lineHeight: Typography.micro.lineHeight,
     textAlign: 'center',
   },
 });

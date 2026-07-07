@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import type { LearnQuestionStep } from '@/features/learn/constants/learn-questionnaire';
 import { LearnOptionCard } from '@/features/learn/components/learn-option-card';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
 import { Spacing } from '@/shared/theme/theme';
 
 export type LearnQuestionStepViewProps = {
@@ -22,25 +22,25 @@ export function LearnQuestionStepView({
   return (
     <View style={styles.container}>
       {step.eyebrow ? (
-        <ThemedText type="metaLabel" themeColor="deepOcean">
+        <TextLabel variant="meta" themeColor="deepOcean">
           {step.eyebrow}
-        </ThemedText>
+        </TextLabel>
       ) : null}
 
-      <ThemedText type="sectionTitle" style={styles.title}>
+      <TextHeading variant="section" style={styles.title}>
         {step.title}
-      </ThemedText>
+      </TextHeading>
 
       {step.kind === 'info' ? (
-        <ThemedText type="default" themeColor="textSecondary" style={styles.body}>
+        <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.body}>
           {step.body}
-        </ThemedText>
+        </TextParagraph>
       ) : (
         <>
           {step.body ? (
-            <ThemedText type="default" themeColor="textSecondary" style={styles.body}>
+            <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.body}>
               {step.body}
-            </ThemedText>
+            </TextParagraph>
           ) : null}
           <View
             accessibilityRole="radiogroup"

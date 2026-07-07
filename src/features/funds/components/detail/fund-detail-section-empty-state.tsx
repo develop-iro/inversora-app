@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { Spacing } from '@/shared/theme/theme';
 
 export type FundDetailSectionEmptyStateProps = {
@@ -15,9 +15,9 @@ export function FundDetailSectionEmptyState({
 }: FundDetailSectionEmptyStateProps) {
   return (
     <View style={styles.wrapper} accessibilityRole="text">
-      <ThemedText type="caption" themeColor="textSecondary">
+      <TextParagraph variant="secondary" themeColor="textSecondary">
         {message}
-      </ThemedText>
+      </TextParagraph>
     </View>
   );
 }

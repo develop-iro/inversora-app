@@ -31,7 +31,7 @@ export function FavoriteToggleButton({
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor: isFavorite ? 'rgba(0, 191, 166, 0.12)' : theme.surfaceMuted,
+          backgroundColor: isFavorite ? theme.primarySurface : theme.surfaceMuted,
           borderColor: isFavorite ? theme.primary : theme.border,
         },
         pressed && styles.pressed,

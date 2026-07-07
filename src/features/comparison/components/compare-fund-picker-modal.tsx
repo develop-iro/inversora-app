@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Modal, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { MAX_COMPARE_FUNDS } from '@/core/storage/compare-selection-storage-key';
@@ -11,16 +11,14 @@ import {
   ScreenBody,
   ScreenBodyIntro,
   ScreenFooter,
-  ScreenHeader,
-  ScreenHeaderIconButton,
-  ScreenShell,
 } from '@/shared/components/layout';
-import { ThemedText } from '@/shared/components/themed-text';
-import { Button, ContentEmptyState, SearchField, SkeletonShimmerProvider } from '@/shared/components/ui';
-import { SkeletonPickerRow } from '@/shared/components/ui/skeleton-picker-row';
+import { AppModalShell } from '@/shared/components/overlay';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
+import { FundListRow } from '@/features/funds/components/fund-list-row';
+import { Button, ContentEmptyState, SearchField } from '@/shared/components/ui';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Spacing } from '@/shared/theme/theme';
+import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type CompareFundPickerModalProps = {
   visible: boolean;
@@ -32,14 +30,11 @@ export type CompareFundPickerModalProps = {
 
 function PickerLoadingSkeleton() {
   return (
-    <SkeletonShimmerProvider>
-      <View style={styles.skeletonList} accessibilityLabel="Cargando catálogo">
-        <SkeletonPickerRow />
-        <SkeletonPickerRow />
-        <SkeletonPickerRow />
-        <SkeletonPickerRow />
-      </View>
-    </SkeletonShimmerProvider>
+    <View style={styles.skeletonList} accessibilityLabel="Cargando catálogo">
+      {Array.from({ length: 4 }, (_, index) => (
+        <FundListRow key={`picker-loading-${index}`} loading />
+      ))}
+    </View>
   );
 }
 
@@ -128,16 +123,16 @@ export function CompareFundPickerModal({
 
     return (
       <View style={styles.listHeader}>
-        <ThemedText type="metaLabel" themeColor="textSecondary" style={styles.sectionEyebrow}>
+        <TextLabel variant="meta" themeColor="textSecondary" style={styles.sectionEyebrow}>
           {trimmedQuery.length > 0
             ? `${filteredFunds.length} resultado${filteredFunds.length === 1 ? '' : 's'}`
             : 'Fondos del catálogo educativo'}
-        </ThemedText>
+        </TextLabel>
         {!canAddMore ? (
           <View style={[styles.limitChip, { backgroundColor: theme.backgroundSoft }]}>
-            <ThemedText type="caption" themeColor="textSecondary">
+            <TextParagraph variant="secondary" themeColor="textSecondary">
               Máximo de {MAX_COMPARE_FUNDS} fondos en comparación
-            </ThemedText>
+            </TextParagraph>
           </View>
         ) : null}
       </View>
@@ -212,64 +207,48 @@ export function CompareFundPickerModal({
   };
 
   return (
-    <Modal
+    <AppModalShell
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={handleClose}
-    >
-      <ScreenShell
-        header={
-          <ScreenHeader
-            title="Elegir fondo"
-            trailing={
-              <ScreenHeaderIconButton
-                icon="close"
-                accessibilityLabel="Cerrar selector de fondos"
-                onPress={handleClose}
-              />
-            }
+      onClose={handleClose}
+      title="Elegir fondo"
+      body={
+        <ScreenBody>
+          <ScreenBodyIntro description="Busca por nombre, ISIN o categoría y añádelo a la comparación.">
+            {selectedIsins.length > 0 ? (
+              <View style={[styles.selectionChip, { backgroundColor: theme.backgroundSoft }]}>
+                <MaterialCommunityIcons name="scale-balance" size={16} color={theme.primary} />
+                <TextParagraph variant="secondary" themeColor="textSecondary">
+                  {selectedIsins.length} fondo{selectedIsins.length === 1 ? '' : 's'} en comparación
+                </TextParagraph>
+              </View>
+            ) : null}
+          </ScreenBodyIntro>
+
+          <SearchField
+            variant="plain"
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Buscar por nombre, ISIN o categoría"
+            accessibilityLabel="Buscar fondo para comparar"
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
           />
-        }
-        body={
-          <ScreenBody>
-            <ScreenBodyIntro description="Busca por nombre, ISIN o categoría y añádelo a la comparación.">
-              {selectedIsins.length > 0 ? (
-                <View style={[styles.selectionChip, { backgroundColor: theme.backgroundSoft }]}>
-                  <MaterialCommunityIcons name="scale-balance" size={16} color={theme.primary} />
-                  <ThemedText type="caption" themeColor="textSecondary">
-                    {selectedIsins.length} fondo{selectedIsins.length === 1 ? '' : 's'} en comparación
-                  </ThemedText>
-                </View>
-              ) : null}
-            </ScreenBodyIntro>
 
-            <SearchField
-              variant="plain"
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Buscar por nombre, ISIN o categoría"
-              accessibilityLabel="Buscar fondo para comparar"
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="search"
-            />
-
-            <View style={styles.listArea}>{renderListContent()}</View>
-          </ScreenBody>
-        }
-        footer={
-          <ScreenFooter>
-            <ThemedText type="caption" themeColor="textSecondary" style={styles.footerSummary}>
-              {selectedIsins.length > 0
-                ? `${selectedIsins.length} de ${MAX_COMPARE_FUNDS} fondos seleccionados`
-                : 'Selecciona al menos dos fondos para comparar'}
-            </ThemedText>
-            <Button label="Listo" onPress={handleClose} />
-          </ScreenFooter>
-        }
-      />
-    </Modal>
+          <View style={styles.listArea}>{renderListContent()}</View>
+        </ScreenBody>
+      }
+      footer={
+        <ScreenFooter>
+          <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.footerSummary}>
+            {selectedIsins.length > 0
+              ? `${selectedIsins.length} de ${MAX_COMPARE_FUNDS} fondos seleccionados`
+              : 'Selecciona al menos dos fondos para comparar'}
+          </TextParagraph>
+          <Button label="Listo" onPress={handleClose} />
+        </ScreenFooter>
+      }
+    />
   );
 }
 
@@ -279,7 +258,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     alignSelf: 'flex-start',
-    borderRadius: 999,
+    borderRadius: Radius.full,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
   },
@@ -298,7 +277,7 @@ const styles = StyleSheet.create({
   },
   limitChip: {
     alignSelf: 'flex-start',
-    borderRadius: 999,
+    borderRadius: Radius.full,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
   },

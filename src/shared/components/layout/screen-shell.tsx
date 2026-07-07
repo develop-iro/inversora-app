@@ -25,7 +25,6 @@ export function ScreenShell({ header, body, footer, overlay, style }: ScreenShel
         styles.root,
         {
           backgroundColor: theme.background,
-          paddingTop: insets.top,
           paddingBottom: footer === undefined ? insets.bottom : 0,
         },
         style,
@@ -46,6 +45,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
 });

@@ -2,6 +2,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
 import {
+    Pressable,
     StyleSheet,
     TextInput,
     View,
@@ -32,13 +33,22 @@ const DEFAULT_SUGGESTIONS = [
 const DEFAULT_ACCESSIBILITY_LABEL =
   "Buscar fondos, categorías u objetivos de inversión";
 
+const CLEAR_BUTTON_ACCESSIBILITY_LABEL = "Borrar búsqueda";
+
+const CLEAR_BUTTON_HIT_SLOP = {
+  top: 8,
+  bottom: 8,
+  left: 8,
+  right: 8,
+} as const;
+
 const webInputStyle: TextStyle | null = isWeb
   ? ({
       outlineWidth: 0,
       outlineStyle: "none",
       borderWidth: 0,
       boxShadow: "none",
-    } as TextStyle)
+    } as unknown as TextStyle)
   : null;
 
 export type SearchFieldVariant = "premium" | "plain";
@@ -48,7 +58,41 @@ export type SearchBarProps = Omit<TextInputProps, "style"> & {
   containerStyle?: StyleProp<ViewStyle>;
   suggestions?: string[];
   variant?: SearchFieldVariant;
+  /** Called after the field value is cleared via the clear button. */
+  onClear?: () => void;
 };
+
+type SearchFieldClearButtonProps = {
+  visible: boolean;
+  onPress: () => void;
+  iconColor: string;
+};
+
+/** Clear control shown when the search field has a non-empty value. */
+function SearchFieldClearButton({
+  visible,
+  onPress,
+  iconColor,
+}: SearchFieldClearButtonProps) {
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={CLEAR_BUTTON_ACCESSIBILITY_LABEL}
+      hitSlop={CLEAR_BUTTON_HIT_SLOP}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.clearButton,
+        pressed && styles.clearButtonPressed,
+      ]}
+    >
+      <MaterialCommunityIcons name="close-circle" size={20} color={iconColor} />
+    </Pressable>
+  );
+}
 
 function PlainSearchBar({
   leadingIcon,
@@ -58,6 +102,7 @@ function PlainSearchBar({
   value,
   defaultValue,
   onChangeText,
+  onClear,
   onFocus,
   onBlur,
   accessibilityLabel = DEFAULT_ACCESSIBILITY_LABEL,
@@ -71,6 +116,7 @@ function PlainSearchBar({
 
   const isControlled = value !== undefined;
   const inputValue = String(isControlled ? (value ?? "") : uncontrolledValue);
+  const showClearButton = inputValue.length > 0;
 
   const handleChangeText = useCallback(
     (nextValue: string) => {
@@ -81,6 +127,14 @@ function PlainSearchBar({
     },
     [isControlled, onChangeText],
   );
+
+  const handleClear = useCallback(() => {
+    if (!isControlled) {
+      setUncontrolledValue("");
+    }
+    onChangeText?.("");
+    onClear?.();
+  }, [isControlled, onChangeText, onClear]);
 
   const handleFocus: NonNullable<TextInputProps["onFocus"]> = useCallback(
     (event) => {
@@ -136,6 +190,12 @@ function PlainSearchBar({
         style={[styles.input, webInputStyle, { color: theme.text }]}
         {...inputProps}
       />
+
+      <SearchFieldClearButton
+        visible={showClearButton}
+        onPress={handleClear}
+        iconColor={theme.deepOcean}
+      />
     </View>
   );
 }
@@ -149,6 +209,7 @@ function PremiumSearchBar({
   value,
   defaultValue,
   onChangeText,
+  onClear,
   onFocus,
   onBlur,
   suggestions,
@@ -164,6 +225,7 @@ function PremiumSearchBar({
 
   const isControlled = value !== undefined;
   const inputValue = String(isControlled ? (value ?? "") : uncontrolledValue);
+  const showClearButton = inputValue.length > 0;
   const suggestionMessages = useMemo(() => {
     if (suggestions?.length) {
       return suggestions;
@@ -187,6 +249,14 @@ function PremiumSearchBar({
     },
     [isControlled, onChangeText],
   );
+
+  const handleClear = useCallback(() => {
+    if (!isControlled) {
+      setUncontrolledValue("");
+    }
+    onChangeText?.("");
+    onClear?.();
+  }, [isControlled, onChangeText, onClear]);
 
   const handleFocus: NonNullable<TextInputProps["onFocus"]> = useCallback(
     (event) => {
@@ -254,6 +324,12 @@ function PremiumSearchBar({
             {...inputProps}
           />
         </View>
+
+        <SearchFieldClearButton
+          visible={showClearButton}
+          onPress={handleClear}
+          iconColor={theme.primary}
+        />
       </View>
     </AuroraBorder>
   );
@@ -319,5 +395,16 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  clearButton: {
+    width: SEARCH_FIELD_MIN_HEIGHT,
+    height: SEARCH_FIELD_MIN_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    marginRight: -Spacing.sm,
+  },
+  clearButtonPressed: {
+    opacity: 0.72,
   },
 });

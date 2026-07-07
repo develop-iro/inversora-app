@@ -3,8 +3,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { getFundScore } from '@/features/funds/utils/fund-summary';
-import { FundCardIcon } from '@/features/onboarding/components/fund-card-icon';
-import { ThemedText } from '@/shared/components/themed-text';
+import { FundCardIcon } from '@/features/funds/components/fund-card-icon';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { ScorePill } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
@@ -50,19 +50,19 @@ export function CompareFundPickerRow({
       <FundCardIcon symbol={fund.symbol} logoUrl={fund.logoUrl} style={styles.icon} />
 
       <View style={styles.copy}>
-        <ThemedText type="bodyBold" numberOfLines={2}>
+        <TextParagraph variant="emphasis" numberOfLines={2}>
           {fund.name}
-        </ThemedText>
-        <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+        </TextParagraph>
+        <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={1}>
           {fund.categoryLabel}
-        </ThemedText>
+        </TextParagraph>
         <View style={styles.metaRow}>
-          <ThemedText type="metaLabel" themeColor="textSecondary">
+          <TextLabel variant="meta" themeColor="textSecondary">
             TER {formatTer(fund.terPercent)}
-          </ThemedText>
-          <ThemedText type="metaLabel" themeColor="textSecondary">
+          </TextLabel>
+          <TextLabel variant="meta" themeColor="textSecondary">
             {fund.isin}
-          </ThemedText>
+          </TextLabel>
         </View>
       </View>
 

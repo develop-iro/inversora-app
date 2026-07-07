@@ -19,7 +19,7 @@ export function buildCompareQuickPrompts(
   details: readonly FundDetail[],
   fairness: CompareFairnessResult = evaluateCompareFairness(details),
 ): string[] {
-  const prompts = [...BASE_PROMPTS];
+  const prompts: string[] = [...BASE_PROMPTS];
 
   if (!fairness.isFair) {
     prompts.push('¿Qué limitaciones tiene esta comparación?');

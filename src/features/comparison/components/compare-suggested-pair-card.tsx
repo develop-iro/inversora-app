@@ -1,68 +1,64 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import type { CompareSuggestedPair } from '@/features/comparison/constants/compare-suggested-pairs.config';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
+import { Card } from '@/shared/components/ui/card';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type CompareSuggestedPairCardProps = {
   pair: CompareSuggestedPair;
   onPress: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
 /**
  * Compact card for a suggested two-fund comparison.
  */
-export function CompareSuggestedPairCard({ pair, onPress }: CompareSuggestedPairCardProps) {
+export function CompareSuggestedPairCard({ pair, onPress, style }: CompareSuggestedPairCardProps) {
   const theme = useTheme();
 
   return (
-    <Pressable
+    <Card
+      variant="outlined"
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Comparar ${pair.label}: ${pair.description}`}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.surface,
-          borderColor: theme.border,
-        },
-        pressed && styles.pressed,
-      ]}
+      style={[styles.card, style]}
+      contentStyle={styles.content}
     >
       <View style={[styles.iconWrap, { backgroundColor: theme.backgroundSoft }]}>
         <MaterialCommunityIcons name={pair.icon} size={20} color={theme.deepOcean} />
       </View>
 
       <View style={styles.copy}>
-        <ThemedText type="bodyBold" numberOfLines={1}>
+        <TextParagraph variant="emphasis" numberOfLines={1}>
           {pair.label}
-        </ThemedText>
-        <ThemedText type="caption" themeColor="textSecondary" numberOfLines={2}>
+        </TextParagraph>
+        <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={2}>
           {pair.description}
-        </ThemedText>
+        </TextParagraph>
       </View>
 
-      <ThemedText type="caption" themeColor="primary">
+      <TextParagraph variant="secondary" themeColor="primary">
         Comparar
-      </ThemedText>
-    </Pressable>
+      </TextParagraph>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    width: 220,
-    minHeight: 118,
-    borderWidth: 1,
+    width: '100%',
+    minWidth: 200,
     borderRadius: Radius.card,
+  },
+  content: {
+    minHeight: 118,
     padding: Spacing.md,
     gap: Spacing.sm,
     justifyContent: 'space-between',
-  },
-  pressed: {
-    opacity: 0.9,
   },
   iconWrap: {
     width: 36,

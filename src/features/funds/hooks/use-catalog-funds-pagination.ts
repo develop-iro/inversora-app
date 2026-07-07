@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import type { FundListMeta } from '@/core/api/parse-fund-list-response';
@@ -11,6 +11,7 @@ import { resolveFundApiErrorMessage } from '@/features/funds/utils/resolve-fund-
 export type CatalogFundsPaginationStatus =
   | 'idle'
   | 'loading'
+  | 'refreshing'
   | 'loading-more'
   | 'ready'
   | 'error';
@@ -62,21 +63,26 @@ export function useCatalogFundsPagination(
   const [meta, setMeta] = useState<FundListMeta | null>(null);
   const [status, setStatus] = useState<CatalogFundsPaginationStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [loadedPageCount, setLoadedPageCount] = useState(0);
 
   const requestIdRef = useRef(0);
-  const nextPageRef = useRef(1);
-  const isLoadingMoreRef = useRef(false);
+  const hasLoadedOnceRef = useRef(false);
+  const lastReloadTokenRef = useRef(reloadToken);
 
-  const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
-
-  const loadInitialPage = useCallback(async () => {
+  const loadInitialPage = useCallback(async (options?: { soft?: boolean }) => {
     const requestId = ++requestIdRef.current;
-    isLoadingMoreRef.current = false;
-    nextPageRef.current = 1;
-    setStatus('loading');
+    const soft = options?.soft === true && hasLoadedOnceRef.current;
+
+    if (soft) {
+      setStatus('refreshing');
+    } else {
+      setStatus('loading');
+      setFunds([]);
+      setMeta(null);
+      setLoadedPageCount(0);
+    }
+
     setError(null);
-    setFunds([]);
-    setMeta(null);
 
     try {
       const response = await getFundsPage(filters, 1);
@@ -87,36 +93,57 @@ export function useCatalogFundsPagination(
 
       setFunds(response.data);
       setMeta(response.meta);
-      nextPageRef.current = 2;
+      setLoadedPageCount(1);
       setStatus('ready');
+      hasLoadedOnceRef.current = true;
     } catch (loadError) {
       if (requestId !== requestIdRef.current) {
         return;
       }
 
-      setFunds([]);
-      setMeta(null);
+      if (!soft) {
+        setFunds([]);
+        setMeta(null);
+        setLoadedPageCount(0);
+      }
+
       setError(resolveFundApiErrorMessage(loadError));
       setStatus('error');
     }
-  }, [filtersKey, filters]);
+  }, [filters]);
 
   useEffect(() => {
-    void loadInitialPage();
+    let cancelled = false;
+    const forceHard = reloadToken !== lastReloadTokenRef.current;
+    lastReloadTokenRef.current = reloadToken;
+    const soft = !forceHard && hasLoadedOnceRef.current;
+
+    void (async () => {
+      await Promise.resolve();
+      if (cancelled) {
+        return;
+      }
+
+      await loadInitialPage({ soft });
+    })();
+
+    return () => {
+      cancelled = true;
+      requestIdRef.current += 1;
+    };
   }, [loadInitialPage, reloadToken]);
 
   const loadMore = useCallback(async () => {
-    if (isLoadingMoreRef.current || status === 'loading') {
+    if (status === 'loading' || status === 'refreshing' || status === 'loading-more') {
       return;
     }
 
-    if (meta === null || nextPageRef.current > meta.totalPages) {
+    if (meta === null || loadedPageCount >= meta.totalPages) {
       return;
     }
 
     const requestId = requestIdRef.current;
-    const page = nextPageRef.current;
-    isLoadingMoreRef.current = true;
+    const page = loadedPageCount + 1;
     setStatus('loading-more');
 
     try {
@@ -128,7 +155,7 @@ export function useCatalogFundsPagination(
 
       setFunds((current) => mergeUniqueFunds(current, response.data));
       setMeta(response.meta);
-      nextPageRef.current = page + 1;
+      setLoadedPageCount(page);
       setStatus('ready');
     } catch (loadError) {
       if (requestId !== requestIdRef.current) {
@@ -137,12 +164,10 @@ export function useCatalogFundsPagination(
 
       setError(resolveFundApiErrorMessage(loadError));
       setStatus('ready');
-    } finally {
-      isLoadingMoreRef.current = false;
     }
-  }, [filters, filtersKey, meta, status]);
+  }, [filters, loadedPageCount, meta, status]);
 
-  const hasMore = meta !== null && nextPageRef.current <= meta.totalPages;
+  const hasMore = meta !== null && loadedPageCount < meta.totalPages;
 
   return {
     funds,
@@ -151,6 +176,6 @@ export function useCatalogFundsPagination(
     error,
     hasMore,
     loadMore,
-    reload: loadInitialPage,
+    reload: () => loadInitialPage({ soft: false }),
   };
 }

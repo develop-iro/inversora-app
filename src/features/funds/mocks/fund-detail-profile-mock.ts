@@ -216,8 +216,11 @@ const PROFILE_PRESETS: Partial<
   },
 };
 
-function buildSummaryRows(fund: FeaturedFund, preset: (typeof PROFILE_PRESETS)[string]): FundDetailProfile['summaryRows'] {
-  const p = preset ?? {};
+function buildSummaryRows(
+  fund: FeaturedFund,
+  preset: (typeof PROFILE_PRESETS)[string],
+): FundDetailProfile['summaryRows'] {
+  const p: Partial<NonNullable<(typeof PROFILE_PRESETS)[string]>> = preset ?? {};
   return [
     {
       id: 'manager',

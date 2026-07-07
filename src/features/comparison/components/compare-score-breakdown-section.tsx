@@ -1,7 +1,7 @@
 import type { FundDetail } from '@/core/domain/catalog';
 import type { ScoreCriterionResult } from '@/core/scoring/types';
 import { CompareCollapsibleSection } from '@/features/comparison/components/compare-collapsible-section';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 import { StyleSheet, View } from 'react-native';
@@ -21,9 +21,9 @@ function CompareCriterionBars({
 
   return (
     <View style={styles.criterionBlock}>
-      <ThemedText type="caption" themeColor="textSecondary">
+      <TextParagraph variant="secondary" themeColor="textSecondary">
         {criterion.label}
-      </ThemedText>
+      </TextParagraph>
 
       {details.map((detail) => {
         const entry = detail.scoredBreakdown.find((item) => item.id === criterion.id);
@@ -44,12 +44,12 @@ function CompareCriterionBars({
         return (
           <View key={`${detail.fund.isin}-${criterion.id}`} style={styles.fundBarRow}>
             <View style={styles.fundBarHeader}>
-              <ThemedText type="metaLabel" themeColor="textSecondary" numberOfLines={1}>
+              <TextLabel variant="meta" themeColor="textSecondary" numberOfLines={1}>
                 {shortLabel}
-              </ThemedText>
-              <ThemedText type="metaLabel" themeColor="deepOcean">
+              </TextLabel>
+              <TextLabel variant="meta" themeColor="deepOcean">
                 {entry.points}/{entry.maxPoints}
-              </ThemedText>
+              </TextLabel>
             </View>
             <View
               style={[styles.track, { backgroundColor: theme.surfaceMuted }]}

@@ -1,6 +1,8 @@
-import type { ColorSchemeName } from 'react-native';
+import { useColorScheme as useDeviceColorScheme, type ColorSchemeName } from 'react-native';
 
-/** MVP: Figma is light-only until a dark theme is designed. */
-export function useColorScheme(): ColorSchemeName {
-  return 'light';
+/**
+ * Resolves the active color scheme from the device, defaulting to light.
+ */
+export function useColorScheme(): NonNullable<ColorSchemeName> {
+  return useDeviceColorScheme() ?? 'light';
 }

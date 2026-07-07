@@ -1,4 +1,6 @@
 import type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
+import type { InvestmentTheme } from '@/core/domain/investment-theme';
+import { parseInvestmentTheme } from '@/core/domain/investment-theme';
 
 export type FundListApiQuery = {
   page?: number;
@@ -7,6 +9,7 @@ export type FundListApiQuery = {
   sortOrder: 'desc';
   q?: string;
   benchmark?: string;
+  investmentTheme?: InvestmentTheme;
   maxTer?: number;
   minScore?: number;
   idealForBeginnersOnly?: boolean;
@@ -61,10 +64,16 @@ export function mapCatalogFiltersToApiQuery(
   }
 
   if (filters.categoryLabel && filters.categoryLabel !== 'all') {
-    const benchmark = extractBenchmarkFromCategoryLabel(filters.categoryLabel);
+    const investmentTheme = parseInvestmentTheme(filters.categoryLabel);
 
-    if (benchmark !== undefined) {
-      query.benchmark = benchmark;
+    if (investmentTheme !== null) {
+      query.investmentTheme = investmentTheme;
+    } else {
+      const benchmark = extractBenchmarkFromCategoryLabel(filters.categoryLabel);
+
+      if (benchmark !== undefined) {
+        query.benchmark = benchmark;
+      }
     }
   }
 

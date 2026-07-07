@@ -1,7 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { EducationalProfile } from '@/core/domain/educational-profile';
@@ -19,7 +18,8 @@ import {
   type BuildEducationalProfileResult,
   type ProfileInconsistency,
 } from '@/features/learn/services/build-educational-profile';
-import { ThemedText } from '@/shared/components/themed-text';
+import { ScreenShell } from '@/shared/components/layout';
+import { Header } from '@/shared/components/headers';
 import { Button } from '@/shared/components/ui';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useTheme } from '@/shared/hooks/use-theme';
@@ -27,8 +27,6 @@ import { routes } from '@/shared/navigation/routes';
 import { Layout, Spacing } from '@/shared/theme/theme';
 
 type LearnFlowPhase = 'questionnaire' | 'inconsistency' | 'result';
-
-const HEADER_HEIGHT = 56;
 
 /**
  * Multi-step educational profiling questionnaire launched from "Quiero aprender".
@@ -178,148 +176,101 @@ export default function LearnQuestionnaireScreen() {
     profileResult?.inconsistencies ?? [];
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.background, paddingTop: insets.top }]}>
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: theme.surface,
-            borderBottomColor: 'rgba(11, 46, 54, 0.06)',
-          },
-        ]}
-      >
-        <View style={[styles.headerInner, { width: contentWidth, maxWidth: contentWidth }]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Volver"
-            onPress={handleBack}
-            style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
-          >
-            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.text} />
-          </Pressable>
-          <ThemedText type="navTitle" style={styles.headerTitle}>
-            Quiero aprender
-          </ThemedText>
-          <View style={styles.headerSpacer} />
-        </View>
-      </View>
+    <ScreenShell
+      header={
+        <Header
+          title="Quiero aprender"
+          leadingActions={['back']}
+          onAction={{ back: handleBack }}
+        />
+      }
+      body={
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              width: contentWidth,
+              maxWidth: contentWidth,
+              paddingBottom: Spacing['3xl'],
+            },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {phase === 'questionnaire' && currentStep ? (
+            <>
+              <LearnProgressHeader
+                currentStep={stepIndex + 1}
+                totalSteps={LEARN_QUESTIONNAIRE_TOTAL_STEPS}
+              />
+              <LearnQuestionStepView
+                step={currentStep}
+                selectedOptionId={selectedOptionId}
+                onSelectOption={handleSelectOption}
+              />
+            </>
+          ) : null}
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            width: contentWidth,
-            maxWidth: contentWidth,
-            paddingBottom: insets.bottom + Spacing['3xl'],
-          },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {phase === 'questionnaire' && currentStep ? (
-          <>
-            <LearnProgressHeader
-              currentStep={stepIndex + 1}
-              totalSteps={LEARN_QUESTIONNAIRE_TOTAL_STEPS}
-            />
-            <LearnQuestionStepView
-              step={currentStep}
-              selectedOptionId={selectedOptionId}
-              onSelectOption={handleSelectOption}
-            />
-          </>
-        ) : null}
-
-        {phase === 'inconsistency' ? (
-          <LearnInconsistencyNotice inconsistencies={inconsistencies} />
-        ) : null}
-
-        {phase === 'result' && completedProfile ? (
-          <LearnProfileResult profile={completedProfile} />
-        ) : null}
-      </ScrollView>
-
-      <View
-        style={[
-          styles.footer,
-          {
-            backgroundColor: theme.surface,
-            borderTopColor: 'rgba(11, 46, 54, 0.06)',
-            paddingBottom: insets.bottom + Spacing.md,
-          },
-        ]}
-      >
-        <View style={[styles.footerInner, { width: contentWidth, maxWidth: contentWidth }]}>
           {phase === 'inconsistency' ? (
-            <Button
-              variant="ghost"
-              label="Revisar respuestas"
-              accessibilityLabel="Revisar respuestas del cuestionario"
-              onPress={handleReviseAnswers}
-              fullWidth
-            />
+            <LearnInconsistencyNotice inconsistencies={inconsistencies} />
           ) : null}
 
-          <Button
-            label={primaryLabel}
-            accessibilityLabel={primaryLabel}
-            onPress={() => {
-              void handlePrimaryPress();
-            }}
-            loading={isSaving}
-            disabled={phase === 'questionnaire' && !canContinue}
-            fullWidth
-          />
+          {phase === 'result' && completedProfile ? (
+            <LearnProfileResult profile={completedProfile} />
+          ) : null}
+        </ScrollView>
+      }
+      footer={
+        <View
+          style={[
+            styles.footer,
+            {
+              backgroundColor: theme.surface,
+              borderTopColor: theme.borderSubtle,
+              paddingBottom: insets.bottom + Spacing.md,
+            },
+          ]}
+        >
+          <View style={[styles.footerInner, { width: contentWidth, maxWidth: contentWidth }]}>
+            {phase === 'inconsistency' ? (
+              <Button
+                variant="ghost"
+                label="Revisar respuestas"
+                accessibilityLabel="Revisar respuestas del cuestionario"
+                onPress={handleReviseAnswers}
+                fullWidth
+              />
+            ) : null}
 
-          {phase === 'result' ? (
             <Button
-              variant="ghost"
-              label="Volver al inicio"
-              accessibilityLabel="Volver al inicio"
-              onPress={() => router.replace(routes.home)}
+              label={primaryLabel}
+              accessibilityLabel={primaryLabel}
+              onPress={() => {
+                void handlePrimaryPress();
+              }}
+              loading={isSaving}
+              disabled={phase === 'questionnaire' && !canContinue}
               fullWidth
             />
-          ) : null}
+
+            {phase === 'result' ? (
+              <Button
+                variant="ghost"
+                label="Volver al inicio"
+                accessibilityLabel="Volver al inicio"
+                onPress={() => router.replace(routes.home)}
+                fullWidth
+              />
+            ) : null}
+          </View>
         </View>
-      </View>
-    </View>
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  header: {
-    alignSelf: 'stretch',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  headerInner: {
-    alignSelf: 'center',
-    minHeight: HEADER_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: -Spacing.sm,
-  },
-  backButtonPressed: {
-    opacity: 0.7,
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 40,
-  },
   scroll: {
     flex: 1,
     width: '100%',

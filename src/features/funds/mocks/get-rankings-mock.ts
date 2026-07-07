@@ -1,6 +1,7 @@
 import type { RankedFund } from '@/core/scoring/types';
 
 import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
+import { resolveMockFundReturns } from '@/features/funds/mocks/mock-fund-returns';
 import { scoreFund } from '@/core/scoring/score-fund';
 
 /**
@@ -43,6 +44,7 @@ export function getRankingsMock(
       return {
         ...scored,
         rank: 0,
+        returns: fund.returns ?? resolveMockFundReturns(fund.isin),
       } satisfies RankedFund;
     })
     .sort((left, right) => right.score - left.score)

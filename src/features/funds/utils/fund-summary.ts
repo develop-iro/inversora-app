@@ -9,5 +9,11 @@ export function getFundScore(fund: FundSummarySource): number {
 
 export function buildFundCardA11yLabel(fund: FundSummarySource, efficiencyLabel: string): string {
   const score = getFundScore(fund);
-  return `${fund.name}. ${fund.categoryLabel}. Temática ${fund.themeLabel}. ${efficiencyLabel}. Score Inversora ${score} sobre 100.`;
+  const oneYearReturn = fund.returns.oneYear;
+  const returnFragment =
+    oneYearReturn === null
+      ? ''
+      : ` Rentabilidad histórica a un año ${oneYearReturn.toFixed(1).replace('.', ',')} por ciento.`;
+
+  return `${fund.name}. ${fund.categoryLabel}. Temática ${fund.themeLabel}. ${efficiencyLabel}. Score Inversora ${score} sobre 100.${returnFragment}`;
 }

@@ -37,7 +37,7 @@ Leyenda de madurez:
 
 | Elemento | Estado | Notas |
 |----------|--------|-------|
-| Tabs: inicio, fondos, favoritos, comparar, calcular | ✅ | `_layout.tsx` + `FloatingTabBar` |
+| Tabs: inicio, fondos, favoritos, comparar, calcular | ✅ | `_layout.tsx` + `NavTabBar` |
 | Re-export fino a `features/*/screens` | ✅ | Patrón consistente |
 | `/learn` | ⬜ | No existe |
 | `/funds/[isin]` | ✅ | `app/funds/[isin].tsx` → ficha ampliada |
@@ -86,12 +86,12 @@ Leyenda de madurez:
 | Modo “quiero aprender” dedicado | ⬜ | Sin ruta ni flujo |
 | Perfil educativo sin registro | ⬜ | Copy de Sora; sin persistencia |
 
-**Archivos clave:** `home-screen.tsx`, `home-hero.tsx`, `featured-funds-carousel.tsx`, `fund-card-icon.tsx`
+**Archivos clave:** `home-screen.tsx`, `home-hero-carousel.tsx`, `featured-funds-carousel.tsx`, `features/funds/components/fund-card-icon.tsx`
 
 **Deuda:**
 
 - Datos de ranking duplicados respecto a futuro catálogo (`funds`).
-- Import directo desde `features/funds` (modelo, mock, `FundCard`).
+- Import directo desde `features/funds` (modelo, mock, `CardFund`).
 - `home-screen.tsx` ~670 líneas — candidato a extraer secciones (`RankingPreview`, `SoraEntryCard`, `EducationalDisclaimer`).
 
 **Próximos pasos sugeridos:**
@@ -110,7 +110,7 @@ Leyenda de madurez:
 |---------------|--------|-------------------|
 | Modelo `FeaturedFund` | ✅ | `models/fund.ts` (`RiskLevel`, métricas, `quarterTag`, etc.) |
 | Mock destacados | ✅ | `mocks/featured-funds-mock.ts` |
-| `FundCard` (presentación) | ✅ | Usado en home y carousel |
+| `CardFund` (presentación) | ✅ | Usado en home y carousel |
 | `FundMetricRow` | ✅ | Componente listo para detalle/comparación |
 | Pantalla catálogo | 🟡 | `funds-screen.tsx` — placeholder “Next Functional Block” |
 | Búsqueda por nombre / ISIN / categoría | ⬜ | |
@@ -206,7 +206,7 @@ Leyenda de madurez:
 ```text
 app ──────────────────────────► features/*/screens
                                     │
-                    onboarding ─────┼──► funds (models, mocks, FundCard)  ⚠️
+                    onboarding ─────┼──► funds (models, mocks, CardFund)  ⚠️
                                     │
                                     └──► shared (theme, UI, navigation)
 ```

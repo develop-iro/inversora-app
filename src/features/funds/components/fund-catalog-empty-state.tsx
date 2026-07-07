@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -31,10 +31,10 @@ export function FundCatalogEmptyState({
 
   return (
     <View style={styles.wrapper} accessibilityRole="text">
-      <ThemedText type="bodyBold">{title}</ThemedText>
-      <ThemedText type="caption" themeColor="textSecondary">
+      <TextParagraph variant="emphasis">{title}</TextParagraph>
+      <TextParagraph variant="secondary" themeColor="textSecondary">
         {body}
-      </ThemedText>
+      </TextParagraph>
 
       {hasQuery && onClearSearch ? (
         <Pressable
@@ -47,9 +47,9 @@ export function FundCatalogEmptyState({
             pressed && styles.actionPressed,
           ]}
         >
-          <ThemedText type="metaLabel" style={{ color: theme.primary }}>
+          <TextLabel variant="meta" style={{ color: theme.primary }}>
             Limpiar búsqueda
-          </ThemedText>
+          </TextLabel>
         </Pressable>
       ) : null}
 
@@ -64,9 +64,9 @@ export function FundCatalogEmptyState({
             pressed && styles.actionPressed,
           ]}
         >
-          <ThemedText type="metaLabel" style={{ color: theme.primary }}>
+          <TextLabel variant="meta" style={{ color: theme.primary }}>
             Reiniciar filtros
-          </ThemedText>
+          </TextLabel>
         </Pressable>
       ) : null}
     </View>

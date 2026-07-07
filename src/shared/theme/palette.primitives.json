@@ -1,0 +1,23 @@
+{
+  "primaryTeal": "#00BFA6",
+  "deepOcean": "#0B2E36",
+  "softTealBackground": "#EAF8F6",
+  "mintAccent": "#B8F2E6",
+  "limeAccent": "#D7FF64",
+  "chartInterestTeal": "#0F766E",
+  "neutralBackground": "#F8FAF9",
+  "textPrimary": "#111827",
+  "textSecondary": "#475569",
+  "textSecondaryOnDark": "#B8C5CA",
+  "warningSoft": "#FACC15",
+  "warningMuted": "#FEF9E7",
+  "dangerSoft": "#FB7185",
+  "dangerMuted": "#FEECF0",
+  "warningStrong": "#B45309",
+  "dangerStrong": "#BE123C",
+  "darkOceanSurface": "#0F3D47",
+  "darkOceanElement": "#134652",
+  "darkOceanSelected": "#1A5C68",
+  "white": "#FFFFFF",
+  "black": "#000000"
+}

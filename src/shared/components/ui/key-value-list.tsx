@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { Divider } from '@/shared/components/ui/divider';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Spacing } from '@/shared/theme/theme';
@@ -24,11 +24,11 @@ export function KeyValueList({ rows }: KeyValueListProps) {
       {rows.map((row, index) => (
         <View key={row.id}>
           <View style={styles.row}>
-            <ThemedText type="body" style={styles.label} numberOfLines={2}>
+            <TextParagraph variant="default" style={styles.label} numberOfLines={2}>
               {row.label}
-            </ThemedText>
-            <ThemedText
-              type="bodyBold"
+            </TextParagraph>
+            <TextParagraph
+              variant="emphasis"
               style={[
                 styles.value,
                 row.emphasis === 'link' && { color: theme.primary },
@@ -36,7 +36,7 @@ export function KeyValueList({ rows }: KeyValueListProps) {
               numberOfLines={3}
             >
               {row.value}
-            </ThemedText>
+            </TextParagraph>
           </View>
           {index < rows.length - 1 ? (
             <Divider spacing={0} style={styles.divider} />

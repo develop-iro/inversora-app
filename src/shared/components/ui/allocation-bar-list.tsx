@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { AllocationSlice } from '@/core/domain/fund-detail-profile';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { Divider } from '@/shared/components/ui/divider';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
@@ -17,7 +17,7 @@ export type AllocationBarListProps = {
 
 export function AllocationBarList({ slices, barColor }: AllocationBarListProps) {
   const theme = useTheme();
-  const fillColor = barColor ?? 'rgba(255, 143, 143, 0.55)';
+  const fillColor = barColor ?? theme.chartAllocationFill;
 
   return (
     <View style={styles.list}>
@@ -35,12 +35,12 @@ export function AllocationBarList({ slices, barColor }: AllocationBarListProps) 
             ) : (
               <View style={styles.iconPlaceholder} />
             )}
-            <ThemedText type="body" style={styles.label} numberOfLines={1}>
+            <TextParagraph variant="default" style={styles.label} numberOfLines={1}>
               {slice.label}
-            </ThemedText>
-            <ThemedText type="bodyBold" style={styles.percent}>
+            </TextParagraph>
+            <TextParagraph variant="emphasis" style={styles.percent}>
               {slice.percent.toFixed(1).replace('.', ',')}%
-            </ThemedText>
+            </TextParagraph>
           </View>
           <View
             style={[styles.track, { backgroundColor: theme.surfaceMuted }]}

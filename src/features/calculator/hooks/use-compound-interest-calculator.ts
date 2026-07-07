@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { CatalogFund } from '@/core/domain/catalog';
+import { validateWithSchema } from '@/core/forms/validate-with-schema';
 import {
   calculateCompoundInterest,
   DEFAULT_COMPOUND_INTEREST_INPUT,
   type CompoundInterestInput,
   type CompoundInterestResult,
 } from '@/features/calculator/models/compound-interest.engine';
+import { compoundInterestInputSchema } from '@/features/calculator/schemas/compound-interest-input.schema';
 import {
   deriveIllustrativeFundRate,
   type IllustrativeFundRate,
@@ -28,7 +30,8 @@ export type UseCompoundInterestCalculatorResult = {
   clearFund: () => void;
   result: CompoundInterestResult | null;
   hasCalculated: boolean;
-  calculate: () => void;
+  fieldErrors: Readonly<Record<string, string>>;
+  calculate: () => boolean;
   reset: () => void;
 };
 
@@ -50,6 +53,7 @@ export function useCompoundInterestCalculator(
   const [fundError, setFundError] = useState<string | null>(null);
   const [result, setResult] = useState<CompoundInterestResult | null>(null);
   const [hasCalculated, setHasCalculated] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const loadFund = useCallback(async (fund: CatalogFund) => {
     setSelectedFund(fund);
@@ -114,25 +118,37 @@ export function useCompoundInterestCalculator(
   const updateInput = useCallback((patch: Partial<CompoundInterestInput>) => {
     setInput((current) => ({ ...current, ...patch }));
     setHasCalculated(false);
+    setFieldErrors((current) => {
+      const next = { ...current };
+
+      for (const key of Object.keys(patch)) {
+        delete next[key];
+      }
+
+      return next;
+    });
   }, []);
 
-  const calculate = useCallback(() => {
-    const safeInput: CompoundInterestInput = {
-      ...input,
-      durationYears: Math.min(Math.max(Math.round(input.durationYears), 1), 40),
-      initialBalance: Math.max(input.initialBalance, 0),
-      periodicDeposit: Math.max(input.periodicDeposit, 0),
-      annualRatePercent: Math.max(input.annualRatePercent, 0),
-    };
+  const calculate = useCallback((): boolean => {
+    const validation = validateWithSchema(compoundInterestInputSchema, input);
 
-    setResult(calculateCompoundInterest(safeInput));
+    if (!validation.success) {
+      setFieldErrors(validation.fieldErrors);
+      setHasCalculated(false);
+      return false;
+    }
+
+    setFieldErrors({});
+    setResult(calculateCompoundInterest(validation.data));
     setHasCalculated(true);
+    return true;
   }, [input]);
 
   const reset = useCallback(() => {
     setInput(DEFAULT_COMPOUND_INTEREST_INPUT);
     setResult(null);
     setHasCalculated(false);
+    setFieldErrors({});
     clearFund();
     setModeState('free');
   }, [clearFund]);
@@ -147,18 +163,24 @@ export function useCompoundInterestCalculator(
     let cancelled = false;
 
     void (async () => {
-      const detail = await getFundByIsin(normalizedIsin);
+      try {
+        const detail = await getFundByIsin(normalizedIsin);
 
-      if (cancelled || detail === null) {
-        return;
+        if (cancelled || detail === null) {
+          return;
+        }
+
+        await loadFund({
+          ...detail.fund,
+          inversoraScore: detail.inversoraScore,
+          rank: detail.rank,
+          catalogVisibility: 'visible',
+        });
+      } catch {
+        if (!cancelled) {
+          setFundError('No se pudo cargar la información del fondo seleccionado.');
+        }
       }
-
-      await loadFund({
-        ...detail.fund,
-        inversoraScore: detail.inversoraScore,
-        rank: detail.rank,
-        catalogVisibility: 'visible',
-      });
     })();
 
     return () => {
@@ -179,6 +201,7 @@ export function useCompoundInterestCalculator(
     clearFund,
     result,
     hasCalculated,
+    fieldErrors,
     calculate,
     reset,
   };

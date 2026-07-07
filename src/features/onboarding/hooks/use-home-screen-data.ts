@@ -10,6 +10,7 @@ import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { HOME_INVESTMENT_NEWS_MOCK } from '@/features/onboarding/mocks/home-investment-news-mock';
 import {
   resolveHomeSearch,
+  HOME_FULL_RANKING_LIMIT,
   type HomeSearchResult,
 } from '@/features/onboarding/services/resolve-home-search';
 import {
@@ -88,7 +89,7 @@ async function loadDefaultRanking(): Promise<{
   state: HomeSectionLoadState;
 }> {
   try {
-    const result = await resolveHomeSearch('');
+    const result = await resolveHomeSearch('', { limit: HOME_FULL_RANKING_LIMIT });
 
     if (result.funds.length === 0) {
       return { result, state: 'empty' };
@@ -184,7 +185,7 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
       setSearchState('loading');
 
       try {
-        const result = await resolveHomeSearch(debouncedQuery);
+        const result = await resolveHomeSearch(debouncedQuery, { limit: HOME_FULL_RANKING_LIMIT });
 
         if (!cancelled) {
           setSearchResult(result);
@@ -220,7 +221,7 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
     if (searchQuery.trim()) {
       setSearchState('loading');
       try {
-        const result = await resolveHomeSearch(searchQuery);
+        const result = await resolveHomeSearch(searchQuery, { limit: HOME_FULL_RANKING_LIMIT });
         setSearchResult(result);
         setSearchState(result.funds.length > 0 || result.kind === 'answer' ? 'ready' : 'empty');
       } catch {
@@ -241,7 +242,7 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
     setSearchState('loading');
 
     try {
-      const result = await resolveHomeSearch(searchQuery);
+      const result = await resolveHomeSearch(searchQuery, { limit: HOME_FULL_RANKING_LIMIT });
       setSearchResult(result);
       setSearchState(result.funds.length > 0 || result.kind === 'answer' ? 'ready' : 'empty');
     } catch {

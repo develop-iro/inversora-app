@@ -1,6 +1,8 @@
 import type { FeaturedFund } from '@/core/domain/fund';
 
-const BRANDFETCH_RENDER_PATH = '/w/64/h/64/theme/dark/fallback/404';
+import { resolveMockFundReturns } from '@/features/funds/mocks/mock-fund-returns';
+
+const BRANDFETCH_RENDER_PATH = '/w/64/h/64/theme/dark/fallback/lettermark';
 const BRANDFETCH_CLIENT_ID = '1idFIPVa2ymBOeqsfgS';
 
 /**
@@ -12,7 +14,7 @@ function brandfetchDomainLogo(domain: string): string {
   return `https://cdn.brandfetch.io/domain/${domain}${BRANDFETCH_RENDER_PATH}?c=${BRANDFETCH_CLIENT_ID}`;
 }
 
-export const FEATURED_FUNDS_MOCK: FeaturedFund[] = [
+const FEATURED_FUNDS_MOCK_BASE: Omit<FeaturedFund, 'returns'>[] = [
   {
     id: 'msci-world-core',
     isin: 'IE00B4L5Y983',
@@ -21,6 +23,7 @@ export const FEATURED_FUNDS_MOCK: FeaturedFund[] = [
     logoUrl: brandfetchDomainLogo('ishares.com'),
     name: 'MSCI World Index Core',
     categoryLabel: 'Renta Variable Global',
+    investmentTheme: 'global-equity',
     themeLabel: 'Multisector global',
     badge: 'Ideal para empezar',
     idealForBeginners: true,
@@ -44,6 +47,7 @@ export const FEATURED_FUNDS_MOCK: FeaturedFund[] = [
     logoUrl: brandfetchDomainLogo('ishares.com'),
     name: 'S&P 500 Acc',
     categoryLabel: 'Renta Variable USA',
+    investmentTheme: 'us-equity',
     themeLabel: 'Tecnología y mega caps',
     badge: 'Núcleo de cartera',
     idealForBeginners: true,
@@ -67,6 +71,7 @@ export const FEATURED_FUNDS_MOCK: FeaturedFund[] = [
     logoUrl: brandfetchDomainLogo('amundi.com'),
     name: 'Europe Quality ESG',
     categoryLabel: 'Renta Variable Europa',
+    investmentTheme: 'esg',
     themeLabel: 'Renovables y ESG',
     badge: 'Filtro calidad ESG',
     idealForBeginners: false,
@@ -90,6 +95,7 @@ export const FEATURED_FUNDS_MOCK: FeaturedFund[] = [
     logoUrl: brandfetchDomainLogo('vanguard.com'),
     name: 'Global Balanced Index',
     categoryLabel: 'Mixto Moderado',
+    investmentTheme: 'multi-asset',
     themeLabel: 'Multiactivo equilibrado',
     badge: 'Volatilidad contenida',
     idealForBeginners: true,
@@ -106,3 +112,8 @@ export const FEATURED_FUNDS_MOCK: FeaturedFund[] = [
     isFeatured: true,
   },
 ];
+
+export const FEATURED_FUNDS_MOCK: FeaturedFund[] = FEATURED_FUNDS_MOCK_BASE.map((fund) => ({
+  ...fund,
+  returns: resolveMockFundReturns(fund.isin),
+}));

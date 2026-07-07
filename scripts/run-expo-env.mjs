@@ -1,14 +1,28 @@
 import { spawn } from 'node:child_process';
+import { loadEnv, normalizeProfile } from './load-env.mjs';
 
-const appEnv = process.argv[2];
+const profileArg = process.argv[2];
 const expoArgs = process.argv.slice(3);
 
-if (appEnv === undefined || appEnv.trim().length === 0) {
-  console.error('Usage: node scripts/run-expo-env.mjs <local|ei|qa|pro> [expo args...]');
+if (profileArg === undefined || profileArg.trim().length === 0) {
+  console.error(
+    'Usage: node scripts/run-expo-env.mjs <local|qa|pro> [expo args...]',
+  );
+  console.error('');
+  console.error('Profiles:');
+  console.error('  local — API local (http://localhost:3000), mock fallback si la API falla');
+  console.error('  qa    — staging API');
+  console.error('  pro   — production API');
+  console.error('');
+  console.error('Stack local con datos productivos:');
+  console.error('  API: npm run start:pro   (inversora-api)');
+  console.error('  App: npm run start:local');
   process.exit(1);
 }
 
-process.env.EXPO_PUBLIC_APP_ENV = appEnv.trim().toLowerCase();
+const profile = normalizeProfile(profileArg);
+process.env.INVERSORA_ENV = profile;
+loadEnv({ profile });
 
 const child = spawn('npx', ['expo', ...expoArgs], {
   stdio: 'inherit',

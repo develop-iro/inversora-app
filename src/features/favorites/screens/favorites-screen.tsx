@@ -1,15 +1,18 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { CatalogFund } from '@/core/domain/catalog';
+import { MIN_COMPARE_FUNDS } from '@/core/storage/compare-selection-storage-key';
 import { FundListRow } from '@/features/funds/components/fund-list-row';
 import { useFavoritesList } from '@/features/funds/hooks/use-favorites-list';
 import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
 import { mapFundDetailToCatalogFund } from '@/features/funds/utils/map-fund-detail-to-catalog';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
-import { ThemedText } from '@/shared/components/themed-text';
+import { ScreenQuickAction, ScreenQuickActionsRow } from '@/shared/components/layout';
+import { TextHeading, TextParagraph } from '@/shared/components/text';
+import { Button, Spinner } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
 import { BottomTabInset, Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
@@ -24,7 +27,6 @@ export default function FavoritesScreen() {
 
   useEffect(() => {
     if (isins.length === 0) {
-      setFunds([]);
       return;
     }
 
@@ -33,18 +35,31 @@ export default function FavoritesScreen() {
     void (async () => {
       setIsCatalogLoading(true);
 
-      const details = await Promise.all(isins.map((isin) => getFundByIsin(isin)));
+      try {
+        const details = await Promise.all(
+          isins.map(async (isin) => {
+            try {
+              return await getFundByIsin(isin);
+            } catch {
+              return null;
+            }
+          }),
+        );
 
-      if (cancelled) {
-        return;
+        if (cancelled) {
+          return;
+        }
+
+        const favoriteFunds = details
+          .filter((detail) => detail !== null)
+          .map((detail) => mapFundDetailToCatalogFund(detail));
+
+        setFunds(favoriteFunds);
+      } finally {
+        if (!cancelled) {
+          setIsCatalogLoading(false);
+        }
       }
-
-      const favoriteFunds = details
-        .filter((detail) => detail !== null)
-        .map((detail) => mapFundDetailToCatalogFund(detail));
-
-      setFunds(favoriteFunds);
-      setIsCatalogLoading(false);
     })();
 
     return () => {
@@ -52,8 +67,29 @@ export default function FavoritesScreen() {
     };
   }, [isins]);
 
-  const displayFunds = isins.length === 0 ? [] : funds;
+  const displayFunds = useMemo(
+    () => (isins.length === 0 ? [] : funds),
+    [funds, isins.length],
+  );
   const isLoading = isFavoritesLoading || (isins.length > 0 && isCatalogLoading);
+  const canCompareFavorites = displayFunds.length >= MIN_COMPARE_FUNDS;
+
+  const favoriteIsins = useMemo(
+    () => displayFunds.map((fund) => fund.isin),
+    [displayFunds],
+  );
+
+  const handleExploreCatalog = useCallback(() => {
+    router.push(routes.fundsCatalog);
+  }, [router]);
+
+  const handleCompareFavorites = useCallback(() => {
+    router.push(routes.compareWithIsins(favoriteIsins));
+  }, [favoriteIsins, router]);
+
+  const handleOpenLegal = useCallback(() => {
+    router.push(routes.legal);
+  }, [router]);
 
   return (
     <ScrollView
@@ -68,42 +104,83 @@ export default function FavoritesScreen() {
     >
       <View style={styles.inner}>
         <View style={styles.headerBlock}>
-          <ThemedText type="sectionTitle">Favoritos</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
+          <TextHeading variant="section">Favoritos</TextHeading>
+          <TextParagraph variant="secondary" themeColor="textSecondary">
             Guarda fondos para revisarlos con calma. No constituye una recomendación
             de inversión.
-          </ThemedText>
+          </TextParagraph>
         </View>
 
         {isLoading ? (
-          <ActivityIndicator color={theme.primary} style={styles.loader} />
+          <Spinner size="lg" accessibilityLabel="Cargando favoritos" style={styles.loader} />
         ) : isins.length === 0 ? (
           <View style={styles.empty}>
-            <ThemedText type="bodyBold">Aún no tienes favoritos</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
+            <TextParagraph variant="emphasis">Aún no tienes favoritos</TextParagraph>
+            <TextParagraph variant="secondary" themeColor="textSecondary">
               Abre un fondo en el catálogo y pulsa «Guardar en favoritos» para verlo
               aquí.
-            </ThemedText>
+            </TextParagraph>
+            <Button
+              label="Explorar catálogo"
+              variant="secondary"
+              onPress={handleExploreCatalog}
+              accessibilityLabel="Explorar catálogo de fondos"
+              style={styles.emptyAction}
+            />
           </View>
         ) : displayFunds.length === 0 ? (
           <View style={styles.empty}>
-            <ThemedText type="caption" themeColor="textSecondary">
-              Tus favoritos guardados ya no están en el catálogo mock.
-            </ThemedText>
+            <TextParagraph variant="secondary" themeColor="textSecondary">
+              Tus favoritos guardados ya no están disponibles en el catálogo actual.
+            </TextParagraph>
+            <Button
+              label="Explorar catálogo"
+              variant="secondary"
+              onPress={handleExploreCatalog}
+              accessibilityLabel="Explorar catálogo de fondos"
+              style={styles.emptyAction}
+            />
           </View>
         ) : (
-          <View style={styles.list}>
-            {displayFunds.map((fund) => (
-              <FundListRow
-                key={fund.isin}
-                fund={fund}
-                onPress={() => router.push(routes.fundDetail(fund.isin))}
-              />
-            ))}
-          </View>
+          <>
+            {canCompareFavorites ? (
+              <ScreenQuickActionsRow>
+                <ScreenQuickAction
+                  icon="scale-balance"
+                  label="Comparar favoritos"
+                  accessibilityLabel="Comparar fondos favoritos seleccionados"
+                  variant="accent"
+                  onPress={handleCompareFavorites}
+                />
+                <ScreenQuickAction
+                  icon="magnify"
+                  label="Explorar catálogo"
+                  accessibilityLabel="Explorar catálogo de fondos"
+                  onPress={handleExploreCatalog}
+                />
+              </ScreenQuickActionsRow>
+            ) : (
+              <TextParagraph variant="secondary" themeColor="textSecondary">
+                Añade al menos otro favorito para compararlos lado a lado.
+              </TextParagraph>
+            )}
+
+            <View style={styles.list}>
+              {displayFunds.map((fund) => (
+                <FundListRow
+                  key={fund.isin}
+                  fund={fund}
+                  onPress={() => router.push(routes.fundDetail(fund.isin))}
+                />
+              ))}
+            </View>
+          </>
         )}
 
-        <LegalNotice body="Los favoritos son una herramienta de seguimiento educativo. Inversora no ofrece asesoramiento financiero personalizado." />
+        <LegalNotice
+          body="Los favoritos son una herramienta de seguimiento educativo. Inversora no ofrece asesoramiento financiero personalizado."
+          onLearnMorePress={handleOpenLegal}
+        />
       </View>
     </ScrollView>
   );
@@ -130,8 +207,11 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.lg,
   },
   empty: {
-    gap: Spacing.xs,
+    gap: Spacing.sm,
     paddingVertical: Spacing.md,
+  },
+  emptyAction: {
+    alignSelf: 'flex-start',
   },
   list: {
     gap: Spacing.md,
