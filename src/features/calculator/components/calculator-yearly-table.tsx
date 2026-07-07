@@ -2,7 +2,6 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useState } from 'react';
 import {
-  Alert,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
@@ -10,6 +9,8 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+
+import { toast } from '@/core/overlay';
 
 import type {
   CompoundInterestInput,
@@ -92,10 +93,9 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
       const exportResult = await exportCalculatorSimulation(input, result);
 
       if (exportResult.status === 'downloaded') {
-        Alert.alert(
-          'Simulación exportada',
-          'Se ha descargado un archivo CSV compatible con Excel.',
-        );
+        toast.success('Se ha descargado un archivo CSV compatible con Excel.', {
+          title: 'Simulación exportada',
+        });
         return;
       }
 
@@ -104,14 +104,18 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
       }
 
       if (exportResult.status === 'copied') {
-        Alert.alert(
-          'Simulación copiada',
+        toast.info(
           'No pudimos abrir el menú de compartir. Los datos se copiaron al portapapeles para pegarlos en Excel o Google Sheets.',
+          {
+            title: 'Simulación copiada',
+          },
         );
         return;
       }
 
-      Alert.alert('Exportación no disponible', exportResult.message);
+      toast.error(exportResult.message, {
+        title: 'Exportación no disponible',
+      });
     } finally {
       setIsExporting(false);
     }

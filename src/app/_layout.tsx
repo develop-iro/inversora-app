@@ -14,6 +14,7 @@ import {
   useHeaderHorizontalInset,
 } from "@/shared/components/brand/app-header-bar";
 import { FloatingTabBar } from "@/shared/components/navigation/floating-tab-bar";
+import { AppProviders } from "@/shared/components/overlay";
 import { isFundDetailPath } from "@/shared/navigation/tab-route-state";
 import { semanticColors } from "@/shared/theme/colors";
 
@@ -44,8 +45,9 @@ export default function TabLayout() {
 
   return (
     <ThemeProvider value={DefaultTheme}>
-      <StatusBar barStyle="dark-content" />
-      <Tabs
+      <AppProviders>
+        <StatusBar barStyle="dark-content" />
+        <Tabs
         screenOptions={{
           tabBarStyle: {
             display: "none",
@@ -127,6 +129,7 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
+      </AppProviders>
     </ThemeProvider>
   );
 }

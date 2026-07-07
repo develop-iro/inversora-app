@@ -1,10 +1,12 @@
-import { semanticColors, type ThemeColor } from '@/shared/theme/colors';
+import { useColorScheme } from '@/shared/hooks/use-color-scheme';
+import { semanticColors, type Theme, type ThemeColor } from '@/shared/theme/colors';
 
 /**
- * MVP uses the light Figma palette only. Dark semantic tokens exist for later.
+ * Returns semantic theme tokens for the active color scheme.
  */
-export function useTheme() {
-  return semanticColors.light;
+export function useTheme(): Theme {
+  const colorScheme = useColorScheme();
+  return semanticColors[colorScheme === 'dark' ? 'dark' : 'light'];
 }
 
-export type { ThemeColor };
+export type { Theme, ThemeColor };
