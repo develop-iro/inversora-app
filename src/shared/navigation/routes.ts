@@ -22,4 +22,5 @@ export const routes = {
       pathname: '/calculator',
       params: { isin: isin.trim().toUpperCase() },
     }) as Href,
+  legal: '/legal' as Href,
 };

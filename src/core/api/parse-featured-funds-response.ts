@@ -1,5 +1,6 @@
 import type { FeaturedFund } from '@/core/domain/fund';
 import { AppError } from '@/core/errors/app-error';
+import { resolveFundReturnSnapshotFromApi } from '@/core/api/parse-fund-return-snapshot';
 
 const RISK_LEVELS = new Set(['low', 'medium', 'high']);
 const DIVERSIFICATION_LEVELS = new Set(['low', 'medium', 'high']);
@@ -42,6 +43,7 @@ export function parseFeaturedFund(value: unknown): FeaturedFund | null {
     benefitSummary,
     featuredReason,
     isFeatured,
+    returns,
   } = value;
 
   if (
@@ -92,6 +94,7 @@ export function parseFeaturedFund(value: unknown): FeaturedFund | null {
     benefitSummary,
     featuredReason,
     isFeatured,
+    returns: resolveFundReturnSnapshotFromApi(returns),
   };
 }
 

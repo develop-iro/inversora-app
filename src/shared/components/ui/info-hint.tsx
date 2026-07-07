@@ -10,16 +10,17 @@ import {
 } from 'react-native';
 
 import { useInfoHintHost } from '@/shared/components/ui/info-hint-host';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { usePlatformCapabilities } from '@/shared/hooks/use-platform-capabilities';
 import { useWebHover, type WebHoverProps } from '@/shared/hooks/use-web-hover';
 import { useTheme } from '@/shared/hooks/use-theme';
+import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
 import {
   isWeb,
   shouldShowInfoHint,
   type InfoHintSurface,
 } from '@/shared/platform/capabilities';
-import { Radius, Shadows, Spacing } from '@/shared/theme/theme';
+import { Radius, Spacing, webElevationShadow } from '@/shared/theme/theme';
 
 export type { InfoHintSurface } from '@/shared/platform/capabilities';
 
@@ -44,12 +45,14 @@ function InfoHintWebPopup({
   position,
   theme,
   hoverProps,
+  shadows,
 }: {
   term: string;
   explanation: string;
   position: PopupPosition;
   theme: ReturnType<typeof useTheme>;
   hoverProps: WebHoverProps;
+  shadows: ReturnType<typeof useThemeShadows>;
 }) {
   if (typeof document === 'undefined') {
     return null;
@@ -62,22 +65,22 @@ function InfoHintWebPopup({
       accessibilityLabel={`${term}. ${explanation}`}
       style={[
         styles.portalPopup,
-        Shadows.card,
+        shadows.card,
         {
           top: position.top,
           left: position.left,
           backgroundColor: theme.surface,
           borderColor: theme.border,
-          boxShadow: '0 10px 28px rgba(11, 46, 54, 0.16)',
+          boxShadow: webElevationShadow(theme),
         } as ViewStyle,
       ]}
     >
-      <ThemedText type="metaLabel" themeColor="deepOcean" style={styles.popupTerm}>
+      <TextLabel variant="meta" themeColor="deepOcean" style={styles.popupTerm}>
         {term}
-      </ThemedText>
-      <ThemedText type="caption" themeColor="textSecondary" style={styles.popupBody}>
+      </TextLabel>
+      <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.popupBody}>
         {explanation}
-      </ThemedText>
+      </TextParagraph>
     </View>,
     document.body,
   );
@@ -92,6 +95,7 @@ export function InfoHintTrigger({
   surface = 'catalog',
 }: InfoHintTriggerProps) {
   const theme = useTheme();
+  const shadows = useThemeShadows();
   const hintId = useId();
   const host = useInfoHintHost();
   const { supportsInfoHintPopover } = usePlatformCapabilities();
@@ -242,9 +246,9 @@ export function InfoHintTrigger({
         </Pressable>
 
         {!useHoverPopup && expanded ? (
-          <ThemedText type="caption" themeColor="textSecondary" style={styles.explanation}>
+          <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.explanation}>
             {explanation}
-          </ThemedText>
+          </TextParagraph>
         ) : null}
       </View>
 
@@ -254,6 +258,7 @@ export function InfoHintTrigger({
           explanation={explanation}
           position={popupPosition}
           theme={theme}
+          shadows={shadows}
           hoverProps={popupHoverProps}
         />
       ) : null}
@@ -272,9 +277,9 @@ export function InfoHint({ term, explanation, style, surface = 'detail' }: InfoH
   return (
     <View style={[styles.labeledWrapper, style]}>
       <View style={styles.labelRow}>
-        <ThemedText type="metaLabel" themeColor="textSecondary" style={styles.term}>
+        <TextLabel variant="meta" themeColor="textSecondary" style={styles.term}>
           {term}
-        </ThemedText>
+        </TextLabel>
         <InfoHintTrigger term={term} explanation={explanation} surface={surface} />
       </View>
     </View>

@@ -21,7 +21,7 @@ Inversora es **informativa y educativa**. Estos mensajes deben ser visibles en s
 | Rentabilidad histórica | Aviso HU-39 junto al dato |
 | Comparador | Advertencia si comparación no homogénea (HU-27) |
 | Calculadora | Escenarios ilustrativos, no promesa de rentabilidad |
-| `/legal` | Textos completos centralizados (pendiente) |
+| `/legal` | Textos completos centralizados | ✅ `features/legal` + `app/legal.tsx` |
 
 ## Lenguaje a evitar (asistente y UI)
 
@@ -36,8 +36,8 @@ Inversora es **informativa y educativa**. Estos mensajes deben ser visibles en s
 
 ## Estado en el repo
 
-- Disclaimer en `home-screen` — ✅ parcial.
-- Ruta `/legal` y componente compartido — ⬜.
+- Disclaimer en `home-screen` — ✅ con enlace a `/legal`.
+- Ruta `/legal` y componente compartido — ✅ (`LegalNotice` + pantalla legal).
 
 ## Ver también
 

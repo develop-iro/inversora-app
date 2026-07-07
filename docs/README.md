@@ -14,6 +14,7 @@
 | Avisos legales y copy obligatorio | [product/legal-and-disclaimers.md](./product/legal-and-disclaimers.md) |
 | Estado del código por feature | [architecture/mvp-feature-map.md](./architecture/mvp-feature-map.md) |
 | Límites de dominio (scoring, favoritos, IA) | [architecture/adr-001-domain-boundaries.md](./architecture/adr-001-domain-boundaries.md) |
+| Convención de componentes UI (tabs, texto) | [architecture/adr-003-component-naming.md](./architecture/adr-003-component-naming.md) |
 | Stack elegido vs alternativas del doc oficial | [architecture/stack-decisions.md](./architecture/stack-decisions.md) |
 | Conectar app a API local en dev (HU-07 filtros, CORS, LAN) | [development-api.md](./development-api.md) |
 

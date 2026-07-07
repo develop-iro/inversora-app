@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { skeletonTokens } from '@/shared/components/ui/skeleton-tokens';
-import { Radius, Shadows, Spacing } from '@/shared/theme/theme';
+import { getSkeletonTokens } from '@/shared/components/ui/skeleton-tokens';
+import { useTheme } from '@/shared/hooks/use-theme';
+import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
+import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type SkeletonPanelProps = {
   children: ReactNode;
@@ -14,6 +17,10 @@ export type SkeletonPanelProps = {
  * Elevated white surface that groups skeleton lines (BBVA-style content card).
  */
 export function SkeletonPanel({ children, style, padded = true }: SkeletonPanelProps) {
+  const theme = useTheme();
+  const shadows = useThemeShadows();
+  const skeletonTokens = useMemo(() => getSkeletonTokens(theme), [theme]);
+
   return (
     <View
       style={[
@@ -23,7 +30,7 @@ export function SkeletonPanel({ children, style, padded = true }: SkeletonPanelP
           backgroundColor: skeletonTokens.panelBackground,
           borderColor: skeletonTokens.panelBorder,
         },
-        Shadows.card,
+        shadows.card,
         style,
       ]}
     >

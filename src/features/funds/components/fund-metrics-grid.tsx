@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
-import { useTheme } from '@/shared/hooks/use-theme';
+import { HeaderSection } from '@/shared/components/headers/header-section';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { Spacing } from '@/shared/theme/theme';
 
 export type FundMetricCell = {
@@ -18,25 +18,25 @@ export type FundMetricsGridProps = {
 };
 
 export function FundMetricsGrid({ title, metrics }: FundMetricsGridProps) {
-  const theme = useTheme();
+  if (metrics.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.section}>
-      <ThemedText type="bodyBold" accessibilityRole="header">
-        {title}
-      </ThemedText>
+      <HeaderSection title={title} variant="compact" style={styles.header} />
       <View style={styles.grid}>
         {metrics.map((metric) => (
           <View key={metric.id} style={styles.cell}>
-            <ThemedText type="metaLabel" themeColor="textSecondary">
+            <TextLabel variant="meta" themeColor="textSecondary">
               {metric.label}
-            </ThemedText>
+            </TextLabel>
             <View style={styles.valueRow}>
-              <ThemedText type="bodyBold">{metric.value}</ThemedText>
+              <TextParagraph variant="emphasis">{metric.value}</TextParagraph>
               {metric.hint ? (
-                <ThemedText type="caption" style={{ color: theme.primary }}>
+                <TextParagraph variant="secondary" themeColor="primary">
                   {metric.hint}
-                </ThemedText>
+                </TextParagraph>
               ) : null}
             </View>
           </View>
@@ -48,7 +48,11 @@ export function FundMetricsGrid({ title, metrics }: FundMetricsGridProps) {
 
 const styles = StyleSheet.create({
   section: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
+    alignSelf: 'stretch',
+  },
+  header: {
+    paddingBottom: 0,
   },
   grid: {
     flexDirection: 'row',

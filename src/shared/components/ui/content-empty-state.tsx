@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { Button } from '@/shared/components/ui/button';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { useTheme } from '@/shared/hooks/use-theme';
@@ -15,6 +15,7 @@ export type ContentEmptyStateProps = {
   message: string;
   actionLabel?: string;
   onAction?: () => void;
+  className?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -27,6 +28,7 @@ export function ContentEmptyState({
   message,
   actionLabel,
   onAction,
+  className,
   style,
 }: ContentEmptyStateProps) {
   const theme = useTheme();
@@ -88,11 +90,12 @@ export function ContentEmptyState({
     <View
       accessibilityRole="summary"
       accessibilityLabel={`${title}. ${message}`}
+      className={className}
       style={[
         styles.card,
         {
-          backgroundColor: 'rgba(234, 248, 246, 0.55)',
-          borderColor: 'rgba(0, 191, 166, 0.14)',
+          backgroundColor: theme.softTealSurfaceMuted,
+          borderColor: theme.primaryBorderFaint,
         },
         style,
       ]}
@@ -101,29 +104,29 @@ export function ContentEmptyState({
         <Animated.View
           style={[
             styles.orbitRing,
-            { borderColor: 'rgba(0, 191, 166, 0.18)', transform: [{ rotate: orbitRotate }] },
+            { borderColor: theme.primaryBorderFaint, transform: [{ rotate: orbitRotate }] },
           ]}
         >
-          <View style={[styles.orbitDot, styles.orbitDotTop]} />
-          <View style={[styles.orbitDot, styles.orbitDotRight]} />
+          <View style={[styles.orbitDot, styles.orbitDotTop, { backgroundColor: theme.primaryAccent }]} />
+          <View style={[styles.orbitDot, styles.orbitDotRight, { backgroundColor: theme.primaryAccent }]} />
         </Animated.View>
 
         <Animated.View
           style={[
             styles.iconBubble,
-            { backgroundColor: theme.surface, transform: [{ translateY: floatTranslateY }] },
+            { backgroundColor: theme.surface, shadowColor: theme.shadow, transform: [{ translateY: floatTranslateY }] },
           ]}
         >
           <MaterialCommunityIcons name={icon} size={28} color={theme.primary} />
         </Animated.View>
       </View>
 
-      <ThemedText type="bodyBold" style={styles.title}>
+      <TextParagraph variant="emphasis" style={styles.title}>
         {title}
-      </ThemedText>
-      <ThemedText type="caption" themeColor="textSecondary" style={styles.message}>
+      </TextParagraph>
+      <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.message}>
         {message}
-      </ThemedText>
+      </TextParagraph>
 
       {actionLabel && onAction ? (
         <Button
@@ -156,7 +159,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   orbitRing: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     borderWidth: 1.5,
     borderRadius: Radius.full,
     borderStyle: 'dashed',
@@ -166,7 +169,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: Radius.full,
-    backgroundColor: 'rgba(0, 191, 166, 0.55)',
   },
   orbitDotTop: {
     top: -4,
@@ -183,7 +185,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0B2E36',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 10,

@@ -6,6 +6,21 @@ import { parseFundDetailResponse } from '@/core/api/parse-fund-detail-response';
 import { AppError } from '@/core/errors/app-error';
 import { getFundDetailMock } from '@/features/funds/mocks/get-fund-detail-mock';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+/**
+ * Detects NestJS error envelopes accidentally returned with a success HTTP status.
+ */
+function isNotFoundPayload(payload: unknown): boolean {
+  return isRecord(payload) && payload.statusCode === 404;
+}
+
+function isHttpNotFoundError(error: unknown): boolean {
+  return error instanceof AppError && error.status === 404;
+}
+
 /**
  * Fetches the aggregated fund detail for a given ISIN from `GET /funds/:isin`.
  *
@@ -32,9 +47,13 @@ export async function getFundByIsin(
       signal,
     });
 
+    if (isNotFoundPayload(payload)) {
+      return null;
+    }
+
     return parseFundDetailResponse(payload);
   } catch (error) {
-    if (error instanceof AppError && error.status === 404) {
+    if (isHttpNotFoundError(error)) {
       return null;
     }
 

@@ -8,7 +8,13 @@ type TabRoute = {
   state?: NestedRouteState;
 };
 
-const FUNDS_CATALOG_ROUTE = 'index';
+/** Nested stack screen name for the fund catalog (`/funds`). */
+export const FUNDS_CATALOG_SCREEN = 'index';
+
+/** Top-level tab route name for the funds stack. */
+export const FUNDS_TAB_NAME = 'funds';
+
+const FUNDS_CATALOG_ROUTE = FUNDS_CATALOG_SCREEN;
 
 /** Expo Router uses the real ISIN as the nested route name, not `[isin]`. */
 export function isFundsStackDetailRoute(routeName: string | undefined): boolean {
@@ -49,4 +55,14 @@ export function isFundDetailPath(segments: readonly string[]): boolean {
 /** Path-based check for `/learn` (reactive with `useSegments`). */
 export function isLearnPath(segments: readonly string[]): boolean {
   return segments.includes('learn');
+}
+
+/** Path-based check for `/legal` (reactive with `useSegments`). */
+export function isLegalPath(segments: readonly string[]): boolean {
+  return segments.includes('legal');
+}
+
+/** Tab navigation target that always opens the fund catalog. */
+export function createFundsCatalogTabParams(): { screen: typeof FUNDS_CATALOG_SCREEN } {
+  return { screen: FUNDS_CATALOG_SCREEN };
 }

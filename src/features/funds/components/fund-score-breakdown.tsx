@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import type { ScoreBreakdown } from '@/core/scoring/types';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -17,9 +17,9 @@ export function FundScoreBreakdown({ breakdown }: FundScoreBreakdownProps) {
       {breakdown.map((criterion) => (
         <View key={criterion.id} style={styles.row}>
           <View style={styles.labelBlock}>
-            <ThemedText type="caption" themeColor="textSecondary">
+            <TextParagraph variant="secondary" themeColor="textSecondary">
               {criterion.label}
-            </ThemedText>
+            </TextParagraph>
             <View
               style={[styles.track, { backgroundColor: theme.surfaceMuted }]}
               accessibilityRole="progressbar"
@@ -40,9 +40,9 @@ export function FundScoreBreakdown({ breakdown }: FundScoreBreakdownProps) {
               />
             </View>
           </View>
-          <ThemedText type="metaLabel" themeColor="deepOcean">
+          <TextLabel variant="meta" themeColor="deepOcean">
             {criterion.points}/{criterion.maxPoints}
-          </ThemedText>
+          </TextLabel>
         </View>
       ))}
     </View>

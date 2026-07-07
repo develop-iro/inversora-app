@@ -1,201 +1,181 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { HomeRankingEntry } from '@/features/onboarding/services/resolve-home-search';
-import { ThemedText } from '@/shared/components/themed-text';
-import { Badge } from '@/shared/components/ui';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
+import { Badge, FundReturnChip, SkeletonBone, SkeletonShimmerProvider } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import type { WithLoading } from '@/shared/types/component-loading';
 import { getRiskBadgeVariant, getRiskLabel } from '@/shared/utils/fund-risk';
 
-export type HomeRankingRowProps = {
+type HomeRankingRowContentProps = {
   fund: HomeRankingEntry;
   highlightLabel?: string;
   onPress: () => void;
 };
 
-export function HomeRankingRow({ fund, highlightLabel = 'Top fondo', onPress }: HomeRankingRowProps) {
+export type HomeRankingRowProps = WithLoading<HomeRankingRowContentProps>;
+
+function HomeRankingRowLoading() {
+  const theme = useTheme();
+
+  return (
+    <SkeletonShimmerProvider>
+      <View
+        className="min-h-[96px] flex-row items-center gap-md rounded-field border px-md py-md"
+        style={{
+          borderColor: theme.borderSubtle,
+          backgroundColor: theme.surfaceMuted,
+        }}
+        accessibilityLabel="Cargando fila del ranking"
+      >
+        <SkeletonBone width={37} height={37} borderRadius={16} />
+        <View className="flex-1 gap-sm">
+          <SkeletonBone width="68%" height={16} />
+          <SkeletonBone width="46%" height={12} />
+        </View>
+        <SkeletonBone width={44} height={28} borderRadius={9999} />
+      </View>
+    </SkeletonShimmerProvider>
+  );
+}
+
+export function HomeRankingRow(props: HomeRankingRowProps) {
+  if (props.loading) {
+    return <HomeRankingRowLoading />;
+  }
+
+  return (
+    <HomeRankingRowContent
+      fund={props.fund}
+      highlightLabel={props.highlightLabel}
+      onPress={props.onPress}
+    />
+  );
+}
+
+function HomeRankingRowContent({
+  fund,
+  highlightLabel = 'Top fondo',
+  onPress,
+}: HomeRankingRowContentProps) {
   const theme = useTheme();
   const isHighlighted = fund.isHighlighted;
   const riskLabel = getRiskLabel(fund.riskLevel);
+  const oneYearReturn = fund.returns.oneYear;
+  const returnA11y =
+    oneYearReturn === null
+      ? ''
+      : `, rentabilidad histórica a un año ${oneYearReturn.toFixed(1).replace('.', ',')} por ciento`;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Posición ${fund.displayRank}, ${fund.name}, Score Inversora ${fund.score} sobre 100, riesgo ${riskLabel.toLowerCase()}, comisión anual ${fund.terPercent.toFixed(2)} por ciento.`}
+      accessibilityLabel={`Posición ${fund.displayRank}, ${fund.name}, Score Inversora ${fund.score} sobre 100, riesgo ${riskLabel.toLowerCase()}, comisión anual ${fund.terPercent.toFixed(2)} por ciento${returnA11y}.`}
       accessibilityHint="Abre la ficha resumida del fondo"
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.row,
-        {
-          backgroundColor: isHighlighted ? theme.backgroundSoft : theme.surface,
-          borderColor: isHighlighted ? 'rgba(0, 191, 166, 0.35)' : theme.border,
-        },
-        pressed && styles.rowPressed,
-      ]}
+      className={[
+        'min-h-[96px] rounded-field border px-md py-md active:opacity-[0.92]',
+        isHighlighted ? 'border-[1.5px]' : 'border',
+      ].join(' ')}
+      style={{
+        backgroundColor: theme.surface,
+        borderColor: isHighlighted ? theme.primary : theme.border,
+      }}
     >
-      <View style={styles.mainContent}>
-        <View style={styles.mainRow}>
-          <View style={styles.rankAndInfoBlock}>
+      <View className="gap-xs">
+        <View className="flex-row items-center justify-between gap-sm">
+          <View className="flex-1 flex-row items-start gap-sm">
             <View
-              style={[
-                styles.rankIndicator,
+              className="mt-half min-h-[37px] min-w-[37px] items-center justify-center rounded-full border px-sm"
+              style={
                 isHighlighted
                   ? {
-                      backgroundColor: 'rgba(19, 78, 94, 0.92)',
-                      borderColor: 'rgba(0, 191, 166, 0.22)',
+                      backgroundColor: theme.primary,
+                      borderColor: theme.primary,
                     }
                   : {
-                      backgroundColor: theme.surfaceMuted,
-                      borderColor: theme.border,
-                    },
-              ]}
+                      backgroundColor: theme.backgroundSoft,
+                      borderColor: theme.accentMint,
+                    }
+              }
             >
-              <ThemedText
-                type={isHighlighted ? 'chip' : 'metaLabel'}
+              <TextLabel
+                variant={isHighlighted ? 'chip' : 'meta'}
                 style={{
                   color: isHighlighted ? theme.textOnDark : theme.textSecondary,
                   letterSpacing: isHighlighted ? -0.3 : 0.88,
                 }}
               >
                 #{fund.displayRank}
-              </ThemedText>
+              </TextLabel>
             </View>
 
-            <View style={styles.textBlock}>
+            <View className="flex-1 gap-threeQuarter">
               {isHighlighted ? (
-                <View style={[styles.highlightBadge, { backgroundColor: theme.accentMint }]}>
-                  <ThemedText type="caption" style={styles.highlightBadgeLabel}>
+                <View
+                  className="mb-2xs self-start rounded-chip px-sm py-half"
+                  style={{ backgroundColor: theme.backgroundSoft }}
+                >
+                  <TextLabel variant="meta" themeColor="primary">
                     {highlightLabel}
-                  </ThemedText>
+                  </TextLabel>
                 </View>
               ) : null}
 
-              <ThemedText type="bodyBold" numberOfLines={1}>
+              <TextParagraph variant="emphasis" numberOfLines={1}>
                 {fund.name}
-              </ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+              </TextParagraph>
+              <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={1}>
                 {fund.categoryLabel}
-              </ThemedText>
-              <ThemedText
-                type="caption"
+              </TextParagraph>
+              <TextParagraph
+                variant="secondary"
                 themeColor="textSecondary"
                 numberOfLines={1}
-                style={styles.isinText}
+                className="text-[11px] leading-[14px] opacity-[0.62]"
               >
                 ISIN {fund.isin}
-              </ThemedText>
+              </TextParagraph>
             </View>
           </View>
 
-          <View style={styles.scoreBlock}>
-            <ThemedText type="metaLabel" themeColor="textSecondary">
+          <View className="min-w-[88px] items-end gap-half">
+            <TextLabel variant="meta" themeColor="textSecondary">
               Score Inversora
-            </ThemedText>
-            <ThemedText type="chip" style={styles.scoreValue}>
+            </TextLabel>
+            <TextLabel
+              variant="chip"
+              className="text-[18px] leading-6 tracking-[-0.3px]"
+              style={isHighlighted ? { color: theme.primary } : undefined}
+            >
               {fund.score}/100
-            </ThemedText>
+            </TextLabel>
           </View>
         </View>
 
-        <View style={styles.metaRow}>
-          <View style={styles.metaLeft}>
+        <View className="flex-row items-center justify-between gap-md">
+          <View className="flex-1 flex-row flex-wrap items-center gap-sm">
             <Badge
               label={`Riesgo ${riskLabel.toLowerCase()}`}
               variant={getRiskBadgeVariant(fund.riskLevel)}
             />
-            <ThemedText type="caption" themeColor="textSecondary" style={styles.annualFeeText}>
+            <FundReturnChip label="1A hist." value={oneYearReturn} />
+            <TextParagraph
+              variant="secondary"
+              themeColor="textSecondary"
+              className="text-[12px] leading-4"
+            >
               Comisión anual {fund.terPercent.toFixed(2)}%
-            </ThemedText>
+            </TextParagraph>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={18}
+            color={isHighlighted ? theme.primary : theme.textSecondary}
+          />
         </View>
       </View>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    minHeight: 96,
-  },
-  rowPressed: {
-    opacity: 0.92,
-  },
-  mainContent: {
-    gap: Spacing.xs,
-  },
-  mainRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  rankAndInfoBlock: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-  },
-  rankIndicator: {
-    minWidth: 37,
-    minHeight: 37,
-    borderRadius: 999,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.sm,
-    marginTop: 2,
-  },
-  textBlock: {
-    flex: 1,
-    gap: 3,
-  },
-  highlightBadge: {
-    alignSelf: 'flex-start',
-    borderRadius: Radius.chip,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    marginBottom: 1,
-  },
-  highlightBadgeLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  isinText: {
-    fontSize: 11,
-    lineHeight: 14,
-    opacity: 0.62,
-  },
-  scoreBlock: {
-    alignItems: 'flex-end',
-    gap: 2,
-    minWidth: 88,
-  },
-  scoreValue: {
-    letterSpacing: -0.3,
-    fontSize: 18,
-    lineHeight: 24,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-  },
-  metaLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    flex: 1,
-  },
-  annualFeeText: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-});

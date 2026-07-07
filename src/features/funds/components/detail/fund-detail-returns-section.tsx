@@ -2,12 +2,12 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { FundDetailProfile } from '@/core/domain/fund-detail-profile';
-import { FundDetailSectionEmptyState } from '@/features/funds/components/detail/fund-detail-section-empty-state';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
+import { hasAnyReturnData, hasReturnData } from '@/features/funds/utils/fund-detail-presentation';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
-import { ThemedText } from '@/shared/components/themed-text';
-import { HorizontalBarChart, SegmentTabs } from '@/shared/components/ui';
-import { hasReturnData } from '@/features/funds/utils/fund-detail-presentation';
+import { CollapsibleSection } from '@/shared/components/layout';
+import { TextParagraph } from '@/shared/components/text';
+import { HorizontalBarChart, TabHeader } from '@/shared/components/ui';
 import { Spacing } from '@/shared/theme/theme';
 
 type ReturnsTab = 'periods' | 'years';
@@ -22,11 +22,23 @@ export type FundDetailReturnsSectionProps = {
   fundName: string;
 };
 
+function buildAvailableReturnsTabs(profile: FundDetailProfile): { value: ReturnsTab; label: string }[] {
+  return RETURNS_TABS.filter((tab) => hasReturnData(profile, tab.value));
+}
+
 export function FundDetailReturnsSection({ profile, fundName }: FundDetailReturnsSectionProps) {
-  const [tab, setTab] = useState<ReturnsTab>('periods');
+  const availableTabs = useMemo(() => buildAvailableReturnsTabs(profile), [profile]);
+  const [tab, setTab] = useState<ReturnsTab>(() => availableTabs[0]?.value ?? 'periods');
+  const activeTab = availableTabs.some((item) => item.value === tab)
+    ? tab
+    : availableTabs[0]?.value;
 
   const chartData = useMemo(() => {
-    if (tab === 'periods') {
+    if (!activeTab) {
+      return [];
+    }
+
+    if (activeTab === 'periods') {
       return profile.returnsByPeriod.map((item) => ({
         id: item.id,
         label: item.label,
@@ -39,12 +51,19 @@ export function FundDetailReturnsSection({ profile, fundName }: FundDetailReturn
       label: String(item.year),
       value: item.percent,
     }));
-  }, [profile, tab]);
+  }, [activeTab, profile]);
 
   const chartA11y = `Rentabilidad de ${fundName}, ${
-    tab === 'periods' ? 'por periodos' : 'por años'
+    activeTab === 'periods' ? 'por periodos' : 'por años'
   }`;
-  const hasData = hasReturnData(profile, tab);
+
+  const methodologyNotes = [profile.currencyNote.trim(), profile.methodNote.trim()].filter(
+    (note) => note.length > 0,
+  );
+
+  if (!hasAnyReturnData(profile) || !activeTab) {
+    return null;
+  }
 
   return (
     <FundDetailSectionShell
@@ -52,41 +71,41 @@ export function FundDetailReturnsSection({ profile, fundName }: FundDetailReturn
       hintTerm={FUND_GLOSSARY.pastPerformance.term}
       hintExplanation={FUND_GLOSSARY.pastPerformance.explanation}
     >
-      <SegmentTabs tabs={RETURNS_TABS} value={tab} onChange={setTab} accessibilityLabel="Rentabilidad del fondo" />
+      <TabHeader
+        tabs={availableTabs}
+        value={activeTab}
+        onChange={setTab}
+        accessibilityLabel="Rentabilidad del fondo"
+      />
 
       <View style={styles.chartWrap}>
-        {hasData ? (
-          <HorizontalBarChart data={chartData} accessibilityLabel={chartA11y} />
-        ) : (
-          <FundDetailSectionEmptyState message="Todavía no hay rentabilidades publicadas para este fondo en este horizonte." />
-        )}
+        <HorizontalBarChart data={chartData} accessibilityLabel={chartA11y} />
       </View>
 
-      <View style={styles.notes}>
-        <ThemedText type="caption" themeColor="textSecondary">
-          {profile.currencyNote}
-        </ThemedText>
-        <ThemedText type="caption" themeColor="textSecondary" style={styles.noteRight}>
-          {profile.methodNote}
-        </ThemedText>
-      </View>
+      {methodologyNotes.length > 0 ? (
+        <CollapsibleSection
+          title="Metodología y divisa"
+          subtitle="Notas sobre cómo se calculan estas rentabilidades."
+          defaultExpanded={false}
+        >
+          <View style={styles.notes}>
+            {methodologyNotes.map((note) => (
+              <TextParagraph key={note} variant="secondary" themeColor="textSecondary">
+                {note}
+              </TextParagraph>
+            ))}
+          </View>
+        </CollapsibleSection>
+      ) : null}
     </FundDetailSectionShell>
   );
 }
 
 const styles = StyleSheet.create({
   chartWrap: {
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.xs,
   },
   notes: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
     gap: Spacing.sm,
-  },
-  noteRight: {
-    flex: 1,
-    minWidth: 200,
-    textAlign: 'right',
   },
 });

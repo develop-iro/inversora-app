@@ -4,7 +4,9 @@ import { StyleSheet, View } from 'react-native';
 import type { FundDetailProfile, FundDistributorKind } from '@/core/domain/fund-detail-profile';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
-import { ThemedText } from '@/shared/components/themed-text';
+import { CollapsibleSection } from '@/shared/components/layout';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
+import { Card } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -38,55 +40,53 @@ export function FundDetailDistributorsSection({ profile }: FundDetailDistributor
     >
       <View style={styles.list}>
         {profile.distributors.map((distributor) => (
-          <View
-            key={distributor.id}
-            style={[
-              styles.row,
-              {
-                backgroundColor: theme.surfaceMuted,
-                borderColor: theme.border,
-              },
-            ]}
-          >
-            <View
-              style={[
-                styles.iconWrap,
-                {
-                  backgroundColor: theme.surface,
-                  borderColor: theme.border,
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={KIND_ICONS[distributor.kind]}
-                size={20}
-                color={theme.primary}
-                accessibilityElementsHidden
-                importantForAccessibility="no"
-              />
-            </View>
-            <View style={styles.textBlock}>
-              <View style={styles.nameRow}>
-                <ThemedText type="bodyBold">{distributor.name}</ThemedText>
-                <ThemedText type="metaLabel" themeColor="textSecondary">
-                  {KIND_LABELS[distributor.kind]}
-                </ThemedText>
+          <Card key={distributor.id} variant="outlined" style={styles.row}>
+            <View style={styles.rowContent}>
+              <View
+                style={[
+                  styles.iconWrap,
+                  {
+                    backgroundColor: theme.surfaceMuted,
+                    borderColor: theme.border,
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name={KIND_ICONS[distributor.kind]}
+                  size={20}
+                  color={theme.primary}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                />
               </View>
-              {distributor.note ? (
-                <ThemedText type="caption" themeColor="textSecondary">
-                  {distributor.note}
-                </ThemedText>
-              ) : null}
+              <View style={styles.textBlock}>
+                <View style={styles.nameRow}>
+                  <TextParagraph variant="emphasis">{distributor.name}</TextParagraph>
+                  <TextLabel variant="meta" themeColor="textSecondary">
+                    {KIND_LABELS[distributor.kind]}
+                  </TextLabel>
+                </View>
+                {distributor.note ? (
+                  <TextParagraph variant="secondary" themeColor="textSecondary">
+                    {distributor.note}
+                  </TextParagraph>
+                ) : null}
+              </View>
             </View>
-          </View>
+          </Card>
         ))}
       </View>
 
-      <ThemedText type="caption" themeColor="textSecondary" style={styles.disclaimer}>
-        Comprueba en la web de cada entidad el ISIN, la clase del fondo y las comisiones antes de
-        contratar. Inversora no enlaza con plataformas ni recibe remuneración por su inclusión en
-        esta lista.
-      </ThemedText>
+      <CollapsibleSection
+        title="Aviso sobre disponibilidad"
+        defaultExpanded={false}
+      >
+        <TextParagraph variant="secondary" themeColor="textSecondary">
+          Comprueba en la web de cada entidad el ISIN, la clase del fondo y las comisiones antes de
+          contratar. Inversora no enlaza con plataformas ni recibe remuneración por su inclusión en
+          esta lista.
+        </TextParagraph>
+      </CollapsibleSection>
     </FundDetailSectionShell>
   );
 }
@@ -96,18 +96,18 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   row: {
+    alignSelf: 'stretch',
+  },
+  rowContent: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.md,
-    padding: Spacing.md,
-    borderRadius: Radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   iconWrap: {
     width: 40,
     height: 40,
     borderRadius: Radius.chip,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -121,8 +121,5 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'baseline',
     gap: Spacing.sm,
-  },
-  disclaimer: {
-    lineHeight: 18,
   },
 });

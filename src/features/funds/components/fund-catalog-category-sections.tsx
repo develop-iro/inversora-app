@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import type { CatalogFund } from '@/core/domain/catalog';
 import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
 import type { CatalogCategoryGroup } from '@/features/funds/utils/group-funds-by-category';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { Spacing } from '@/shared/theme/theme';
 
 export type FundCatalogCategorySectionsProps = {
@@ -25,10 +25,10 @@ export function FundCatalogCategorySections({
           accessibilityLabel={`Categoría ${group.categoryLabel}, ${group.funds.length} fondos`}
         >
           <View style={styles.sectionHeader}>
-            <ThemedText type="bodyBold">{group.categoryLabel}</ThemedText>
-            <ThemedText type="metaLabel" themeColor="textSecondary">
+            <TextParagraph variant="emphasis">{group.categoryLabel}</TextParagraph>
+            <TextLabel variant="meta" themeColor="textSecondary">
               {group.funds.length} fondo{group.funds.length === 1 ? '' : 's'}
-            </ThemedText>
+            </TextLabel>
           </View>
           <FundCatalogGrid funds={group.funds} onFundPress={onFundPress} />
         </View>

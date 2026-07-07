@@ -1,11 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { SoraChatSheet } from '@/features/assistant/components/sora-chat-sheet';
-import { ThemedText } from '@/shared/components/themed-text';
+import { SectionCard } from '@/shared/components/layout';
+import { TextParagraph } from '@/shared/components/text';
 import { Button } from '@/shared/components/ui/button';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { palette } from '@/shared/theme/palette';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type CompareSoraSectionProps = {
@@ -36,31 +36,21 @@ export function CompareSoraSection({
   const visiblePrompts = quickPrompts.slice(0, 2);
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: palette.softTealBackground,
-          borderColor: 'rgba(0, 191, 166, 0.18)',
-        },
-      ]}
+    <SectionCard
+      title="Pregunta a SORA"
+      summary="Explica diferencias de TER, score y categoría con los datos visibles en esta comparación."
+      surface="muted"
+      contentStyle={styles.content}
     >
       <View style={styles.titleRow}>
         <MaterialCommunityIcons name="creation" size={20} color={theme.primary} />
-        <ThemedText type="bodyBold">Pregunta a SORA</ThemedText>
+        <TextParagraph variant="secondary" themeColor="textSecondary">
+          Respuestas educativas, sin recomendación de inversión.
+        </TextParagraph>
       </View>
 
-      <ThemedText type="caption" themeColor="textSecondary">
-        SORA puede explicar diferencias de TER, score y categoría usando solo los datos visibles
-        en esta comparación.
-      </ThemedText>
-
       {canAskSora && visiblePrompts.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.promptsScroll}
-        >
+        <View style={styles.promptsRow}>
           {visiblePrompts.map((prompt) => (
             <Pressable
               key={prompt}
@@ -76,18 +66,19 @@ export function CompareSoraSection({
                 pressed && styles.promptChipPressed,
               ]}
             >
-              <ThemedText type="caption" numberOfLines={2}>
+              <TextParagraph variant="secondary" numberOfLines={2}>
                 {prompt}
-              </ThemedText>
+              </TextParagraph>
             </Pressable>
           ))}
-        </ScrollView>
+        </View>
       ) : null}
 
       <Button
         label="Abrir chat de comparación"
         onPress={() => onOpenChat()}
         disabled={!canAskSora}
+        fullWidth
       />
 
       <SoraChatSheet
@@ -100,27 +91,23 @@ export function CompareSoraSection({
         conversationMode
         quickPrompts={quickPrompts}
       />
-    </View>
+    </SectionCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    padding: Spacing.md,
-    gap: Spacing.sm,
+  content: {
+    gap: Spacing.md,
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: Spacing.sm,
   },
-  promptsScroll: {
+  promptsRow: {
     gap: Spacing.sm,
   },
   promptChip: {
-    maxWidth: 220,
     borderWidth: 1,
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.md,

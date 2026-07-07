@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
-import { FundCard } from '@/features/funds/components/fund-card';
+import { CardFund } from '@/features/funds/components/card-fund';
 import { Layout, Spacing } from '@/shared/theme/theme';
 
 const TWO_COLUMN_BREAKPOINT = 640;
@@ -29,7 +29,7 @@ export function FundCatalogGrid({ funds, onFundPress }: FundCatalogGridProps) {
   return (
     <View style={styles.grid} accessibilityRole="list">
       {funds.map((fund) => (
-        <FundCard
+        <CardFund
           key={fund.isin}
           fund={fund}
           style={[styles.card, { flexBasis: cardBasis }]}

@@ -1,8 +1,10 @@
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { RiskLevel } from '@/core/domain/fund';
 import type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
+import { TabChip } from '@/shared/components/tabs/tab-chip';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -40,132 +42,158 @@ type FundCatalogFiltersBarProps = {
   onChange: (next: FundCatalogFiltersState) => void;
 };
 
-type ChipOption<T extends string> = {
-  value: T;
-  label: string;
-};
-
-const RISK_OPTIONS: ChipOption<RiskLevel | 'all'>[] = [
-  { value: 'all', label: 'Riesgo: todos' },
-  { value: 'low', label: 'Bajo' },
-  { value: 'medium', label: 'Medio' },
-  { value: 'high', label: 'Alto' },
+const RISK_TABS = [
+  { value: 'all' as const, label: 'Todos' },
+  { value: 'low' as const, label: 'Bajo' },
+  { value: 'medium' as const, label: 'Medio' },
+  { value: 'high' as const, label: 'Alto' },
 ];
 
-const TER_OPTIONS: { value: number | null; label: string }[] = [
-  { value: null, label: 'Comisión: todas' },
+const TER_TABS = [
+  { value: null, label: 'Todas' },
   { value: 0.15, label: '≤ 0,15%' },
   { value: 0.25, label: '≤ 0,25%' },
 ];
 
-const SCORE_OPTIONS: { value: number | null; label: string }[] = [
-  { value: null, label: 'Score: todos' },
+const SCORE_TABS = [
+  { value: null, label: 'Todos' },
   { value: 80, label: '≥ 80' },
   { value: 75, label: '≥ 75' },
 ];
 
-export function FundCatalogFiltersBar({ value, onChange }: FundCatalogFiltersBarProps) {
+export function FundCatalogFiltersForm({ value, onChange }: FundCatalogFiltersBarProps) {
   const theme = useTheme();
 
   return (
     <View style={styles.wrapper}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
+      <FilterSection
+        title="Perfil de riesgo"
+        hint="Filtra por nivel educativo de riesgo"
       >
-        {RISK_OPTIONS.map((option) => (
-          <FilterChip
-            key={option.value}
-            label={option.label}
-            selected={value.riskLevel === option.value}
-            onPress={() => onChange({ ...value, riskLevel: option.value })}
-            theme={theme}
-          />
-        ))}
-      </ScrollView>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
-      >
-        {TER_OPTIONS.map((option) => (
-          <FilterChip
-            key={option.label}
-            label={option.label}
-            selected={value.maxTerPercent === option.value}
-            onPress={() => onChange({ ...value, maxTerPercent: option.value })}
-            theme={theme}
-          />
-        ))}
-        {SCORE_OPTIONS.map((option) => (
-          <FilterChip
-            key={option.label}
-            label={option.label}
-            selected={value.minScore === option.value}
-            onPress={() => onChange({ ...value, minScore: option.value })}
-            theme={theme}
-          />
-        ))}
-        <FilterChip
-          label="Para empezar"
-          selected={value.idealForBeginnersOnly}
-          onPress={() =>
-            onChange({ ...value, idealForBeginnersOnly: !value.idealForBeginnersOnly })
-          }
-          theme={theme}
+        <TabChip
+          tabs={RISK_TABS}
+          value={value.riskLevel}
+          onChange={(riskLevel) => onChange({ ...value, riskLevel })}
+          accessibilityLabel="Filtrar por perfil de riesgo"
+          tabAccessibilityPrefix="Riesgo"
         />
-      </ScrollView>
+      </FilterSection>
+
+      <FilterSection title="Comisión (TER)" hint="Coste anual del fondo">
+        <TabChip
+          tabs={TER_TABS.map((option) => ({
+            value: String(option.value ?? 'all'),
+            label: option.label,
+          }))}
+          value={String(value.maxTerPercent ?? 'all')}
+          onChange={(nextValue) =>
+            onChange({
+              ...value,
+              maxTerPercent: nextValue === 'all' ? null : Number(nextValue),
+            })
+          }
+          accessibilityLabel="Filtrar por comisión"
+          tabAccessibilityPrefix="Comisión"
+        />
+      </FilterSection>
+
+      <FilterSection title="Inversora Score" hint="Puntuación objetiva del fondo">
+        <View style={styles.scoreRow}>
+          <View style={styles.scoreTabs}>
+            <TabChip
+              tabs={SCORE_TABS.map((option) => ({
+                value: String(option.value ?? 'all'),
+                label: option.label,
+              }))}
+              value={String(value.minScore ?? 'all')}
+              onChange={(nextValue) =>
+                onChange({
+                  ...value,
+                  minScore: nextValue === 'all' ? null : Number(nextValue),
+                })
+              }
+              accessibilityLabel="Filtrar por Inversora Score"
+              tabAccessibilityPrefix="Score"
+            />
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: value.idealForBeginnersOnly }}
+            accessibilityLabel="Mostrar solo fondos recomendados para empezar"
+            onPress={() =>
+              onChange({ ...value, idealForBeginnersOnly: !value.idealForBeginnersOnly })
+            }
+            style={[
+              styles.beginnerChip,
+              {
+                backgroundColor: value.idealForBeginnersOnly ? theme.primary : theme.surface,
+                borderColor: value.idealForBeginnersOnly ? theme.primary : theme.border,
+              },
+            ]}
+          >
+            <TextParagraph
+              variant="secondary"
+              style={{
+                color: value.idealForBeginnersOnly ? theme.textOnDark : theme.text,
+              }}
+            >
+              Para empezar
+            </TextParagraph>
+          </Pressable>
+        </View>
+      </FilterSection>
     </View>
   );
 }
 
-type FilterChipProps = {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-  theme: ReturnType<typeof useTheme>;
+/** @deprecated Use {@link FundCatalogFiltersForm} inside the filters sheet. */
+export const FundCatalogFiltersBar = FundCatalogFiltersForm;
+
+type FilterSectionProps = {
+  title: string;
+  hint: string;
+  children: ReactNode;
 };
 
-function FilterChip({ label, selected, onPress, theme }: FilterChipProps) {
+function FilterSection({ title, hint, children }: FilterSectionProps) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={[
-        styles.chip,
-        {
-          backgroundColor: selected ? theme.primary : theme.surface,
-          borderColor: selected ? theme.primary : theme.border,
-        },
-      ]}
-    >
-      <ThemedText
-        type="caption"
-        style={{ color: selected ? theme.textOnDark : theme.textSecondary }}
-        numberOfLines={1}
-      >
-        {label}
-      </ThemedText>
-    </Pressable>
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <TextParagraph variant="emphasis">{title}</TextParagraph>
+        <TextLabel variant="meta" themeColor="textSecondary">
+          {hint}
+        </TextLabel>
+      </View>
+      {children}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
+    gap: Spacing.lg,
+    paddingVertical: Spacing.xs,
+  },
+  section: {
     gap: Spacing.sm,
   },
-  row: {
-    gap: Spacing.sm,
-    paddingRight: Spacing.md,
+  sectionHeader: {
+    gap: Spacing.xs,
   },
-  chip: {
+  scoreRow: {
+    gap: Spacing.sm,
+  },
+  scoreTabs: {
+    alignSelf: 'stretch',
+  },
+  beginnerChip: {
+    alignSelf: 'flex-start',
     borderWidth: 1,
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    maxWidth: 220,
+    minHeight: 40,
+    justifyContent: 'center',
   },
 });

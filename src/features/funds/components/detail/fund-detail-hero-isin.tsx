@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { toast } from '@/core/overlay';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { InfoHintTrigger } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
@@ -27,9 +27,9 @@ export function FundDetailHeroIsin({ isin }: FundDetailHeroIsinProps) {
   return (
     <View style={styles.row}>
       <View style={styles.labelRow}>
-        <ThemedText type="metaLabel" themeColor="textSecondary">
+        <TextLabel variant="meta" themeColor="textSecondary">
           {FUND_GLOSSARY.isin.term}
-        </ThemedText>
+        </TextLabel>
         <InfoHintTrigger
           surface="detail"
           term={FUND_GLOSSARY.isin.term}
@@ -37,14 +37,14 @@ export function FundDetailHeroIsin({ isin }: FundDetailHeroIsinProps) {
         />
       </View>
       <View style={styles.valueRow}>
-        <ThemedText
-          type="caption"
+        <TextParagraph
+          variant="secondary"
           themeColor="deepOcean"
           selectable
           style={styles.isinValue}
         >
           {isin}
-        </ThemedText>
+        </TextParagraph>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Copiar ISIN ${isin}`}

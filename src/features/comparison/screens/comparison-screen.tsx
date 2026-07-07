@@ -1,18 +1,17 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MIN_COMPARE_FUNDS } from '@/core/storage/compare-selection-storage-key';
 import { CompareEmptyBody } from '@/features/comparison/components/compare-empty-body';
 import { CompareFairnessBanner } from '@/features/comparison/components/compare-fairness-banner';
 import { CompareFundPickerModal } from '@/features/comparison/components/compare-fund-picker-modal';
-import { CompareFundVersusHeader } from '@/features/comparison/components/compare-fund-versus-header';
 import { CompareLoadErrorsBanner } from '@/features/comparison/components/compare-load-errors-banner';
 import { CompareLoadingSkeleton } from '@/features/comparison/components/compare-loading-skeleton';
 import { CompareMetricsTable } from '@/features/comparison/components/compare-metrics-table';
-import { ComparePartialSelectionHint } from '@/features/comparison/components/compare-partial-selection-hint';
 import { CompareScoreBreakdownSection } from '@/features/comparison/components/compare-score-breakdown-section';
+import { CompareSelectionPanel } from '@/features/comparison/components/compare-selection-panel';
 import { CompareSoraSection } from '@/features/comparison/components/compare-sora-section';
 import { useCompareFunds } from '@/features/comparison/hooks/use-compare-funds';
 import { useCompareSelection } from '@/features/comparison/hooks/use-compare-selection';
@@ -21,11 +20,11 @@ import { buildCompareQuickPrompts } from '@/features/comparison/utils/build-comp
 import { buildCompareTableRows } from '@/features/comparison/utils/build-compare-table-rows';
 import { evaluateCompareFairness } from '@/features/comparison/utils/evaluate-compare-fairness';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
-import { ScreenBodyIntro } from '@/shared/components/layout';
-import { ThemedText } from '@/shared/components/themed-text';
-import { SkeletonShimmerProvider } from '@/shared/components/ui';
+import { SectionCard } from '@/shared/components/layout';
+import { TextHeading, TextParagraph } from '@/shared/components/text';
+import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { BottomTabInset, Layout, Spacing } from '@/shared/theme/theme';
+import { BottomTabInset, Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
 
 function parseIsinsParam(value: string | string[] | undefined): string[] {
   if (value === undefined) {
@@ -43,6 +42,7 @@ function parseIsinsParam(value: string | string[] | undefined): string[] {
 export default function ComparisonScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { contentWidth } = useMobileLayout();
   const params = useLocalSearchParams<{ isins?: string | string[] }>();
   const {
     selectedIsins,
@@ -108,23 +108,31 @@ export default function ComparisonScreen() {
   };
 
   return (
-    <SkeletonShimmerProvider>
-      <ScrollView
-        style={[styles.screen, { backgroundColor: theme.background }]}
-        contentContainerStyle={[
-          styles.content,
+    <ScrollView
+      style={[styles.screen, { backgroundColor: theme.background }]}
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingBottom: insets.bottom + BottomTabInset + Spacing.lg,
+        },
+      ]}
+      showsVerticalScrollIndicator={false}
+    >
+      <View
+        style={[
+          styles.inner,
           {
-            paddingTop: Spacing.xl,
-            paddingBottom: insets.bottom + BottomTabInset,
+            width: contentWidth,
           },
         ]}
-        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerBlock}>
-          <ThemedText type="sectionTitle" themeColor="deepOcean">
+        <View style={styles.header}>
+          <TextHeading variant="section" themeColor="deepOcean">
             Comparar
-          </ThemedText>
-          <ScreenBodyIntro description="Vista educativa de métricas clave. No es recomendación de inversión." />
+          </TextHeading>
+          <TextParagraph variant="secondary" themeColor="textSecondary">
+            Vista educativa de métricas clave. No es recomendación de inversión.
+          </TextParagraph>
         </View>
 
         {isEmpty ? (
@@ -138,35 +146,14 @@ export default function ComparisonScreen() {
         {isLoading ? (
           <CompareLoadingSkeleton />
         ) : !isEmpty ? (
-          <View style={styles.selectionBlock}>
-            <CompareFundVersusHeader
-              entries={entries}
-              onRemoveFund={(isin) => {
-                void removeFund(isin);
-              }}
-            />
-
-            {canAddMore ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Añadir fondo"
-                onPress={handleOpenPicker}
-                style={({ pressed }) => pressed && styles.linkPressed}
-              >
-                <ThemedText type="caption" themeColor="primary" style={styles.addLink}>
-                  + Añadir fondo
-                </ThemedText>
-              </Pressable>
-            ) : (
-              <ThemedText type="caption" themeColor="textSecondary">
-                Máximo de fondos alcanzado.
-              </ThemedText>
-            )}
-          </View>
-        ) : null}
-
-        {!isLoading && needsSecondFund ? (
-          <ComparePartialSelectionHint
+          <CompareSelectionPanel
+            entries={entries}
+            selectedCount={selectedIsins.length}
+            needsSecondFund={needsSecondFund}
+            canAddMore={canAddMore}
+            onRemoveFund={(isin) => {
+              void removeFund(isin);
+            }}
             onOpenPicker={handleOpenPicker}
             onApplyPair={handleApplyPair}
           />
@@ -177,27 +164,34 @@ export default function ComparisonScreen() {
             <CompareLoadErrorsBanner notFoundIsins={notFoundIsins} />
 
             {canCompare ? (
-              <>
+              <SectionCard
+                title="Resultados comparativos"
+                summary="Métricas alineadas para una lectura educativa entre fondos."
+                borderless
+              >
                 <CompareFairnessBanner fairness={fairness} />
                 <CompareMetricsTable details={loadedDetails} rows={tableRows} />
                 <CompareScoreBreakdownSection details={loadedDetails} />
-              </>
+              </SectionCard>
             ) : null}
 
-            <CompareSoraSection
-              selectedIsins={selectedIsins}
-              quickPrompts={quickPrompts}
-              canAskSora={canAskSora}
-              isSoraVisible={isSoraVisible}
-              soraSession={soraSession}
-              soraInitialMessage={soraInitialMessage}
-              onOpenChat={handleOpenSora}
-              onCloseChat={() => setIsSoraVisible(false)}
-            />
+            {canAskSora ? (
+              <CompareSoraSection
+                selectedIsins={selectedIsins}
+                quickPrompts={quickPrompts}
+                canAskSora={canAskSora}
+                isSoraVisible={isSoraVisible}
+                soraSession={soraSession}
+                soraInitialMessage={soraInitialMessage}
+                onOpenChat={handleOpenSora}
+                onCloseChat={() => setIsSoraVisible(false)}
+              />
+            ) : null}
           </>
         ) : null}
 
         <LegalNotice
+          style={styles.legalNotice}
           title="Aviso educativo"
           body="Esta comparación es orientativa. SORA no recomienda comprar ni vender productos y no modifica rankings ni scores."
         />
@@ -211,8 +205,8 @@ export default function ComparisonScreen() {
             void addFund(fund.isin);
           }}
         />
-      </ScrollView>
-    </SkeletonShimmerProvider>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -221,19 +215,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
+    alignItems: 'center',
+    paddingTop: Spacing.lg,
+  },
+  inner: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: MaxContentWidth,
     paddingHorizontal: Layout.screenPaddingHorizontal,
     gap: Spacing.lg,
   },
-  headerBlock: {
+  header: {
     gap: Spacing.sm,
   },
-  selectionBlock: {
-    gap: Spacing.sm,
-  },
-  addLink: {
-    textAlign: 'center',
-  },
-  linkPressed: {
-    opacity: 0.85,
+  legalNotice: {
+    marginTop: Spacing.md,
+    paddingVertical: Spacing.md,
   },
 });

@@ -15,11 +15,11 @@ import { useCompoundInterestCalculator } from '@/features/calculator/hooks/use-c
 import { CompareFundPickerModal } from '@/features/comparison/components/compare-fund-picker-modal';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import {
-  FLOATING_TAB_BAR_BOTTOM_GAP,
-  FLOATING_TAB_BAR_HEIGHT,
-} from '@/shared/components/navigation/floating-tab-bar';
-import { ThemedText } from '@/shared/components/themed-text';
-import { SegmentTabs } from '@/shared/components/ui';
+  NAV_TAB_BAR_BOTTOM_GAP,
+  NAV_TAB_BAR_HEIGHT,
+} from '@/shared/components/navigation/nav-tab-bar';
+import { TextHeading, TextParagraph } from '@/shared/components/text';
+import { TabHeader } from '@/shared/components/ui';
 import { Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
 
 function parseIsinParam(value: string | string[] | undefined): string | undefined {
@@ -85,6 +85,7 @@ export default function CalculatorScreen() {
     clearFund,
     result,
     hasCalculated,
+    fieldErrors,
     calculate,
     reset,
   } = useCompoundInterestCalculator(initialIsin);
@@ -111,8 +112,11 @@ export default function CalculatorScreen() {
   }, []);
 
   const handleCalculate = useCallback(() => {
-    calculate();
-    pendingScrollTargetRef.current = 'results';
+    const didCalculate = calculate();
+
+    if (didCalculate) {
+      pendingScrollTargetRef.current = 'results';
+    }
   }, [calculate]);
 
   const handleViewEvolution = useCallback(() => {
@@ -144,7 +148,7 @@ export default function CalculatorScreen() {
   }, [hasCalculated, result, scrollToChart, scrollToResults]);
 
   const bottomPadding =
-    insets.bottom + FLOATING_TAB_BAR_HEIGHT + FLOATING_TAB_BAR_BOTTOM_GAP + Spacing.xl;
+    insets.bottom + NAV_TAB_BAR_HEIGHT + NAV_TAB_BAR_BOTTOM_GAP + Spacing.xl;
 
   return (
     <>
@@ -163,14 +167,14 @@ export default function CalculatorScreen() {
       >
         <View ref={contentRef} style={styles.inner} collapsable={false}>
           <View style={styles.headerBlock}>
-            <ThemedText type="sectionTitle">Calcular</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
+            <TextHeading variant="section">Calcular</TextHeading>
+            <TextParagraph variant="secondary" themeColor="textSecondary">
               Simula el interés compuesto con escenarios claros y lenguaje sencillo. No es una
               recomendación de inversión.
-            </ThemedText>
+            </TextParagraph>
           </View>
 
-          <SegmentTabs
+          <TabHeader
             accessibilityLabel="Modo de calculadora"
             tabs={modeTabs}
             value={mode}
@@ -190,6 +194,7 @@ export default function CalculatorScreen() {
 
           <CalculatorInputForm
             input={input}
+            fieldErrors={fieldErrors}
             onChange={updateInput}
             onCalculate={handleCalculate}
             onReset={reset}

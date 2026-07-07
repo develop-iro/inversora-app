@@ -127,34 +127,10 @@ export const DEFAULT_COMPOUND_INTEREST_INPUT: CompoundInterestInput = {
   durationYears: 10,
 };
 
-/**
- * Parses a localized numeric field (`1.234,56` or `1234.56`).
- *
- * @param raw - Raw text input.
- */
-export function parseCalculatorNumber(raw: string): number {
-  const normalized = raw.trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
-
-  if (normalized.length === 0) {
-    return 0;
-  }
-
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-/**
- * Formats a number for calculator input fields.
- *
- * @param value - Numeric value.
- */
-export function formatCalculatorInputNumber(value: number): string {
-  if (!Number.isFinite(value)) {
-    return '0';
-  }
-
-  return value.toFixed(2).replace('.', ',');
-}
+export {
+  formatLocalizedDecimal as formatCalculatorInputNumber,
+  parseLocalizedNumber as parseCalculatorNumber,
+} from '@/shared/components/inputs/input-utils';
 
 /**
  * Formats currency for calculator results.

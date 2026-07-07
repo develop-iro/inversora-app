@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   NativeScrollEvent,
   NativeSyntheticEvent,
   ScrollView,
@@ -15,24 +14,32 @@ import { SoraChatSheet } from '@/features/assistant/components/sora-chat-sheet';
 import { isQuestionLikeQuery } from '@/features/assistant/utils/search-intent';
 import type { CatalogFund } from '@/core/domain/catalog';
 import { FundApiErrorState } from '@/features/funds/components/fund-api-error-state';
+import { FundCatalogActiveFilterChips } from '@/features/funds/components/fund-catalog-active-filter-chips';
 import { FundCatalogCategorySections } from '@/features/funds/components/fund-catalog-category-sections';
 import { FundCatalogEmptyState } from '@/features/funds/components/fund-catalog-empty-state';
 import {
   DEFAULT_CATALOG_FILTERS,
-  FundCatalogFiltersBar,
   toServiceFilters,
   type FundCatalogFiltersState,
 } from '@/features/funds/components/fund-catalog-filters';
+import { FundCatalogFiltersSheet } from '@/features/funds/components/fund-catalog-filters-sheet';
 import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
 import { FundCatalogLoadMoreFooter } from '@/features/funds/components/fund-catalog-load-more-footer';
 import { FundCatalogSearchField } from '@/features/funds/components/fund-catalog-search-field';
+import { FundCatalogToolbar } from '@/features/funds/components/fund-catalog-toolbar';
+import { useCatalogCategoryIndex } from '@/features/funds/hooks/use-catalog-category-index';
 import { useCatalogFundsPagination } from '@/features/funds/hooks/use-catalog-funds-pagination';
-import { deriveCatalogCategories } from '@/features/funds/utils/derive-catalog-categories';
+import { buildCatalogCategoryOptions } from '@/features/funds/utils/build-catalog-category-options';
+import {
+  buildCatalogActiveFilterChips,
+  countActiveCatalogFilters,
+  formatCatalogResultsHeadline,
+} from '@/features/funds/utils/catalog-filter-presentation';
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
-import { ThemedText } from '@/shared/components/themed-text';
-import { SegmentTabs } from '@/shared/components/ui';
+import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
+import { Spinner } from '@/shared/components/ui';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
@@ -80,6 +87,8 @@ export default function FundsScreen() {
   const [reloadToken, setReloadToken] = useState(0);
   const [isSoraVisible, setIsSoraVisible] = useState(false);
   const [soraSession, setSoraSession] = useState(0);
+  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  const [filtersSheetSession, setFiltersSheetSession] = useState(0);
 
   const debouncedQuery = useDebouncedValue(filters.query, CATALOG_SEARCH_DEBOUNCE_MS);
   const showSoraChip = isQuestionLikeQuery(debouncedQuery);
@@ -92,24 +101,50 @@ export default function FundsScreen() {
     [filters, debouncedQuery],
   );
 
-  const { funds, meta, status, error, hasMore, loadMore, reload } =
+  const { funds, meta, status, error, hasMore, loadMore } =
     useCatalogFundsPagination(activeServiceFilters, reloadToken);
 
-  const categoryTabs = useMemo(
-    () => [
-      { value: 'all' as const, label: 'Todas' },
-      ...deriveCatalogCategories(funds).map((category) => ({
-        value: category,
-        label: category,
-      })),
-    ],
-    [funds],
+  const { funds: categoryIndexFunds } = useCatalogCategoryIndex();
+
+  const categoryOptions = useMemo(
+    () => buildCatalogCategoryOptions(categoryIndexFunds),
+    [categoryIndexFunds],
   );
+
+  const categoryLabelById = useMemo(
+    () => new Map(categoryOptions.map((category) => [category.id, category.label])),
+    [categoryOptions],
+  );
+
+  const activeFilterCount = countActiveCatalogFilters(filters);
+  const activeFilterChips = useMemo(
+    () => buildCatalogActiveFilterChips(filters, categoryLabelById),
+    [filters, categoryLabelById],
+  );
+
+  const selectedCategoryLabel =
+    filters.categoryLabel === 'all'
+      ? undefined
+      : categoryLabelById.get(filters.categoryLabel) ?? filters.categoryLabel;
+
+  const resultsHeadline = formatCatalogResultsHeadline(meta?.total ?? null, funds.length, {
+    categoryLabel: selectedCategoryLabel,
+    query: debouncedQuery,
+  });
+
+  const totalCatalogFundCount = useMemo(() => {
+    if (meta?.total != null) {
+      return meta.total;
+    }
+
+    return categoryOptions.reduce((sum, category) => sum + category.fundCount, 0);
+  }, [categoryOptions, meta]);
 
   const groupedFunds = useMemo(() => groupFundsByCategory(funds), [funds]);
   const showGrouped = shouldGroupByCategory(filters, debouncedQuery);
   const hasActiveFilters = hasActiveNonSearchFilters(filters);
-  const isInitialLoading = status === 'loading' || status === 'idle';
+  const isInitialLoading = (status === 'loading' || status === 'idle') && funds.length === 0;
+  const isRefreshing = status === 'refreshing';
   const isLoadingMore = status === 'loading-more';
   const blockingError = error && funds.length === 0 ? error : null;
   const footerError = error && funds.length > 0 ? error : null;
@@ -135,22 +170,39 @@ export default function FundsScreen() {
     setFilters(next);
   }, []);
 
-  const handleCategoryChange = useCallback((categoryLabel: string | 'all') => {
-    setFilters((current) => ({ ...current, categoryLabel }));
+  const handleRemoveFilterChip = useCallback((chipId: string) => {
+    setFilters((current) => {
+      switch (chipId) {
+        case 'category':
+          return { ...current, categoryLabel: 'all' };
+        case 'risk':
+          return { ...current, riskLevel: 'all' };
+        case 'ter':
+          return { ...current, maxTerPercent: null };
+        case 'score':
+          return { ...current, minScore: null };
+        case 'beginners':
+          return { ...current, idealForBeginnersOnly: false };
+        default:
+          return current;
+      }
+    });
+  }, []);
+
+  const handleResetSecondaryFilters = useCallback(() => {
+    setFilters((current) => ({
+      ...DEFAULT_CATALOG_FILTERS,
+      query: current.query,
+    }));
   }, []);
 
   const handleClearSearch = useCallback(() => {
     setFilters((current) => ({ ...current, query: '' }));
   }, []);
 
-  const handleResetFilters = useCallback(() => {
-    setFilters(DEFAULT_CATALOG_FILTERS);
-  }, []);
-
   const handleRetryLoad = useCallback(() => {
     setReloadToken((current) => current + 1);
-    void reload();
-  }, [reload]);
+  }, []);
 
   const handleFundPress = useCallback(
     (fund: CatalogFund) => {
@@ -175,11 +227,11 @@ export default function FundsScreen() {
     >
       <View style={styles.inner}>
         <View style={styles.header}>
-          <ThemedText type="sectionTitle">Catálogo de fondos</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            Explora fondos indexados con filtros básicos y rankings objetivos. Los
-            resultados son educativos, no recomendaciones personalizadas.
-          </ThemedText>
+          <TextHeading variant="section">Catálogo de fondos</TextHeading>
+          <TextParagraph variant="secondary" themeColor="textSecondary">
+            Explora fondos indexados con filtros claros. Resultados educativos, no
+            recomendaciones personalizadas.
+          </TextParagraph>
         </View>
 
         <FundCatalogSearchField query={filters.query} onQueryChange={handleQueryChange} />
@@ -194,17 +246,23 @@ export default function FundsScreen() {
           />
         ) : null}
 
-        <SegmentTabs
-          accessibilityLabel="Filtrar catálogo por categoría"
-          tabs={categoryTabs}
-          value={filters.categoryLabel}
-          onChange={handleCategoryChange}
+        <FundCatalogToolbar
+          headline={resultsHeadline}
+          activeFilterCount={activeFilterCount}
+          onOpenFilters={() => {
+            setFiltersSheetSession((current) => current + 1);
+            setIsFiltersVisible(true);
+          }}
         />
 
-        <FundCatalogFiltersBar value={filters} onChange={handleFiltersChange} />
+        <FundCatalogActiveFilterChips
+          chips={activeFilterChips}
+          onRemoveChip={handleRemoveFilterChip}
+          onClearAll={handleResetSecondaryFilters}
+        />
 
         {isInitialLoading ? (
-          <ActivityIndicator style={styles.loader} color={theme.primary} />
+          <Spinner size="lg" accessibilityLabel="Cargando catálogo" style={styles.loader} />
         ) : blockingError ? (
           <FundApiErrorState
             title="No se pudo cargar el catálogo"
@@ -216,17 +274,25 @@ export default function FundsScreen() {
             query={debouncedQuery}
             hasActiveFilters={hasActiveFilters}
             onClearSearch={debouncedQuery.trim() ? handleClearSearch : undefined}
-            onResetFilters={hasActiveFilters ? handleResetFilters : undefined}
+            onResetFilters={hasActiveFilters ? handleResetSecondaryFilters : undefined}
           />
         ) : (
-          <View style={styles.results}>
+          <View style={[styles.results, isRefreshing && styles.resultsRefreshing]}>
+            {isRefreshing ? (
+              <View style={styles.refreshRow}>
+                <Spinner.BarChart size="sm" />
+                <TextLabel variant="meta" themeColor="textSecondary">
+                  Actualizando resultados…
+                </TextLabel>
+              </View>
+            ) : null}
+
             {!showGrouped ? (
-              <ThemedText type="metaLabel" themeColor="textSecondary">
+              <TextLabel variant="meta" themeColor="textSecondary">
                 {meta?.total != null
-                  ? `${funds.length} de ${meta.total} fondo${meta.total === 1 ? '' : 's'}`
-                  : `${funds.length} fondo${funds.length === 1 ? '' : 's'}`}
-                {debouncedQuery.trim() ? ` para «${debouncedQuery.trim()}»` : ''}
-              </ThemedText>
+                  ? `${funds.length} de ${meta.total} cargado${meta.total === 1 ? '' : 's'}`
+                  : `${funds.length} cargado${funds.length === 1 ? '' : 's'}`}
+              </TextLabel>
             ) : null}
 
             {showGrouped ? (
@@ -255,6 +321,17 @@ export default function FundsScreen() {
           body="Guardar o comparar fondos no implica una recomendación de inversión. Revisa siempre comisiones, riesgo y horizonte temporal."
         />
       </View>
+
+      <FundCatalogFiltersSheet
+        visible={isFiltersVisible}
+        sessionKey={filtersSheetSession}
+        value={filters}
+        categories={categoryOptions}
+        totalFundCount={totalCatalogFundCount}
+        resultCount={meta?.total ?? null}
+        onClose={() => setIsFiltersVisible(false)}
+        onApply={handleFiltersChange}
+      />
 
       <SoraChatSheet
         key={`catalog-sora-${soraSession}`}
@@ -291,5 +368,13 @@ const styles = StyleSheet.create({
   },
   results: {
     gap: Spacing.md,
+  },
+  resultsRefreshing: {
+    opacity: 0.72,
+  },
+  refreshRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
 });

@@ -2,10 +2,14 @@ import type { FundDetail } from '@/core/domain/catalog';
 import type {
   ExposureTabId,
   FundDetailProfile,
+  FundProfileRow,
   RatioHorizon,
 } from '@/core/domain/fund-detail-profile';
 
 const EMPTY_VALUE = '—';
+
+/** Minimum description length before collapsing behind an expandable block. */
+export const FUND_DETAIL_COLLAPSIBLE_DESCRIPTION_MIN_LENGTH = 160;
 
 /**
  * Returns whether a formatted profile value represents missing data.
@@ -16,6 +20,80 @@ export function isMissingProfileValue(value: string): boolean {
   const trimmed = value.trim();
 
   return trimmed.length === 0 || trimmed === EMPTY_VALUE;
+}
+
+/**
+ * Returns whether a key-value row contains a populated value.
+ *
+ * @param row - Profile summary or fee row.
+ */
+export function hasPopulatedProfileRow(row: FundProfileRow): boolean {
+  return !isMissingProfileValue(row.value);
+}
+
+/**
+ * Returns whether a table exposes at least one populated row.
+ *
+ * @param rows - Profile rows from the BFF payload.
+ */
+export function hasPopulatedProfileRows(rows: readonly FundProfileRow[]): boolean {
+  return rows.some((row) => hasPopulatedProfileRow(row));
+}
+
+/**
+ * Returns whether the sheet freshness date is present.
+ *
+ * @param asOf - ISO date from the profile block.
+ */
+export function hasSheetFreshness(asOf: string): boolean {
+  return asOf.trim().length > 0;
+}
+
+/**
+ * Returns whether the information section has any renderable content.
+ *
+ * @param profile - Fund detail profile block.
+ */
+export function hasInformationSectionData(profile: FundDetailProfile): boolean {
+  return (
+    profile.description.trim().length > 0 ||
+    hasPopulatedProfileRows(profile.summaryRows) ||
+    hasPopulatedProfileRows(profile.feeRows) ||
+    profile.documents.length > 0
+  );
+}
+
+/**
+ * Returns whether any returns tab contains populated values.
+ *
+ * @param profile - Fund detail profile block.
+ */
+export function hasAnyReturnData(profile: FundDetailProfile): boolean {
+  return hasReturnData(profile, 'periods') || hasReturnData(profile, 'years');
+}
+
+/**
+ * Returns whether the fund exposes performance history in any timeframe.
+ *
+ * @param detail - Aggregated fund detail payload.
+ */
+export function hasPerformanceHistory(detail: FundDetail): boolean {
+  return Object.values(detail.market.performanceByTimeframe).some(
+    (series) => series != null && series.points.length > 1,
+  );
+}
+
+/**
+ * Returns ratio horizons that expose at least one populated row.
+ *
+ * @param profile - Fund detail profile block.
+ */
+export function getRatioHorizonsWithData(profile: FundDetailProfile): RatioHorizon[] {
+  const horizons: RatioHorizon[] = ['12m', '3y', '5y'];
+
+  return horizons.filter((horizon) =>
+    profile.ratiosByHorizon[horizon].some((row) => hasRatioValue(row.value)),
+  );
 }
 
 /**

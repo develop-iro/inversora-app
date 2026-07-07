@@ -49,6 +49,7 @@ export function getFundDetailMock(isin: string): FundDetail | null {
     benefitSummary: catalogFund.benefitSummary,
     featuredReason: catalogFund.featuredReason,
     isFeatured: catalogFund.isFeatured,
+    returns: catalogFund.returns,
   };
 
   const scored = scoreFund({

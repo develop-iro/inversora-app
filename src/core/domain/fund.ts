@@ -1,3 +1,8 @@
+import type { FundHistoricalReturns } from '@/core/scoring/types';
+import type { InvestmentTheme } from '@/core/domain/investment-theme';
+
+export type { FundHistoricalReturns };
+
 export type RiskLevel = 'low' | 'medium' | 'high';
 export type DiversificationLevel = 'low' | 'medium' | 'high';
 
@@ -11,6 +16,8 @@ export type FeaturedFund = {
   logoUrl: string | null;
   name: string;
   categoryLabel: string;
+  /** Canonical investment theme code when classified by the API. */
+  investmentTheme: InvestmentTheme | null;
   /** Investment theme shown on summary cards (e.g. renovables, tecnología). */
   themeLabel: string;
   badge: string;
@@ -25,6 +32,7 @@ export type FeaturedFund = {
   benefitSummary: string;
   featuredReason: string;
   isFeatured: boolean;
+  returns: FundHistoricalReturns;
 };
 
 /** Raw fund metrics used as input to the scoring engine. */

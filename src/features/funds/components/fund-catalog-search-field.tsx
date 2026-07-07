@@ -1,21 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { searchCatalogFunds } from '@/features/funds/services/get-funds';
+import { shouldUseMockData } from '@/core/config/app-environment';
 import { FundCatalogSearchSuggestions } from '@/features/funds/components/fund-catalog-search-suggestions';
+import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
+import { searchCatalogFunds } from '@/features/funds/services/get-funds';
 import {
   CATALOG_SEARCH_DEBOUNCE_MS,
   CATALOG_SUGGESTIONS_MIN_QUERY_LENGTH,
   getFundSearchSuggestions,
   type FundSearchSuggestion,
 } from '@/features/funds/utils/fund-search';
-import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
-import { shouldUseMockData } from '@/core/config/app-environment';
 import { SearchField } from '@/shared/components/ui';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { Spacing } from '@/shared/theme/theme';
 
-const PLACEHOLDER_SUGGESTIONS = ['MSCI World', 'IE00B4L5Y983', 'S&P 500'] as const;
 const BLUR_DISMISS_DELAY_MS = 160;
 
 export type FundCatalogSearchFieldProps = {
@@ -38,48 +37,57 @@ export function FundCatalogSearchField({
   onQueryChange,
 }: FundCatalogSearchFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const [suggestions, setSuggestions] = useState<FundSearchSuggestion[]>([]);
+  const [apiSuggestions, setApiSuggestions] = useState<FundSearchSuggestion[]>([]);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
 
   const debouncedQuery = useDebouncedValue(query, CATALOG_SEARCH_DEBOUNCE_MS);
+  const trimmedDebouncedQuery = debouncedQuery.trim();
+  const queryMeetsMinimum =
+    trimmedDebouncedQuery.length >= CATALOG_SUGGESTIONS_MIN_QUERY_LENGTH;
 
-  useEffect(() => {
-    const trimmedQuery = debouncedQuery.trim();
-
-    if (trimmedQuery.length < CATALOG_SUGGESTIONS_MIN_QUERY_LENGTH) {
-      setSuggestions([]);
-      return;
+  const mockSuggestions = useMemo(() => {
+    if (!shouldUseMockData() || !queryMeetsMinimum) {
+      return [];
     }
 
-    if (shouldUseMockData()) {
-      setSuggestions(getFundSearchSuggestions(CATALOG_FUNDS_MOCK, debouncedQuery));
+    return getFundSearchSuggestions(CATALOG_FUNDS_MOCK, debouncedQuery);
+  }, [debouncedQuery, queryMeetsMinimum]);
+
+  useEffect(() => {
+    if (shouldUseMockData() || !queryMeetsMinimum) {
       return;
     }
 
     const requestId = ++requestIdRef.current;
     const controller = new AbortController();
 
-    void searchCatalogFunds(trimmedQuery, { signal: controller.signal })
+    void searchCatalogFunds(trimmedDebouncedQuery, { signal: controller.signal })
       .then((results) => {
         if (requestId !== requestIdRef.current) {
           return;
         }
 
-        setSuggestions(mapCatalogFundsToSuggestions(results));
+        setApiSuggestions(mapCatalogFundsToSuggestions(results));
       })
       .catch(() => {
         if (requestId !== requestIdRef.current) {
           return;
         }
 
-        setSuggestions([]);
+        setApiSuggestions([]);
       });
 
     return () => {
       controller.abort();
     };
-  }, [debouncedQuery]);
+  }, [queryMeetsMinimum, trimmedDebouncedQuery]);
+
+  const suggestions = shouldUseMockData()
+    ? mockSuggestions
+    : queryMeetsMinimum
+      ? apiSuggestions
+      : [];
 
   const showSuggestions =
     isFocused &&
@@ -117,8 +125,9 @@ export function FundCatalogSearchField({
   return (
     <View style={styles.wrapper}>
       <SearchField
+        variant="plain"
         accessibilityLabel="Buscar fondos por nombre o ISIN"
-        placeholder="Nombre del fondo o ISIN"
+        placeholder="Buscar por nombre o ISIN"
         value={query}
         onChangeText={onQueryChange}
         onFocus={handleFocus}
@@ -126,7 +135,6 @@ export function FundCatalogSearchField({
         autoCapitalize="none"
         autoCorrect={false}
         returnKeyType="search"
-        suggestions={[...PLACEHOLDER_SUGGESTIONS]}
       />
 
       {showSuggestions ? (

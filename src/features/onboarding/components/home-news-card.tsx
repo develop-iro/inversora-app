@@ -1,15 +1,18 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { InvestmentNewsCategory, InvestmentNewsItem } from '@/core/domain/investment-news';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
+import { SkeletonBone, SkeletonShimmerProvider } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import type { WithLoading } from '@/shared/types/component-loading';
 
-export type HomeNewsCardProps = {
+type HomeNewsCardContentProps = {
   item: InvestmentNewsItem;
   onPress?: (item: InvestmentNewsItem) => void;
 };
+
+export type HomeNewsCardProps = WithLoading<HomeNewsCardContentProps>;
 
 const CATEGORY_LABELS: Record<InvestmentNewsCategory, string> = {
   concepto: 'Concepto',
@@ -30,10 +33,45 @@ function formatPublishedDate(isoDate: string): string {
   });
 }
 
+function HomeNewsCardLoading() {
+  const theme = useTheme();
+
+  return (
+    <SkeletonShimmerProvider>
+      <View
+        className="gap-sm rounded-card border px-md py-md"
+        style={{
+          backgroundColor: theme.surfaceMuted,
+          borderColor: theme.border,
+        }}
+        accessibilityLabel="Cargando noticia"
+      >
+        <View className="flex-row items-center justify-between gap-sm">
+          <SkeletonBone width={72} height={22} borderRadius={9999} />
+          <SkeletonBone width={56} height={12} />
+        </View>
+
+        <SkeletonBone width="88%" height={18} />
+        <SkeletonBone width="100%" height={12} />
+        <SkeletonBone width="92%" height={12} />
+        <SkeletonBone width="34%" height={12} />
+      </View>
+    </SkeletonShimmerProvider>
+  );
+}
+
 /**
  * Compact news row for the home investment news section.
  */
-export function HomeNewsCard({ item, onPress }: HomeNewsCardProps) {
+export function HomeNewsCard(props: HomeNewsCardProps) {
+  if (props.loading) {
+    return <HomeNewsCardLoading />;
+  }
+
+  return <HomeNewsCardContent item={props.item} onPress={props.onPress} />;
+}
+
+function HomeNewsCardContent({ item, onPress }: HomeNewsCardContentProps) {
   const theme = useTheme();
   const categoryLabel = CATEGORY_LABELS[item.category];
 
@@ -47,42 +85,38 @@ export function HomeNewsCard({ item, onPress }: HomeNewsCardProps) {
       onPress={() => {
         onPress?.(item);
       }}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.surface,
-          borderColor: theme.border,
-        },
-        pressed && styles.cardPressed,
-      ]}
+      className="gap-sm rounded-card border px-md py-md active:opacity-90"
+      style={{
+        backgroundColor: theme.surfaceMuted,
+        borderColor: theme.border,
+      }}
     >
-      <View style={styles.metaRow}>
+      <View className="flex-row items-center justify-between gap-sm">
         <View
-          style={[
-            styles.categoryChip,
-            { backgroundColor: 'rgba(0, 191, 166, 0.1)' },
-          ]}
+          className="rounded-full px-sm py-xs"
+          style={{ backgroundColor: theme.backgroundSoft }}
         >
-          <ThemedText type="metaLabel" themeColor="deepOcean" style={styles.categoryLabel}>
+          <TextLabel variant="meta" themeColor="primary" className="text-micro tracking-[0.6px]">
             {categoryLabel}
-          </ThemedText>
+          </TextLabel>
         </View>
-        <ThemedText type="caption" themeColor="textSecondary">
+
+        <TextParagraph variant="secondary" themeColor="textSecondary">
           {formatPublishedDate(item.publishedAt)}
-        </ThemedText>
+        </TextParagraph>
       </View>
 
-      <ThemedText type="bodyBold" style={styles.title}>
+      <TextParagraph variant="emphasis" className="leading-[22px]">
         {item.title}
-      </ThemedText>
-      <ThemedText type="caption" themeColor="textSecondary" style={styles.summary}>
+      </TextParagraph>
+      <TextParagraph variant="secondary" themeColor="textSecondary" className="leading-[19px]">
         {item.summary}
-      </ThemedText>
+      </TextParagraph>
 
-      <View style={styles.footer}>
-        <ThemedText type="caption" themeColor="textSecondary">
+      <View className="flex-row items-center justify-between gap-sm">
+        <TextParagraph variant="secondary" themeColor="textSecondary">
           {item.source}
-        </ThemedText>
+        </TextParagraph>
         {item.url ? (
           <MaterialCommunityIcons name="open-in-new" size={14} color={theme.primary} />
         ) : null}
@@ -90,44 +124,3 @@ export function HomeNewsCard({ item, onPress }: HomeNewsCardProps) {
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
-  },
-  cardPressed: {
-    opacity: 0.9,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  categoryChip: {
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  categoryLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    letterSpacing: 0.6,
-  },
-  title: {
-    lineHeight: 22,
-  },
-  summary: {
-    lineHeight: 19,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-});

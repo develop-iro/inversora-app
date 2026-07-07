@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { Button } from '@/shared/components/ui';
 import { Spacing } from '@/shared/theme/theme';
 
@@ -19,10 +19,10 @@ export function FundApiErrorState({
 }: FundApiErrorStateProps) {
   return (
     <View style={styles.wrapper} accessibilityRole="alert">
-      <ThemedText type="bodyBold">{title}</ThemedText>
-      <ThemedText type="caption" themeColor="textSecondary">
+      <TextParagraph variant="emphasis">{title}</TextParagraph>
+      <TextParagraph variant="secondary" themeColor="textSecondary">
         {message}
-      </ThemedText>
+      </TextParagraph>
       {onRetry ? (
         <Button label={retryLabel} variant="outline" onPress={onRetry} style={styles.retry} />
       ) : null}

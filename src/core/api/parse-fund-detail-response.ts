@@ -99,10 +99,6 @@ function parsePerformanceSeries(value: unknown): FundPerformanceSeries | null {
     })
     .filter((point): point is FundPerformanceSeries['points'][number] => point !== null);
 
-  if (parsedPoints.length === 0) {
-    return null;
-  }
-
   return {
     timeframe: timeframe as FundPerformanceTimeframe,
     points: parsedPoints,
@@ -184,7 +180,7 @@ function parseProfile(value: unknown): FundDetailProfile | null {
     }
   }
 
-  if (typeof value.isIndexed !== 'boolean') {
+  if (typeof value.tracksIndex !== 'boolean') {
     return null;
   }
 
@@ -207,7 +203,27 @@ function parseProfile(value: unknown): FundDetailProfile | null {
     return null;
   }
 
-  return value as unknown as FundDetailProfile;
+  return {
+    asOf: value.asOf,
+    sourceLabel: value.sourceLabel,
+    description: value.description,
+    manager: value.manager,
+    benchmark: value.benchmark,
+    isIndexed: value.tracksIndex,
+    fundAum: value.fundAum,
+    classAum: typeof value.classAum === 'string' ? value.classAum : undefined,
+    inceptionDate: value.inceptionDate,
+    summaryRows: value.summaryRows as FundDetailProfile['summaryRows'],
+    feeRows: value.feeRows as FundDetailProfile['feeRows'],
+    documents: value.documents as FundDetailProfile['documents'],
+    returnsByPeriod: value.returnsByPeriod as FundDetailProfile['returnsByPeriod'],
+    returnsByYear: value.returnsByYear as FundDetailProfile['returnsByYear'],
+    currencyNote: value.currencyNote,
+    methodNote: value.methodNote,
+    ratiosByHorizon: value.ratiosByHorizon as FundDetailProfile['ratiosByHorizon'],
+    exposureByTab: value.exposureByTab as FundDetailProfile['exposureByTab'],
+    distributors: value.distributors as FundDetailProfile['distributors'],
+  };
 }
 
 /**
@@ -235,7 +251,7 @@ export function parseFundDetailResponse(payload: unknown): FundDetail {
     market === null ||
     profile === null ||
     typeof inversoraScore !== 'number' ||
-    (typeof rank !== 'number' && rank !== undefined) ||
+    (typeof rank !== 'number' && rank != null) ||
     typeof scoringStatus !== 'string' ||
     !SCORING_STATUSES.has(scoringStatus as ScoringStatus)
   ) {

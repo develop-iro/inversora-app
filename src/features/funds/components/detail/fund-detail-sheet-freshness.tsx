@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { Spacing } from '@/shared/theme/theme';
 
 export type FundDetailSheetFreshnessProps = {
@@ -24,11 +24,11 @@ export function FundDetailSheetFreshness({ asOf }: FundDetailSheetFreshnessProps
       accessibilityRole="text"
       accessibilityLabel={`Ficha del fondo revisada en su totalidad el ${formattedDate}`}
     >
-      <ThemedText type="caption" themeColor="textSecondary">
+      <TextParagraph variant="secondary" themeColor="textSecondary">
         Ficha revisada en su totalidad el {formattedDate}. Las cifras de esta pantalla son
         orientativas y provienen de fuentes externas; no sustituyen la documentación oficial del
         gestor.
-      </ThemedText>
+      </TextParagraph>
     </View>
   );
 }

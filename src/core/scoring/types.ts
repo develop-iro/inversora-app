@@ -2,6 +2,13 @@ import type { FundScoringInput, RiskLevel } from '@/core/domain/fund';
 
 export type ScoringStatus = 'ok' | 'warning' | 'quarantined';
 
+export type FundHistoricalReturns = {
+  ytd: number | null;
+  oneYear: number | null;
+  threeYear: number | null;
+  asOf: string | null;
+};
+
 export type ScoreCriterionId =
   | 'ter'
   | 'tracking'
@@ -32,6 +39,7 @@ export type ScoredFund = {
 
 export type RankedFund = ScoredFund & {
   rank: number;
+  returns: FundHistoricalReturns;
 };
 
 export type { FundScoringInput };

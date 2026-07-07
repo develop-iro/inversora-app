@@ -1,27 +1,58 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { FundDetailProfile } from '@/core/domain/fund-detail-profile';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
+import {
+  FUND_DETAIL_COLLAPSIBLE_DESCRIPTION_MIN_LENGTH,
+  hasInformationSectionData,
+  hasPopulatedProfileRows,
+} from '@/features/funds/utils/fund-detail-presentation';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
-import { ThemedText } from '@/shared/components/themed-text';
-import { KeyValueList, SegmentTabs } from '@/shared/components/ui';
+import { CollapsibleSection } from '@/shared/components/layout';
+import { TextParagraph } from '@/shared/components/text';
+import { KeyValueList, TabHeader } from '@/shared/components/ui';
 import { Spacing } from '@/shared/theme/theme';
 
 type InfoTab = 'summary' | 'fees' | 'documents';
 
-const INFO_TABS = [
-  { value: 'summary' as const, label: 'Resumen' },
-  { value: 'fees' as const, label: 'Comisiones' },
-  { value: 'documents' as const, label: 'Documentos' },
+const INFO_TAB_DEFINITIONS: { value: InfoTab; label: string }[] = [
+  { value: 'summary', label: 'Resumen' },
+  { value: 'fees', label: 'Comisiones' },
+  { value: 'documents', label: 'Documentos' },
 ];
 
 export type FundDetailInformationSectionProps = {
   profile: FundDetailProfile;
 };
 
+/**
+ * Renders profile tables only for tabs that contain populated rows.
+ */
+function buildAvailableInfoTabs(profile: FundDetailProfile): { value: InfoTab; label: string }[] {
+  return INFO_TAB_DEFINITIONS.filter((tab) => {
+    if (tab.value === 'summary') {
+      return hasPopulatedProfileRows(profile.summaryRows);
+    }
+
+    if (tab.value === 'fees') {
+      return hasPopulatedProfileRows(profile.feeRows);
+    }
+
+    return profile.documents.length > 0;
+  });
+}
+
 export function FundDetailInformationSection({ profile }: FundDetailInformationSectionProps) {
-  const [tab, setTab] = useState<InfoTab>('summary');
+  const availableTabs = useMemo(() => buildAvailableInfoTabs(profile), [profile]);
+  const [tab, setTab] = useState<InfoTab>(() => availableTabs[0]?.value ?? 'summary');
+  const trimmedDescription = profile.description.trim();
+  const shouldCollapseDescription =
+    trimmedDescription.length >= FUND_DETAIL_COLLAPSIBLE_DESCRIPTION_MIN_LENGTH;
+
+  const activeTab = availableTabs.some((item) => item.value === tab)
+    ? tab
+    : availableTabs[0]?.value;
 
   const documentRows = profile.documents.map((doc) => ({
     id: doc.id,
@@ -30,23 +61,45 @@ export function FundDetailInformationSection({ profile }: FundDetailInformationS
     emphasis: doc.status === 'available' ? ('link' as const) : undefined,
   }));
 
+  if (!hasInformationSectionData(profile)) {
+    return null;
+  }
+
   return (
     <FundDetailSectionShell
       title="Información"
       hintTerm={FUND_GLOSSARY.benchmark.term}
       hintExplanation={FUND_GLOSSARY.benchmark.explanation}
     >
-      <ThemedText type="body" themeColor="textSecondary" style={styles.description}>
-        {profile.description}
-      </ThemedText>
+      {trimmedDescription.length > 0 ? (
+        shouldCollapseDescription ? (
+          <CollapsibleSection title="Descripción del fondo" defaultExpanded={false}>
+            <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.description}>
+              {trimmedDescription}
+            </TextParagraph>
+          </CollapsibleSection>
+        ) : (
+          <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.description}>
+            {trimmedDescription}
+          </TextParagraph>
+        )
+      ) : null}
 
-      <SegmentTabs tabs={INFO_TABS} value={tab} onChange={setTab} accessibilityLabel="Información del fondo" />
-
-      <View style={styles.tabPanel}>
-        {tab === 'summary' ? <KeyValueList rows={profile.summaryRows} /> : null}
-        {tab === 'fees' ? <KeyValueList rows={profile.feeRows} /> : null}
-        {tab === 'documents' ? <KeyValueList rows={documentRows} /> : null}
-      </View>
+      {availableTabs.length > 0 && activeTab ? (
+        <>
+          <TabHeader
+            tabs={availableTabs}
+            value={activeTab}
+            onChange={setTab}
+            accessibilityLabel="Información del fondo"
+          />
+          <View style={styles.tabPanel}>
+            {activeTab === 'summary' ? <KeyValueList rows={profile.summaryRows} /> : null}
+            {activeTab === 'fees' ? <KeyValueList rows={profile.feeRows} /> : null}
+            {activeTab === 'documents' ? <KeyValueList rows={documentRows} /> : null}
+          </View>
+        </>
+      ) : null}
     </FundDetailSectionShell>
   );
 }
@@ -56,6 +109,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   tabPanel: {
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.xs,
   },
 });

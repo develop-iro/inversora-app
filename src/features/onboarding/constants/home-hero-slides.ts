@@ -54,3 +54,10 @@ export const HOME_HERO_SLIDES: readonly HomeHeroSlide[] = [
       'Ilustración de un camino ascendente suave con reloj de arena, simbolizando decisiones pausadas',
   },
 ] as const;
+
+export type HomeContentTab = 'explore' | 'ranking';
+
+export const HOME_CONTENT_TABS = [
+  { value: 'explore', label: 'Explorar' },
+  { value: 'ranking', label: 'Ranking' },
+] as const satisfies readonly { value: HomeContentTab; label: string }[];

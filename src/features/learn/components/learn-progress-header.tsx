@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -18,9 +18,9 @@ export function LearnProgressHeader({ currentStep, totalSteps }: LearnProgressHe
 
   return (
     <View style={styles.container}>
-      <ThemedText type="caption" themeColor="textSecondary">
+      <TextParagraph variant="secondary" themeColor="textSecondary">
         Paso {currentStep} de {totalSteps}
-      </ThemedText>
+      </TextParagraph>
       <View
         accessibilityRole="progressbar"
         accessibilityLabel={`Progreso del cuestionario, paso ${currentStep} de ${totalSteps}`}

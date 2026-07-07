@@ -12,11 +12,9 @@ export {
 export {
     Card,
     InvestmentCard,
-    MediaCard,
     type CardProps,
     type CardVariant,
     type InvestmentCardProps,
-    type MediaCardProps
 } from "@/shared/components/ui/card";
 export { Divider, type DividerProps } from "@/shared/components/ui/divider";
 export {
@@ -33,14 +31,79 @@ export {
     SearchBar, SearchField, type SearchBarProps, type SearchFieldProps, type SearchFieldVariant
 } from "@/shared/components/ui/search-field";
 export {
-    SectionHeader,
-    type SectionHeaderProps
-} from "@/shared/components/ui/section-header";
+    TabChip,
+    TabHeader,
+    TabPill,
+    type TabChipProps,
+    type TabHeaderProps,
+    type TabOption,
+    type TabPillProps,
+} from '@/shared/components/tabs';
 export {
-    SegmentTabs,
-    type SegmentTabOption,
-    type SegmentTabsProps
-} from "@/shared/components/ui/segment-tabs";
+    TextHeading,
+    TextLabel,
+    TextLegal,
+    TextParagraph,
+    type TextHeadingProps,
+    type TextHeadingVariant,
+    type TextLabelProps,
+    type TextLabelVariant,
+    type TextLegalProps,
+    type TextParagraphProps,
+    type TextParagraphVariant,
+} from '@/shared/components/text';
+export {
+    Header,
+    HeaderAction,
+    HeaderApp,
+    HeaderBar,
+    HeaderBrand,
+    HeaderModal,
+    HeaderScreen,
+    HeaderSection,
+    HeaderActionsRow,
+    useHeaderActionHandlers,
+    useHeaderHorizontalInset,
+    type HeaderActionHandlers,
+    type HeaderActionId,
+    type HeaderActionPresentation,
+    type HeaderActionProps,
+    type HeaderActionSpec,
+    type HeaderAppProps,
+    type HeaderBarProps,
+    type HeaderLayout,
+    type HeaderModalProps,
+    type HeaderProps,
+    type HeaderScreenProps,
+    type HeaderScreenTitleVariant,
+    type HeaderSectionProps,
+    type HeaderSectionVariant,
+    type HeaderTitleVariant,
+} from '@/shared/components/headers';
+export {
+    CarouselControls,
+    CarouselDots,
+    CarouselNavButton,
+    CarouselShell,
+    useCarouselAutoplay,
+    useCarouselDotProgress,
+    type CarouselControlsProps,
+    type CarouselDotsProps,
+    type CarouselNavButtonProps,
+    type CarouselShellProps,
+    type UseCarouselAutoplayOptions,
+} from '@/shared/components/carousels';
+export {
+    InputField,
+    InputMessage,
+    InputNumeric,
+    formatLocalizedDecimal,
+    parseLocalizedNumber,
+    type InputFieldProps,
+    type InputMessageProps,
+    type InputNumericProps,
+    type InputVariant,
+} from '@/shared/components/inputs';
 export {
     KeyValueList,
     type KeyValueListProps,
@@ -55,6 +118,12 @@ export {
     AllocationBarList,
     type AllocationBarListProps
 } from "@/shared/components/ui/allocation-bar-list";
+export { FundReturnChip, type FundReturnChipProps } from '@/shared/components/ui/fund-return-chip';
+export {
+    Spinner,
+    type SpinnerProps,
+    type SpinnerSize,
+} from '@/shared/components/ui/spinner';
 export {
     ContentEmptyState,
     type ContentEmptyStateProps
@@ -64,22 +133,16 @@ export {
     type SkeletonBoneProps
 } from "@/shared/components/ui/skeleton-bone";
 export {
-    SkeletonFundCard
-} from "@/shared/components/ui/skeleton-fund-card";
-export {
     SkeletonPanel,
     type SkeletonPanelProps
 } from "@/shared/components/ui/skeleton-panel";
-export {
-    SkeletonPickerRow
-} from "@/shared/components/ui/skeleton-picker-row";
 export {
     SkeletonTextBlock,
     type SkeletonTextBlockProps,
     type SkeletonTextLine
 } from "@/shared/components/ui/skeleton-text-block";
 export {
-    skeletonTokens,
+    getSkeletonTokens,
     SKELETON_SHIMMER_DURATION_MS
 } from "@/shared/components/ui/skeleton-tokens";
 export {
@@ -91,17 +154,11 @@ export {
     ScreenBody,
     ScreenBodyIntro,
     ScreenFooter,
-    ScreenHeader,
-    ScreenHeaderIconButton,
-    ScreenHeaderTextAction,
     ScreenShell,
     ScreenQuickAction,
     type ScreenBodyIntroProps,
     type ScreenBodyProps,
     type ScreenFooterProps,
-    type ScreenHeaderIconButtonProps,
-    type ScreenHeaderProps,
-    type ScreenHeaderTextActionProps,
     type ScreenQuickActionProps,
     type ScreenShellProps,
 } from "@/shared/components/layout";

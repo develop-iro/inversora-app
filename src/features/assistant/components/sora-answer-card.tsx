@@ -2,7 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { AssistantResponseSource } from '@/features/assistant/types/assistant-context';
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -14,6 +14,8 @@ export type SoraAnswerCardProps = {
   disclaimer?: string;
   relatedFundIsin?: string;
   onRelatedFundPress?: (isin: string) => void;
+  /** `message` aligns the card as an assistant chat bubble. */
+  variant?: 'card' | 'message';
 };
 
 function resolveSourceLabel(source: AssistantResponseSource): string {
@@ -39,9 +41,11 @@ export function SoraAnswerCard({
   disclaimer,
   relatedFundIsin,
   onRelatedFundPress,
+  variant = 'card',
 }: SoraAnswerCardProps) {
   const theme = useTheme();
   const sourceLabel = resolveSourceLabel(source);
+  const isMessage = variant === 'message';
   const resolvedDisclaimer =
     disclaimer ??
     'No es asesoramiento financiero personalizado. El rendimiento pasado no garantiza resultados futuros.';
@@ -52,30 +56,31 @@ export function SoraAnswerCard({
       accessibilityLabel={`Respuesta de SORA para ${query}`}
       style={[
         styles.card,
+        isMessage && styles.messageCard,
         {
-          backgroundColor: 'rgba(234, 248, 246, 0.66)',
-          borderColor: 'rgba(0, 191, 166, 0.16)',
+          backgroundColor: isMessage ? theme.surface : theme.softTealSurface,
+          borderColor: isMessage ? theme.border : theme.primaryBorderSubtle,
         },
       ]}
     >
       <View style={styles.header}>
-        <View style={[styles.iconWrap, { backgroundColor: 'rgba(0, 191, 166, 0.14)' }]}>
+        <View style={[styles.iconWrap, { backgroundColor: theme.primaryIconSurface }]}>
           <MaterialCommunityIcons name="robot-outline" size={16} color={theme.deepOcean} />
         </View>
         <View style={styles.headerCopy}>
-          <ThemedText type="metaLabel" themeColor="deepOcean">
+          <TextLabel variant="meta" themeColor="deepOcean">
             SORA · respuesta orientativa
-          </ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary" numberOfLines={2}>
+          </TextLabel>
+          <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={2}>
             {sourceLabel}
-          </ThemedText>
+          </TextParagraph>
         </View>
       </View>
 
-      <ThemedText type="bodyBold">{title}</ThemedText>
-      <ThemedText type="caption" themeColor="textSecondary" style={styles.body}>
+      <TextHeading variant="section">{title}</TextHeading>
+      <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.body}>
         {body}
-      </ThemedText>
+      </TextParagraph>
 
       {relatedFundIsin && onRelatedFundPress ? (
         <Pressable
@@ -84,15 +89,15 @@ export function SoraAnswerCard({
           onPress={() => onRelatedFundPress(relatedFundIsin)}
           style={({ pressed }) => [styles.relatedLink, pressed && styles.relatedLinkPressed]}
         >
-          <ThemedText type="caption" themeColor="deepOcean">
+          <TextParagraph variant="secondary" themeColor="deepOcean">
             Ver fondo relacionado ({relatedFundIsin})
-          </ThemedText>
+          </TextParagraph>
         </Pressable>
       ) : null}
 
-      <ThemedText type="caption" themeColor="textSecondary" style={styles.disclaimer}>
+      <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.disclaimer}>
         {resolvedDisclaimer}
-      </ThemedText>
+      </TextParagraph>
     </View>
   );
 }
@@ -104,6 +109,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     gap: Spacing.sm,
+  },
+  messageCard: {
+    alignSelf: 'flex-start',
+    maxWidth: '92%',
+    borderBottomLeftRadius: 6,
   },
   header: {
     flexDirection: 'row',
@@ -119,7 +129,7 @@ const styles = StyleSheet.create({
   },
   headerCopy: {
     flex: 1,
-    gap: 2,
+    gap: Spacing.half,
   },
   body: {
     lineHeight: 20,

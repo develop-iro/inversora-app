@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { HeaderSection } from '@/shared/components/headers/header-section';
 import { InfoHintTrigger } from '@/shared/components/ui';
 import { Spacing } from '@/shared/theme/theme';
 
@@ -13,6 +13,9 @@ export type FundDetailSectionShellProps = {
   children: ReactNode;
 };
 
+/**
+ * Shared section wrapper for fund detail blocks: {@link HeaderSection} + body slot.
+ */
 export function FundDetailSectionShell({
   title,
   subtitle,
@@ -22,42 +25,35 @@ export function FundDetailSectionShell({
 }: FundDetailSectionShellProps) {
   return (
     <View style={styles.section}>
-      <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <ThemedText type="sectionTitle" accessibilityRole="header">
-            {title}
-          </ThemedText>
-          {hintTerm && hintExplanation ? (
+      <HeaderSection
+        title={title}
+        summary={subtitle}
+        variant="compact"
+        style={styles.header}
+        action={
+          hintTerm && hintExplanation ? (
             <InfoHintTrigger
               surface="detail"
               term={hintTerm}
               explanation={hintExplanation}
             />
-          ) : null}
-        </View>
-        {subtitle ? (
-          <ThemedText type="caption" themeColor="textSecondary">
-            {subtitle}
-          </ThemedText>
-        ) : null}
-      </View>
-      {children}
+          ) : undefined
+        }
+      />
+      <View style={styles.body}>{children}</View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   section: {
-    gap: Spacing.md,
     alignSelf: 'stretch',
+    gap: Spacing.sm,
   },
   header: {
-    gap: Spacing.xs,
+    paddingBottom: 0,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    flexWrap: 'wrap',
+  body: {
+    gap: Spacing.md,
   },
 });

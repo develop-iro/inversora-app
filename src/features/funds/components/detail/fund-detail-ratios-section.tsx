@@ -1,18 +1,21 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { FundDetailProfile, RatioHorizon } from '@/core/domain/fund-detail-profile';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
+import {
+  getRatioHorizonsWithData,
+  hasAnyRatioData,
+} from '@/features/funds/utils/fund-detail-presentation';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
-import { KeyValueList, SegmentTabs } from '@/shared/components/ui';
-import { hasAnyRatioData } from '@/features/funds/utils/fund-detail-presentation';
+import { KeyValueList, TabHeader } from '@/shared/components/ui';
 import { Spacing } from '@/shared/theme/theme';
 
-const RATIO_TABS: { value: RatioHorizon; label: string }[] = [
-  { value: '12m', label: '12 meses' },
-  { value: '3y', label: '3 años' },
-  { value: '5y', label: '5 años' },
-];
+const RATIO_TAB_LABELS: Record<RatioHorizon, string> = {
+  '12m': '12 meses',
+  '3y': '3 años',
+  '5y': '5 años',
+};
 
 export type FundDetailRatiosSectionProps = {
   profile: FundDetailProfile;
@@ -20,13 +23,22 @@ export type FundDetailRatiosSectionProps = {
 };
 
 export function FundDetailRatiosSection({ profile, fundName }: FundDetailRatiosSectionProps) {
-  const [horizon, setHorizon] = useState<RatioHorizon>('12m');
+  const availableHorizons = useMemo(() => getRatioHorizonsWithData(profile), [profile]);
+  const [horizon, setHorizon] = useState<RatioHorizon>(() => availableHorizons[0] ?? '12m');
+  const activeHorizon = availableHorizons.includes(horizon)
+    ? horizon
+    : availableHorizons[0];
 
-  if (!hasAnyRatioData(profile)) {
+  if (!hasAnyRatioData(profile) || !activeHorizon) {
     return null;
   }
 
-  const rows = profile.ratiosByHorizon[horizon].map((row) => ({
+  const ratioTabs = availableHorizons.map((value) => ({
+    value,
+    label: RATIO_TAB_LABELS[value],
+  }));
+
+  const rows = profile.ratiosByHorizon[activeHorizon].map((row) => ({
     id: row.id,
     label: row.label,
     value: row.value,
@@ -39,9 +51,9 @@ export function FundDetailRatiosSection({ profile, fundName }: FundDetailRatiosS
       hintTerm={FUND_GLOSSARY.sharpeRatio.term}
       hintExplanation={FUND_GLOSSARY.sharpeRatio.explanation}
     >
-      <SegmentTabs
-        tabs={RATIO_TABS}
-        value={horizon}
+      <TabHeader
+        tabs={ratioTabs}
+        value={activeHorizon}
         onChange={setHorizon}
         accessibilityLabel="Horizonte temporal de ratios"
       />
@@ -54,6 +66,6 @@ export function FundDetailRatiosSection({ profile, fundName }: FundDetailRatiosS
 
 const styles = StyleSheet.create({
   panel: {
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.xs,
   },
 });

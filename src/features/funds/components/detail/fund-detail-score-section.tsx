@@ -6,7 +6,8 @@ import { SCORING_CRITERIA_VERSION } from '@/core/scoring/criteria';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
 import { FundScoreBreakdown } from '@/features/funds/components/fund-score-breakdown';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
-import { ThemedText } from '@/shared/components/themed-text';
+import { CollapsibleSection } from '@/shared/components/layout';
+import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { Badge, InfoHintTrigger, ScorePill } from '@/shared/components/ui';
 import {
   getEfficiencyBadgeVariant,
@@ -26,6 +27,8 @@ export function FundDetailScoreSection({
   fund,
 }: FundDetailScoreSectionProps) {
   const efficiencyLabel = getEfficiencyLabel(score);
+  const hasSummaryCopy =
+    fund.featuredReason.trim().length > 0 || fund.benefitSummary.trim().length > 0;
 
   return (
     <FundDetailSectionShell
@@ -38,9 +41,9 @@ export function FundDetailScoreSection({
         <ScorePill score={score} variant="compact" />
         <View style={styles.efficiencyBlock}>
           <View style={styles.efficiencyLabelRow}>
-            <ThemedText type="metaLabel" themeColor="textSecondary">
+            <TextLabel variant="meta" themeColor="textSecondary">
               {FUND_GLOSSARY.efficiencyLabel.term}
-            </ThemedText>
+            </TextLabel>
             <InfoHintTrigger
               surface="detail"
               term={FUND_GLOSSARY.efficiencyLabel.term}
@@ -51,26 +54,34 @@ export function FundDetailScoreSection({
         </View>
       </View>
 
-      <View style={styles.summaryBlock}>
-        <ThemedText type="bodyBold">{fund.featuredReason}</ThemedText>
-        <ThemedText type="body" themeColor="textSecondary">
-          {fund.benefitSummary}
-        </ThemedText>
-      </View>
+      {hasSummaryCopy ? (
+        <View style={styles.summaryBlock}>
+          {fund.featuredReason.trim().length > 0 ? (
+            <TextParagraph variant="emphasis">{fund.featuredReason}</TextParagraph>
+          ) : null}
+          {fund.benefitSummary.trim().length > 0 ? (
+            <TextParagraph variant="secondary" themeColor="textSecondary">
+              {fund.benefitSummary}
+            </TextParagraph>
+          ) : null}
+        </View>
+      ) : null}
 
-      <ThemedText type="bodyBold" accessibilityRole="header">
-        Desglose por criterios
-      </ThemedText>
-      <FundScoreBreakdown breakdown={breakdown} />
-
-      <View style={styles.metaBlock}>
-        <ThemedText type="caption" themeColor="textSecondary">
-          Datos de scoring {fund.quarterTag} ({fund.periodStart} – {fund.periodEnd})
-        </ThemedText>
-        <ThemedText type="metaLabel" themeColor="textSecondary">
-          Modelo: {SCORING_CRITERIA_VERSION}
-        </ThemedText>
-      </View>
+      <CollapsibleSection
+        title="Desglose por criterios"
+        subtitle="Detalle de comisiones, seguimiento, patrimonio y antigüedad."
+        defaultExpanded={false}
+      >
+        <FundScoreBreakdown breakdown={breakdown} />
+        <View style={styles.metaBlock}>
+          <TextParagraph variant="secondary" themeColor="textSecondary">
+            Datos de scoring {fund.quarterTag} ({fund.periodStart} – {fund.periodEnd})
+          </TextParagraph>
+          <TextLabel variant="meta" themeColor="textSecondary">
+            Modelo: {SCORING_CRITERIA_VERSION}
+          </TextLabel>
+        </View>
+      </CollapsibleSection>
     </FundDetailSectionShell>
   );
 }
@@ -97,6 +108,5 @@ const styles = StyleSheet.create({
   },
   metaBlock: {
     gap: Spacing.sm,
-    paddingTop: Spacing.xs,
   },
 });

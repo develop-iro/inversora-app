@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
+import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
@@ -21,16 +21,16 @@ export function FundCatalogSoraChip({ query, onPress }: FundCatalogSoraChipProps
       style={({ pressed }) => [
         styles.chip,
         {
-          borderColor: 'rgba(0, 191, 166, 0.24)',
-          backgroundColor: 'rgba(234, 248, 246, 0.66)',
+          borderColor: theme.primaryBorder,
+          backgroundColor: theme.softTealSurface,
         },
         pressed && styles.chipPressed,
       ]}
     >
       <MaterialCommunityIcons name="robot-outline" size={16} color={theme.deepOcean} />
-      <ThemedText type="caption" themeColor="deepOcean">
+      <TextParagraph variant="secondary" themeColor="deepOcean">
         Preguntar a SORA: «{query.trim()}»
-      </ThemedText>
+      </TextParagraph>
     </Pressable>
   );
 }

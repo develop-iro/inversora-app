@@ -108,7 +108,7 @@ Estado detallado por módulo: [mvp-feature-map.md](../architecture/mvp-feature-m
 | HU | Ubicación principal |
 |----|---------------------|
 | HU-01, HU-02 | `features/onboarding/screens/home-screen.tsx`, `featured-funds-carousel.tsx` |
-| HU-03 | `features/funds/components/fund-card.tsx` |
+| HU-03 | `features/funds/components/card-fund.tsx` |
 | HU-13 | `core/scoring/score-fund.ts` (mock) |
 | HU-31–33 | `core/storage/favorites-store.ts` (stub) + `features/favorites` |
 | HU-26 | `features/comparison` (shell) |

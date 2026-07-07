@@ -1,8 +1,7 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/shared/components/themed-text';
-import { Button } from '@/shared/components/ui/button';
-import { useTheme } from '@/shared/hooks/use-theme';
+import { TextParagraph } from '@/shared/components/text';
+import { Button, Spinner } from '@/shared/components/ui';
 import { Spacing } from '@/shared/theme/theme';
 
 export type FundCatalogLoadMoreFooterProps = {
@@ -25,25 +24,23 @@ export function FundCatalogLoadMoreFooter({
   errorMessage,
   onLoadMore,
 }: FundCatalogLoadMoreFooterProps) {
-  const theme = useTheme();
-
   if (isLoadingMore) {
     return (
-      <View style={styles.wrapper}>
-        <ActivityIndicator color={theme.primary} />
-        <ThemedText type="caption" themeColor="textSecondary">
-          Cargando más fondos…
-        </ThemedText>
-      </View>
+      <Spinner
+        size="sm"
+        label="Cargando más fondos…"
+        accessibilityLabel="Cargando más fondos"
+        style={styles.wrapper}
+      />
     );
   }
 
   if (errorMessage) {
     return (
       <View style={styles.wrapper}>
-        <ThemedText type="caption" themeColor="textSecondary">
+        <TextParagraph variant="secondary" themeColor="textSecondary">
           {errorMessage}
-        </ThemedText>
+        </TextParagraph>
         {hasMore ? (
           <Button
             label="Reintentar carga"
@@ -63,22 +60,22 @@ export function FundCatalogLoadMoreFooter({
 
     return (
       <View style={styles.wrapper}>
-        <ThemedText type="caption" themeColor="textSecondary">
+        <TextParagraph variant="secondary" themeColor="textSecondary">
           {totalCount != null
             ? `${loadedCount} de ${totalCount} fondos mostrados`
             : `${loadedCount} fondo${loadedCount === 1 ? '' : 's'} mostrados`}
-        </ThemedText>
+        </TextParagraph>
       </View>
     );
   }
 
   return (
     <View style={styles.wrapper}>
-      <ThemedText type="caption" themeColor="textSecondary">
+      <TextParagraph variant="secondary" themeColor="textSecondary">
         {totalCount != null
           ? `${loadedCount} de ${totalCount} fondos cargados`
           : `${loadedCount} fondos cargados`}
-      </ThemedText>
+      </TextParagraph>
       <Button label="Cargar más" variant="secondary" size="sm" onPress={onLoadMore} />
     </View>
   );

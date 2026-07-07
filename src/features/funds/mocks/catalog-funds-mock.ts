@@ -3,10 +3,11 @@ import type { FeaturedFund, FundScoringInput } from '@/core/domain/fund';
 import { scoreFund } from '@/core/scoring/score-fund';
 
 import { FEATURED_FUNDS_MOCK } from '@/features/funds/mocks/featured-funds-mock';
+import { resolveMockFundReturns } from '@/features/funds/mocks/mock-fund-returns';
 import { resolveFundThemeLabel } from '@/features/funds/mocks/fund-theme-labels-mock';
 import { RANKING_SOURCES_MOCK } from '@/features/funds/mocks/ranking-sources-mock';
 
-type CatalogFundDraft = FeaturedFund & {
+type CatalogFundDraft = Omit<FeaturedFund, 'returns'> & {
   catalogVisibility: CatalogVisibility;
 };
 
@@ -24,6 +25,7 @@ function rankingSourceToFeatured(
     logoUrl: null,
     name: source.name,
     categoryLabel: source.categoryLabel,
+    investmentTheme: null,
     themeLabel: resolveFundThemeLabel(source.isin),
     badge: 'En catálogo',
     idealForBeginners: source.riskLevel === 'low',
@@ -51,6 +53,7 @@ const HIDDEN_CATALOG_DRAFTS: CatalogFundDraft[] = [
     logoUrl: null,
     name: 'Global Equity Stale Data',
     categoryLabel: 'Renta Variable Global',
+    investmentTheme: null,
     themeLabel: resolveFundThemeLabel('IE00B8GKDB10'),
     badge: 'Datos pendientes',
     idealForBeginners: false,
@@ -74,6 +77,7 @@ const HIDDEN_CATALOG_DRAFTS: CatalogFundDraft[] = [
     logoUrl: null,
     name: 'Active Global Opportunities',
     categoryLabel: 'Renta Variable Global',
+    investmentTheme: null,
     themeLabel: resolveFundThemeLabel('LU1234567890'),
     badge: 'Fuera de alcance MVP',
     idealForBeginners: false,
@@ -116,6 +120,7 @@ const CATALOG_BASE = buildCatalogBase();
 export const CATALOG_FUNDS_MOCK: CatalogFund[] = CATALOG_BASE.map((fund) => ({
   ...fund,
   inversoraScore: fund.efficiencyScore,
+  returns: resolveMockFundReturns(fund.isin),
 }));
 
 export const CATALOG_CATEGORIES = [
