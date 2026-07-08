@@ -25,13 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - run: pnpm install --frozen-lockfile
       - run: pnpm run typecheck
 
@@ -40,13 +40,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint:ci
 
@@ -55,13 +55,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test:unit
 
@@ -70,13 +70,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test:scripts
 
@@ -85,36 +85,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - run: pnpm install --frozen-lockfile
       - run: pnpm run security:verify-plugins
 
   # ── Phase 2: Build smoke ───────────────────────────────────────────────────
 
-  web-export:
-    name: Web export
+  bundle-export:
+    name: Metro bundle export
     needs: [typecheck, lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run generate:theme
       - run: pnpm run build:web:ci
       - uses: actions/upload-artifact@v4
         with:
-          name: web-export
+          name: metro-bundle-export
           path: dist/
           retention-days: 3
           if-no-files-found: error
@@ -129,13 +130,13 @@ jobs:
       EXPO_PUBLIC_SSL_PINNING_ENABLED: 'true'
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - run: pnpm install --frozen-lockfile
       - run: pnpm run verify:prebuild
 
@@ -143,19 +144,20 @@ jobs:
 
   eas-preview:
     name: EAS preview Android
-    needs: [web-export, native-prebuild, unit-tests, script-tests]
+    needs: [bundle-export, native-prebuild, unit-tests, script-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run generate:theme
       - name: Trigger EAS preview build
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -176,7 +178,7 @@ jobs:
       - unit-tests
       - script-tests
       - expo-config
-      - web-export
+      - bundle-export
       - native-prebuild
       - eas-preview
     if: always() && !cancelled()
@@ -189,7 +191,7 @@ jobs:
           UNIT_RESULT: ${{ needs.unit-tests.result }}
           SCRIPTS_RESULT: ${{ needs.script-tests.result }}
           CONFIG_RESULT: ${{ needs.expo-config.result }}
-          WEB_EXPORT_RESULT: ${{ needs.web-export.result }}
+          BUNDLE_EXPORT_RESULT: ${{ needs.bundle-export.result }}
           PREBUILD_RESULT: ${{ needs.native-prebuild.result }}
           EAS_RESULT: ${{ needs.eas-preview.result }}
         run: |
@@ -203,7 +205,7 @@ jobs:
             echo "| Unit tests | ${UNIT_RESULT} |"
             echo "| Script tests | ${SCRIPTS_RESULT} |"
             echo "| Expo config | ${CONFIG_RESULT} |"
-            echo "| Web export | ${WEB_EXPORT_RESULT} |"
+            echo "| Metro bundle export | ${BUNDLE_EXPORT_RESULT} |"
             echo "| Native prebuild | ${PREBUILD_RESULT} |"
             echo "| EAS preview Android | ${EAS_RESULT} |"
             echo ""
@@ -216,7 +218,7 @@ jobs:
           needs.unit-tests.result != 'success' ||
           needs.script-tests.result != 'success' ||
           needs.expo-config.result != 'success' ||
-          needs.web-export.result != 'success' ||
+          needs.bundle-export.result != 'success' ||
           needs.native-prebuild.result != 'success' ||
           needs.eas-preview.result != 'success'
         run: exit 1

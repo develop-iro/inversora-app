@@ -23,7 +23,7 @@ Use this checklist before tagging a preview or production mobile build.
 ## Quality gates
 
 - [ ] `npm run test:ci` passes in `invesora` (typecheck, lint, unit + script tests, Expo config)
-- [ ] `npm run build:web:ci` and `npm run verify:prebuild` pass locally before release
+- [ ] `npm run build:web:ci` (Metro Android bundle export) and `npm run verify:prebuild` pass locally before release
 - [ ] `npm run test` passes in `inversora-api`
 - [ ] Manual CORS check for Expo web if applicable
 - [ ] GitHub Actions secret `EXPO_TOKEN` configured for EAS preview builds in CI
