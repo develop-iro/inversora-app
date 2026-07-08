@@ -10,13 +10,13 @@
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~56.0.4",
+    "expo-build-properties": "~56.0.22",
     "expo-clipboard": "~56.0.3",
     "expo-file-system": "~56.0.8",
     "expo-font": "^56.0.5",
     "expo-linear-gradient": "~56.0.4",
     "expo-router": "~56.2.6",
     "expo-secure-store": "~56.0.4",
-    "expo-build-properties": "~56.0.22",
     "expo-sharing": "~56.0.18",
     "expo-splash-screen": "~56.0.10",
     "expo-status-bar": "~56.0.4",
@@ -35,6 +35,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@expo/config-plugins": "~56.0.8",
     "@types/react": "~19.2.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~56.0.4",
@@ -42,8 +43,8 @@
     "eslint-plugin-react-native-a11y": "^3.5.1",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.17",
-    "typescript": "~6.0.3",
-    "tsx": "^4.20.3"
+    "tsx": "^4.20.3",
+    "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "node scripts/run-expo-env.mjs local start",

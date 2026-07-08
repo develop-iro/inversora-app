@@ -27,7 +27,7 @@ export function AppLaunchSplash({ opacity }: AppLaunchSplashProps) {
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 999,
     backgroundColor: palette.deepOcean,
     alignItems: 'center',

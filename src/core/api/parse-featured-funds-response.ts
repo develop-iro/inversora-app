@@ -1,4 +1,5 @@
 import type { FeaturedFund } from '@/core/domain/fund';
+import { parseInvestmentTheme } from '@/core/domain/investment-theme';
 import { AppError } from '@/core/errors/app-error';
 import { resolveFundReturnSnapshotFromApi } from '@/core/api/parse-fund-return-snapshot';
 
@@ -31,6 +32,7 @@ export function parseFeaturedFund(value: unknown): FeaturedFund | null {
     name,
     categoryLabel,
     themeLabel,
+    investmentTheme,
     badge,
     idealForBeginners,
     efficiencyScore,
@@ -82,6 +84,7 @@ export function parseFeaturedFund(value: unknown): FeaturedFund | null {
     name,
     categoryLabel,
     themeLabel,
+    investmentTheme: parseInvestmentTheme(investmentTheme),
     badge,
     idealForBeginners,
     efficiencyScore,
