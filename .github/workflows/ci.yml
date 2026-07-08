@@ -1,11 +1,11 @@
 name: CI
 
 on:
-  push:
-    branches-ignore:
-      - main
   pull_request:
     branches:
+      - main
+  push:
+    branches-ignore:
       - main
 
 concurrency:
@@ -70,6 +70,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - run: pnpm run generate:theme
       - run: pnpm run test:scripts
 
   expo-config:
@@ -99,6 +101,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
       - run: pnpm run generate:theme
       - run: pnpm run build:web:ci
       - uses: actions/upload-artifact@v4
@@ -124,6 +127,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
       - run: pnpm run verify:prebuild
 
   # ── Phase 3: EAS preview (Android) ───────────────────────────────────────
@@ -141,6 +145,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
       - run: pnpm run generate:theme
       - name: Trigger EAS preview build
         env:
