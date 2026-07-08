@@ -73,7 +73,7 @@ function InfoHintWebPopup({
           backgroundColor: theme.surface,
           borderColor: theme.border,
           boxShadow: webElevationShadow(theme),
-        } as ViewStyle,
+        } as unknown as ViewStyle,
       ]}
     >
       <TextLabel variant="meta" themeColor="deepOcean" style={styles.popupTerm}>
