@@ -67,6 +67,7 @@ function InfoHintWebPopup({
         styles.portalPopup,
         shadows.card,
         {
+          position: 'fixed',
           top: position.top,
           left: position.left,
           backgroundColor: theme.surface,
@@ -318,7 +319,6 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   portalPopup: {
-    position: 'fixed',
     minWidth: 200,
     maxWidth: 280,
     paddingHorizontal: Spacing.md,
