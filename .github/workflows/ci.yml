@@ -12,42 +12,211 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  EXPO_PUBLIC_API_URL: https://inversora-api-qa.up.railway.app
+  EXPO_PUBLIC_NEWS_API_ENABLED: 'false'
+  EXPO_PUBLIC_APP_ENV: qa
+
 jobs:
-  quality:
-    name: Quality
+  # ── Phase 1: Static analysis and tests ─────────────────────────────────────
+
+  typecheck:
+    name: Typecheck
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+          cache: pnpm
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint:ci
 
-      - name: Typecheck
-        run: pnpm run typecheck
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:unit
 
-      - name: Lint
-        run: pnpm run lint
+  script-tests:
+    name: Script tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:scripts
 
-      - name: Unit tests
-        run: pnpm run test:unit
+  expo-config:
+    name: Expo config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run security:verify-plugins
 
-      - name: Script tests
-        run: pnpm run test:scripts
+  # ── Phase 2: Build smoke ───────────────────────────────────────────────────
 
-      - name: Verify Expo config plugins
-        run: pnpm run security:verify-plugins
+  web-export:
+    name: Web export
+    needs: [typecheck, lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build:web:ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-export
+          path: dist/
+          retention-days: 3
+          if-no-files-found: error
+
+  native-prebuild:
+    name: Native prebuild
+    needs: [expo-config]
+    runs-on: ubuntu-latest
+    env:
+      EXPO_PUBLIC_APP_ENV: pro
+      EXPO_PUBLIC_API_URL: https://inversora-api-production.up.railway.app
+      EXPO_PUBLIC_SSL_PINNING_ENABLED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run verify:prebuild
+
+  # ── Phase 3: EAS preview (Android) ───────────────────────────────────────
+
+  eas-preview:
+    name: EAS preview Android
+    needs: [web-export, native-prebuild, unit-tests, script-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm install --frozen-lockfile
+      - name: Trigger EAS preview build
         env:
-          EXPO_PUBLIC_API_URL: https://inversora-api-qa.up.railway.app
-          EXPO_PUBLIC_NEWS_API_ENABLED: 'false'
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          pnpm dlx eas-cli@latest build \
+            --platform android \
+            --profile preview \
+            --non-interactive \
+            --wait
+
+  # ── Phase 4: Report ──────────────────────────────────────────────────────
+
+  report:
+    name: CI report
+    needs:
+      - typecheck
+      - lint
+      - unit-tests
+      - script-tests
+      - expo-config
+      - web-export
+      - native-prebuild
+      - eas-preview
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish job summary
+        env:
+          TYPECHECK_RESULT: ${{ needs.typecheck.result }}
+          LINT_RESULT: ${{ needs.lint.result }}
+          UNIT_RESULT: ${{ needs.unit-tests.result }}
+          SCRIPTS_RESULT: ${{ needs.script-tests.result }}
+          CONFIG_RESULT: ${{ needs.expo-config.result }}
+          WEB_EXPORT_RESULT: ${{ needs.web-export.result }}
+          PREBUILD_RESULT: ${{ needs.native-prebuild.result }}
+          EAS_RESULT: ${{ needs.eas-preview.result }}
+        run: |
+          {
+            echo "## CI report"
+            echo ""
+            echo "| Job | Result |"
+            echo "| --- | --- |"
+            echo "| Typecheck | ${TYPECHECK_RESULT} |"
+            echo "| Lint | ${LINT_RESULT} |"
+            echo "| Unit tests | ${UNIT_RESULT} |"
+            echo "| Script tests | ${SCRIPTS_RESULT} |"
+            echo "| Expo config | ${CONFIG_RESULT} |"
+            echo "| Web export | ${WEB_EXPORT_RESULT} |"
+            echo "| Native prebuild | ${PREBUILD_RESULT} |"
+            echo "| EAS preview Android | ${EAS_RESULT} |"
+            echo ""
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Enforce required job results
+        if: >-
+          needs.typecheck.result != 'success' ||
+          needs.lint.result != 'success' ||
+          needs.unit-tests.result != 'success' ||
+          needs.script-tests.result != 'success' ||
+          needs.expo-config.result != 'success' ||
+          needs.web-export.result != 'success' ||
+          needs.native-prebuild.result != 'success' ||
+          needs.eas-preview.result != 'success'
+        run: exit 1

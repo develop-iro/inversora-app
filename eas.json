@@ -13,13 +13,17 @@
     },
     "preview": {
       "distribution": "internal",
+      "node": "22.14.0",
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "qa"
+        "EXPO_PUBLIC_APP_ENV": "qa",
+        "NODE_ENV": "production"
       }
     },
     "production": {
+      "node": "22.14.0",
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "pro"
+        "EXPO_PUBLIC_APP_ENV": "pro",
+        "NODE_ENV": "production"
       }
     }
   },

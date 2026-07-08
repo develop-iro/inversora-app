@@ -29,6 +29,8 @@ export function TabScreenTransition({ children }: TabScreenTransitionProps) {
 
       opacity.value = 0;
       opacity.value = withTiming(1, { duration: TAB_CROSSFADE_MS });
+      // Reanimated shared values are stable refs and must not be hook dependencies.
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- opacity is a stable SharedValue
     }, [isReducedMotionEnabled]),
   );
 

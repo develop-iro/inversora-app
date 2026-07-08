@@ -9,6 +9,7 @@
     "@expo-google-fonts/nunito": "^0.4.2",
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "babel-preset-expo": "~56.0.0",
     "expo": "~56.0.4",
     "expo-build-properties": "~56.0.22",
     "expo-clipboard": "~56.0.3",
@@ -21,6 +22,7 @@
     "expo-splash-screen": "~56.0.10",
     "expo-status-bar": "~56.0.4",
     "nativewind": "^4.2.6",
+    "tailwindcss": "^3.4.17",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
@@ -42,7 +44,6 @@
     "eslint-plugin-react-native": "^5.0.0",
     "eslint-plugin-react-native-a11y": "^3.5.1",
     "prettier-plugin-tailwindcss": "^0.5.11",
-    "tailwindcss": "^3.4.17",
     "tsx": "^4.20.3",
     "typescript": "~6.0.3"
   },
@@ -66,12 +67,18 @@
     "test:unit": "npx tsx --test src/**/*.spec.ts",
     "security:verify-plugins": "npx expo config --type public",
     "lint": "expo lint",
+    "lint:ci": "expo lint --max-warnings 0",
     "lint:fix": "expo lint --fix",
     "typecheck": "tsc --noEmit",
-    "quality": "npm run typecheck && npm run lint && npm run test:unit",
+    "test:ci": "npm run typecheck && npm run lint:ci && npm run test:unit && npm run test:scripts && npm run security:verify-plugins",
+    "quality": "npm run test:ci",
+    "build:web:ci": "node scripts/run-expo-env.mjs qa export --platform web",
+    "verify:prebuild": "node scripts/run-expo-env.mjs pro prebuild --no-install",
     "build:preview": "npx eas-cli build --profile preview",
     "eas:login": "npx eas-cli login",
-    "eas:init": "npx eas-cli init"
+    "eas:init": "npx eas-cli init",
+    "eas-build-post-install": "npm run generate:theme"
   },
-  "private": true
+  "private": true,
+  "packageManager": "pnpm@10.8.1"
 }
