@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { trackEvent } from '@/core/analytics/track-event';
 import type { EducationalProfile } from '@/core/domain/educational-profile';
 import { LearnInconsistencyNotice } from '@/features/learn/components/learn-inconsistency-notice';
 import { LearnProfileResult } from '@/features/learn/components/learn-profile-result';
@@ -100,6 +101,9 @@ export default function LearnQuestionnaireScreen() {
         await saveProfile(result.profile);
         setCompletedProfile(result.profile);
         setPhase('result');
+        void trackEvent('learn_completed', 'learn_questionnaire', {
+          riskOrientation: result.profile.riskOrientation,
+        });
       } finally {
         setIsSaving(false);
       }
@@ -171,6 +175,10 @@ export default function LearnQuestionnaireScreen() {
 
     await handleContinue();
   }, [handleAcceptInconsistency, handleContinue, phase, router]);
+
+  const handleOpenSuggestedCatalog = useCallback(() => {
+    router.replace(routes.fundsCatalogWithProfileHints);
+  }, [router]);
 
   const inconsistencies: readonly ProfileInconsistency[] =
     profileResult?.inconsistencies ?? [];
@@ -255,13 +263,22 @@ export default function LearnQuestionnaireScreen() {
             />
 
             {phase === 'result' ? (
-              <Button
-                variant="ghost"
-                label="Volver al inicio"
-                accessibilityLabel="Volver al inicio"
-                onPress={() => router.replace(routes.home)}
-                fullWidth
-              />
+              <>
+                <Button
+                  variant="secondary"
+                  label="Ir al catálogo con filtros sugeridos"
+                  accessibilityLabel="Ir al catálogo con filtros sugeridos según tu perfil"
+                  onPress={handleOpenSuggestedCatalog}
+                  fullWidth
+                />
+                <Button
+                  variant="ghost"
+                  label="Volver al inicio"
+                  accessibilityLabel="Volver al inicio"
+                  onPress={() => router.replace(routes.home)}
+                  fullWidth
+                />
+              </>
             ) : null}
           </View>
         </View>

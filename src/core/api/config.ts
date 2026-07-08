@@ -1,4 +1,5 @@
 import { getAppEnvironmentConfig } from '@/core/config/app-environment';
+import { assertSslPinningConfigured } from '@/core/api/ssl-pinning';
 
 /**
  * Resolves the Inversora API base URL for HTTP clients.
@@ -7,5 +8,7 @@ import { getAppEnvironmentConfig } from '@/core/config/app-environment';
  * In `ei` mode no API calls are made and this returns an empty string.
  */
 export function getApiBaseUrl(): string {
-  return getAppEnvironmentConfig().apiBaseUrl;
+  const apiBaseUrl = getAppEnvironmentConfig().apiBaseUrl;
+  assertSslPinningConfigured(apiBaseUrl);
+  return apiBaseUrl;
 }

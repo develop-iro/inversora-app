@@ -1,10 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { AppError } from '@/core/errors/app-error';
 import {
   COMPARE_SELECTION_STORAGE_KEY,
   MAX_COMPARE_FUNDS,
 } from '@/core/storage/compare-selection-storage-key';
+import {
+  migrateLegacyAsyncStorageValue,
+  readSecureValue,
+  writeSecureValue,
+} from '@/core/storage/secure-storage';
 
 type CompareSelectionListener = () => void;
 
@@ -19,7 +22,8 @@ function normalizeIsin(isin: string): string {
 }
 
 async function readSelection(): Promise<string[]> {
-  const raw = await AsyncStorage.getItem(COMPARE_SELECTION_STORAGE_KEY);
+  await migrateLegacyAsyncStorageValue(COMPARE_SELECTION_STORAGE_KEY);
+  const raw = await readSecureValue(COMPARE_SELECTION_STORAGE_KEY);
 
   if (!raw) {
     return [];
@@ -43,7 +47,7 @@ async function readSelection(): Promise<string[]> {
 
 async function writeSelection(isins: readonly string[]): Promise<void> {
   const unique = [...new Set(isins.map(normalizeIsin))].slice(0, MAX_COMPARE_FUNDS);
-  await AsyncStorage.setItem(COMPARE_SELECTION_STORAGE_KEY, JSON.stringify(unique));
+  await writeSecureValue(COMPARE_SELECTION_STORAGE_KEY, JSON.stringify(unique));
 }
 
 export function subscribeCompareSelection(listener: CompareSelectionListener): () => void {

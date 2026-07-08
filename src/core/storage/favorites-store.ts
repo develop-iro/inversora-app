@@ -1,7 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { AppError } from '@/core/errors/app-error';
 import { FAVORITES_STORAGE_KEY } from '@/core/storage/favorites-storage-key';
+import {
+  migrateLegacyAsyncStorageValue,
+  readSecureValue,
+  writeSecureValue,
+} from '@/core/storage/secure-storage';
 
 import type { FavoriteIsin } from './types';
 
@@ -14,7 +17,8 @@ function notifyListeners() {
 }
 
 async function readFavoriteSet(): Promise<Set<FavoriteIsin>> {
-  const raw = await AsyncStorage.getItem(FAVORITES_STORAGE_KEY);
+  await migrateLegacyAsyncStorageValue(FAVORITES_STORAGE_KEY);
+  const raw = await readSecureValue(FAVORITES_STORAGE_KEY);
 
   if (!raw) {
     return new Set();
@@ -34,7 +38,7 @@ async function readFavoriteSet(): Promise<Set<FavoriteIsin>> {
 }
 
 async function writeFavoriteSet(favorites: Set<FavoriteIsin>): Promise<void> {
-  await AsyncStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([...favorites]));
+  await writeSecureValue(FAVORITES_STORAGE_KEY, JSON.stringify([...favorites]));
 }
 
 export function subscribeFavorites(listener: FavoritesListener): () => void {

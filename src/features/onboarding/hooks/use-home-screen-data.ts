@@ -7,6 +7,7 @@ import {
   getFeaturedFundsMockFallback,
 } from '@/features/funds/services/get-featured-funds';
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
+import { allowsMockFallback } from '@/core/config/app-environment';
 import { HOME_INVESTMENT_NEWS_MOCK } from '@/features/onboarding/mocks/home-investment-news-mock';
 import {
   resolveHomeSearch,
@@ -52,6 +53,10 @@ async function loadFeaturedFunds(): Promise<{
 
     return { funds, state: 'ready' };
   } catch {
+    if (!allowsMockFallback()) {
+      return { funds: [], state: 'error' };
+    }
+
     const fallback = getFeaturedFundsMockFallback();
 
     if (fallback.length > 0) {
@@ -74,6 +79,10 @@ async function loadNewsItems(
 
     return { items, state: 'ready' };
   } catch {
+    if (!allowsMockFallback()) {
+      return { items: [], state: 'error' };
+    }
+
     const fallback = [...HOME_INVESTMENT_NEWS_MOCK].slice(0, options?.limit ?? 4);
 
     if (fallback.length > 0) {

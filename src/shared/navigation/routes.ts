@@ -5,6 +5,10 @@ export const routes = {
   home: '/' as Href,
   learn: '/learn' as Href,
   fundsCatalog: '/funds' as Href,
+  fundsCatalogWithProfileHints: {
+    pathname: '/funds',
+    params: { applyProfileHints: 'true' },
+  } as Href,
   compare: '/compare' as Href,
   compareWithIsins: (isins: readonly string[]): Href =>
     ({

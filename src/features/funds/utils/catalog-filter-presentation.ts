@@ -1,4 +1,4 @@
-import type { FundCatalogFiltersState } from '@/features/funds/components/fund-catalog-filters';
+import type { FundCatalogFiltersState } from '@/features/funds/types/fund-catalog-filters';
 
 export type CatalogActiveFilterChip = {
   readonly id: string;

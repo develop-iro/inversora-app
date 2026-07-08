@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { trackEvent } from '@/core/analytics/track-event';
 import { favoritesStore, subscribeFavorites } from '@/core/storage/favorites-store';
 
 export function useFavorite(isin: string) {
@@ -26,6 +27,7 @@ export function useFavorite(isin: string) {
     await favoritesStore.toggleFavorite(isin);
     const next = await favoritesStore.isFavorite(isin);
     setIsFavorite(next);
+    void trackEvent('favorite_toggled', 'fund_detail', { isin, isFavorite: next });
   }, [isin]);
 
   return { isFavorite, isLoading, toggle };

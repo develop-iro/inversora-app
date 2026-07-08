@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
@@ -142,7 +143,10 @@ export function FundListRow(props: FundListRowProps) {
   return <FundListRowLoaded fund={props.fund} onPress={props.onPress} />;
 }
 
-function FundListRowLoaded({ fund, onPress }: FundListRowContentProps) {
+const FundListRowLoaded = memo(function FundListRowLoaded({
+  fund,
+  onPress,
+}: FundListRowContentProps) {
   const theme = useTheme();
   const { isFavorite, isLoading: isFavoriteLoading, toggle } = useFavorite(fund.isin);
   const score = getFundScore(fund);
@@ -204,7 +208,7 @@ function FundListRowLoaded({ fund, onPress }: FundListRowContentProps) {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

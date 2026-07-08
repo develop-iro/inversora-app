@@ -2,6 +2,12 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import {
+  CATALOG_SORT_OPTIONS,
+  isCatalogSortOptionActive,
+  type CatalogSortOption,
+  type CatalogSortState,
+} from '@/features/funds/types/catalog-sort';
 import { TextHeading, TextLabel } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
@@ -9,19 +15,26 @@ import { Radius, Spacing } from '@/shared/theme/theme';
 export type FundCatalogToolbarProps = {
   headline: string;
   activeFilterCount: number;
+  sort: CatalogSortState;
+  onSortChange: (option: CatalogSortOption) => void;
   onOpenFilters: () => void;
 };
 
 /**
- * Compact results header with an idealista-style filter action bar.
+ * Compact results header with filter and sort actions.
  */
 export function FundCatalogToolbar({
   headline,
   activeFilterCount,
+  sort,
+  onSortChange,
   onOpenFilters,
 }: FundCatalogToolbarProps) {
   const theme = useTheme();
   const hasActiveFilters = activeFilterCount > 0;
+  const activeSort =
+    CATALOG_SORT_OPTIONS.find((option) => isCatalogSortOptionActive(sort, option)) ??
+    CATALOG_SORT_OPTIONS[0];
 
   return (
     <View style={styles.wrapper}>
@@ -48,6 +61,21 @@ export function FundCatalogToolbar({
               ? `Filtrar, ${activeFilterCount} filtro${activeFilterCount === 1 ? '' : 's'} activo${activeFilterCount === 1 ? '' : 's'}`
               : 'Abrir filtros del catálogo'
           }
+        />
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <ToolbarAction
+          icon="sort"
+          label={activeSort.label}
+          onPress={() => {
+            const currentIndex = CATALOG_SORT_OPTIONS.findIndex((option) =>
+              isCatalogSortOptionActive(sort, option),
+            );
+            const nextOption =
+              CATALOG_SORT_OPTIONS[(currentIndex + 1) % CATALOG_SORT_OPTIONS.length] ??
+              CATALOG_SORT_OPTIONS[0];
+            onSortChange(nextOption);
+          }}
+          accessibilityLabel={`Ordenar por ${activeSort.label}`}
         />
       </View>
     </View>
@@ -104,6 +132,10 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.card,
     overflow: 'hidden',
+  },
+  divider: {
+    width: StyleSheet.hairlineWidth,
+    alignSelf: 'stretch',
   },
   action: {
     flex: 1,

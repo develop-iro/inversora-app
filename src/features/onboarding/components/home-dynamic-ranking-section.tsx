@@ -9,6 +9,8 @@ import { HomeSectionCard } from '@/features/onboarding/components/home-section-c
 import type { HomeSectionLoadState } from '@/features/onboarding/hooks/use-home-screen-data';
 import type { HomeSearchResult } from '@/features/onboarding/services/resolve-home-search';
 import type { RankingThemeOption } from '@/features/onboarding/utils/build-ranking-theme-options';
+import { DISCLAIMER_RANKING_EDUCATIONAL } from '@/features/legal/constants/disclaimer-snippets';
+import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { TextParagraph } from '@/shared/components/text';
 import { ContentEmptyState } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
@@ -172,6 +174,11 @@ export function HomeDynamicRankingSection({
         </TextParagraph>
         <MaterialCommunityIcons name="arrow-right" size={16} color={theme.primary} />
       </Pressable>
+
+      <LegalNotice
+        title="Ranking educativo"
+        body={DISCLAIMER_RANKING_EDUCATIONAL}
+      />
     </HomeSectionCard>
   );
 }

@@ -15,6 +15,8 @@
     "expo-font": "^56.0.5",
     "expo-linear-gradient": "~56.0.4",
     "expo-router": "~56.2.6",
+    "expo-secure-store": "~56.0.4",
+    "expo-build-properties": "~56.0.22",
     "expo-sharing": "~56.0.18",
     "expo-splash-screen": "~56.0.10",
     "expo-status-bar": "~56.0.4",
@@ -40,7 +42,8 @@
     "eslint-plugin-react-native-a11y": "^3.5.1",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.17",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "tsx": "^4.20.3"
   },
   "scripts": {
     "start": "node scripts/run-expo-env.mjs local start",
@@ -59,10 +62,15 @@
     "test:env": "node --test scripts/load-env.spec.mjs",
     "test:theme": "node --test scripts/generate-global-css.spec.mjs scripts/generate-tailwind-config.spec.mjs",
     "test:scripts": "npm run test:env && npm run test:theme",
+    "test:unit": "npx tsx --test src/**/*.spec.ts",
+    "security:verify-plugins": "npx expo config --type public",
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
     "typecheck": "tsc --noEmit",
-    "quality": "npm run typecheck && npm run lint"
+    "quality": "npm run typecheck && npm run lint && npm run test:unit",
+    "build:preview": "npx eas-cli build --profile preview",
+    "eas:login": "npx eas-cli login",
+    "eas:init": "npx eas-cli init"
   },
   "private": true
 }

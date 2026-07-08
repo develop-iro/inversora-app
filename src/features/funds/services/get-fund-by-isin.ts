@@ -4,7 +4,14 @@ import { apiGet } from '@/core/api/client';
 import { shouldUseMockData } from '@/core/config/app-environment';
 import { parseFundDetailResponse } from '@/core/api/parse-fund-detail-response';
 import { AppError } from '@/core/errors/app-error';
+import {
+  fetchWithCache,
+  FUND_DETAIL_CACHE_TTL_MS,
+  invalidateCache,
+} from '@/core/query/query-cache';
 import { getFundDetailMock } from '@/features/funds/mocks/get-fund-detail-mock';
+
+export { invalidateCache as invalidateFundDetailCache };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -41,24 +48,32 @@ export async function getFundByIsin(
     return getFundDetailMock(normalizedIsin);
   }
 
-  try {
-    const payload = await apiGet<unknown>({
-      path: `/funds/${encodeURIComponent(normalizedIsin)}`,
-      signal,
-    });
+  const loadDetail = async (): Promise<FundDetail | null> => {
+    try {
+      const payload = await apiGet<unknown>({
+        path: `/funds/${encodeURIComponent(normalizedIsin)}`,
+        signal,
+      });
 
-    if (isNotFoundPayload(payload)) {
-      return null;
+      if (isNotFoundPayload(payload)) {
+        return null;
+      }
+
+      return parseFundDetailResponse(payload);
+    } catch (error) {
+      if (isHttpNotFoundError(error)) {
+        return null;
+      }
+
+      throw error instanceof AppError
+        ? error
+        : new AppError('FUNDS_FETCH_FAILED', 'No se pudo cargar la ficha del fondo.', error);
     }
+  };
 
-    return parseFundDetailResponse(payload);
-  } catch (error) {
-    if (isHttpNotFoundError(error)) {
-      return null;
-    }
-
-    throw error instanceof AppError
-      ? error
-      : new AppError('FUNDS_FETCH_FAILED', 'No se pudo cargar la ficha del fondo.', error);
+  if (signal) {
+    return loadDetail();
   }
+
+  return fetchWithCache(`fund:${normalizedIsin}`, FUND_DETAIL_CACHE_TTL_MS, loadDetail);
 }

@@ -8,6 +8,8 @@ import {
 
 import { CardFund } from "@/features/funds/components/card-fund";
 import type { FeaturedFund } from "@/core/domain/fund";
+import { DISCLAIMER_FEATURED_NOT_RECOMMENDATION } from "@/features/legal/constants/disclaimer-snippets";
+import { LegalNotice } from "@/shared/components/legal/legal-notice";
 import { CarouselControls, CarouselNavButton, useCarouselAutoplay } from "@/shared/components/carousels";
 import { SkeletonBone, SkeletonShimmerProvider } from "@/shared/components/ui";
 import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
@@ -308,6 +310,11 @@ function FeaturedFundsCarouselContent({
         onPreviousInteractionEnd={resumeAutoplay}
         onNextInteractionStart={pauseAutoplay}
         onNextInteractionEnd={resumeAutoplay}
+      />
+
+      <LegalNotice
+        title="Destacados del trimestre"
+        body={DISCLAIMER_FEATURED_NOT_RECOMMENDATION}
       />
     </View>
   );

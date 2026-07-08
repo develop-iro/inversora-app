@@ -27,7 +27,7 @@ function resolveSourceLabel(source: AssistantResponseSource): string {
     case 'openai':
       return 'Asistida por IA';
     case 'mock':
-      return 'Mock educativo';
+      return 'Respuesta offline';
     default:
       return 'Respuesta orientativa';
   }

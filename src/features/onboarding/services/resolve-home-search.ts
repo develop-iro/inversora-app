@@ -1,4 +1,5 @@
 import { explainAssistant } from '@/core/api/assistant-client';
+import { allowsMockFallback } from '@/core/config/app-environment';
 import type { RankedFund } from '@/core/scoring/types';
 import { isQuestionLikeQuery } from '@/features/assistant/utils/search-intent';
 import { getRankings } from '@/features/funds/services/get-rankings';
@@ -119,7 +120,11 @@ async function resolveAssistantAnswer(query: string): Promise<HomeSearchAnswer> 
       disclaimer: response.disclaimer,
       relatedFundIsin: response.relatedFundIsin,
     };
-  } catch {
+  } catch (error) {
+    if (!allowsMockFallback()) {
+      throw error;
+    }
+
     return matchHomeSearchAnswer(query);
   }
 }
