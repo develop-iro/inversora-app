@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 import { ScrollView, StyleSheet, View, type View as ViewType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { parseOptionalFundIsinParam } from '@/core/domain/fund-isin';
 import { CalculatorFundContextCard } from '@/features/calculator/components/calculator-fund-context-card';
 import { CalculatorGrowthChart } from '@/features/calculator/components/calculator-growth-chart';
 import { CalculatorInputForm } from '@/features/calculator/components/calculator-input-form';
@@ -23,14 +24,7 @@ import { TabHeader } from '@/shared/components/ui';
 import { Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
 
 function parseIsinParam(value: string | string[] | undefined): string | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  const raw = Array.isArray(value) ? value[0] : value;
-  const trimmed = raw?.trim().toUpperCase();
-
-  return trimmed && trimmed.length > 0 ? trimmed : undefined;
+  return parseOptionalFundIsinParam(value);
 }
 
 /**
@@ -75,6 +69,8 @@ export default function CalculatorScreen() {
   const {
     mode,
     setMode,
+    rateScenario,
+    applyRateScenario,
     input,
     updateInput,
     selectedFund,
@@ -195,6 +191,9 @@ export default function CalculatorScreen() {
           <CalculatorInputForm
             input={input}
             fieldErrors={fieldErrors}
+            rateScenario={rateScenario}
+            showEducationalScenarios={mode === 'free'}
+            onScenarioChange={applyRateScenario}
             onChange={updateInput}
             onCalculate={handleCalculate}
             onReset={reset}

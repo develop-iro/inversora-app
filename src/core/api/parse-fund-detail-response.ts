@@ -203,23 +203,33 @@ function parseProfile(value: unknown): FundDetailProfile | null {
     return null;
   }
 
+  const asOf = value.asOf as string;
+  const sourceLabel = value.sourceLabel as string;
+  const description = value.description as string;
+  const manager = value.manager as string;
+  const benchmark = value.benchmark as string;
+  const fundAum = value.fundAum as string;
+  const inceptionDate = value.inceptionDate as string;
+  const currencyNote = value.currencyNote as string;
+  const methodNote = value.methodNote as string;
+
   return {
-    asOf: value.asOf,
-    sourceLabel: value.sourceLabel,
-    description: value.description,
-    manager: value.manager,
-    benchmark: value.benchmark,
+    asOf,
+    sourceLabel,
+    description,
+    manager,
+    benchmark,
     isIndexed: value.tracksIndex,
-    fundAum: value.fundAum,
+    fundAum,
     classAum: typeof value.classAum === 'string' ? value.classAum : undefined,
-    inceptionDate: value.inceptionDate,
+    inceptionDate,
     summaryRows: value.summaryRows as FundDetailProfile['summaryRows'],
     feeRows: value.feeRows as FundDetailProfile['feeRows'],
     documents: value.documents as FundDetailProfile['documents'],
     returnsByPeriod: value.returnsByPeriod as FundDetailProfile['returnsByPeriod'],
     returnsByYear: value.returnsByYear as FundDetailProfile['returnsByYear'],
-    currencyNote: value.currencyNote,
-    methodNote: value.methodNote,
+    currencyNote,
+    methodNote,
     ratiosByHorizon: value.ratiosByHorizon as FundDetailProfile['ratiosByHorizon'],
     exposureByTab: value.exposureByTab as FundDetailProfile['exposureByTab'],
     distributors: value.distributors as FundDetailProfile['distributors'],
@@ -264,7 +274,7 @@ export function parseFundDetailResponse(payload: unknown): FundDetail {
   return {
     fund,
     inversoraScore,
-    rank,
+    rank: rank ?? undefined,
     scoredBreakdown,
     scoringStatus: scoringStatus as ScoringStatus,
     market,

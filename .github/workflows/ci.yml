@@ -1,0 +1,237 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXPO_PUBLIC_API_URL: https://inversora-api-qa.up.railway.app
+  EXPO_PUBLIC_NEWS_API_ENABLED: 'false'
+  EXPO_PUBLIC_APP_ENV: qa
+
+jobs:
+  # ── Phase 1: Static analysis and tests ─────────────────────────────────────
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint:ci
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:unit
+
+  script-tests:
+    name: Script tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - run: pnpm run generate:theme
+      - run: pnpm run test:scripts
+
+  expo-config:
+    name: Expo config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run security:verify-plugins
+
+  # ── Phase 2: Build smoke ───────────────────────────────────────────────────
+
+  bundle-export:
+    name: Metro bundle export
+    needs: [typecheck, lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - run: pnpm run generate:theme
+      - run: pnpm run build:web:ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: metro-bundle-export
+          path: dist/
+          retention-days: 3
+          if-no-files-found: error
+
+  native-prebuild:
+    name: Native prebuild
+    needs: [expo-config]
+    runs-on: ubuntu-latest
+    env:
+      EXPO_PUBLIC_APP_ENV: pro
+      EXPO_PUBLIC_API_URL: https://inversora-api-production.up.railway.app
+      EXPO_PUBLIC_SSL_PINNING_ENABLED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - run: pnpm run verify:prebuild
+
+  # ── Phase 3: EAS preview (Android) ───────────────────────────────────────
+
+  eas-preview:
+    name: EAS preview Android
+    needs: [bundle-export, native-prebuild, unit-tests, script-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    outputs:
+      result_label: ${{ steps.eas-result.outputs.label }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - run: pnpm run generate:theme
+      - name: Check EXPO_TOKEN
+        id: eas-token
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::EXPO_TOKEN is not configured — skipping EAS preview build"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Trigger EAS preview build
+        id: eas-build
+        if: steps.eas-token.outputs.configured == 'true'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          pnpm dlx eas-cli@latest build \
+            --platform android \
+            --profile preview \
+            --non-interactive \
+            --wait
+      - name: Set EAS job result label
+        id: eas-result
+        if: always()
+        run: |
+          if [ "${{ steps.eas-token.outputs.configured }}" = "true" ]; then
+            echo "label=${{ steps.eas-build.outcome }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "label=skipped (no EXPO_TOKEN)" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── Phase 4: Report ──────────────────────────────────────────────────────
+
+  report:
+    name: CI report
+    needs:
+      - typecheck
+      - lint
+      - unit-tests
+      - script-tests
+      - expo-config
+      - bundle-export
+      - native-prebuild
+      - eas-preview
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish job summary
+        env:
+          TYPECHECK_RESULT: ${{ needs.typecheck.result }}
+          LINT_RESULT: ${{ needs.lint.result }}
+          UNIT_RESULT: ${{ needs.unit-tests.result }}
+          SCRIPTS_RESULT: ${{ needs.script-tests.result }}
+          CONFIG_RESULT: ${{ needs.expo-config.result }}
+          BUNDLE_EXPORT_RESULT: ${{ needs.bundle-export.result }}
+          PREBUILD_RESULT: ${{ needs.native-prebuild.result }}
+          EAS_RESULT: ${{ needs.eas-preview.outputs.result_label }}
+        run: |
+          {
+            echo "## CI report"
+            echo ""
+            echo "| Job | Result |"
+            echo "| --- | --- |"
+            echo "| Typecheck | ${TYPECHECK_RESULT} |"
+            echo "| Lint | ${LINT_RESULT} |"
+            echo "| Unit tests | ${UNIT_RESULT} |"
+            echo "| Script tests | ${SCRIPTS_RESULT} |"
+            echo "| Expo config | ${CONFIG_RESULT} |"
+            echo "| Metro bundle export | ${BUNDLE_EXPORT_RESULT} |"
+            echo "| Native prebuild | ${PREBUILD_RESULT} |"
+            echo "| EAS preview Android | ${EAS_RESULT} |"
+            echo ""
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Enforce required job results
+        if: >-
+          needs.typecheck.result != 'success' ||
+          needs.lint.result != 'success' ||
+          needs.unit-tests.result != 'success' ||
+          needs.script-tests.result != 'success' ||
+          needs.expo-config.result != 'success' ||
+          needs.bundle-export.result != 'success' ||
+          needs.native-prebuild.result != 'success' ||
+          needs.eas-preview.result != 'success'
+        run: exit 1

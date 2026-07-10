@@ -3,6 +3,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { HomeEducationalProfileCard } from '@/features/learn/components/home-educational-profile-card';
+import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
 import { FeaturedFundsCarousel } from '@/features/onboarding/components/featured-funds-carousel';
 import {
   HomeExploreAnswerSection,
@@ -60,6 +62,11 @@ export default function HomeScreen() {
     retryNews,
     retryActiveRanking,
   } = useHomeScreenData();
+  const { profile: educationalProfile, isLoading: isProfileLoading } = useEducationalProfile();
+
+  const handleOpenSuggestedCatalog = useCallback(() => {
+    router.push(routes.fundsCatalogWithProfileHints);
+  }, [router]);
 
   const handleOpenLegal = useCallback(() => {
     router.push(routes.legal);
@@ -128,6 +135,7 @@ export default function HomeScreen() {
 
   const showExploreDefault = activeTab === 'explore' && !hasQuery;
   const showExploreSearchResults = activeTab === 'explore' && hasQuery && activeRanking;
+  const showExploreSearchError = activeTab === 'explore' && hasQuery && rankingState === 'error';
 
   return (
     <View className="flex-1 items-center" style={{ backgroundColor: theme.background }}>
@@ -183,12 +191,32 @@ export default function HomeScreen() {
 
         {activeTab === 'explore' ? (
           <>
+            {showExploreSearchError ? (
+              <HomeSectionCard title="No pudimos resolver tu búsqueda">
+                <ContentEmptyState
+                  icon="cloud-off-outline"
+                  title="SORA no está disponible"
+                  message="No pudimos obtener una respuesta educativa ni actualizar el ranking. Comprueba tu conexión o inténtalo de nuevo."
+                  actionLabel="Reintentar"
+                  onAction={() => {
+                    void retryActiveRanking();
+                  }}
+                />
+              </HomeSectionCard>
+            ) : null}
+
             {showExploreSearchResults && activeRanking.kind === 'answer' ? (
               <HomeSectionCard
                 title="Respuesta educativa"
                 summary="Contexto sobre tu consulta, sin recomendaciones personalizadas."
               >
-                <HomeExploreAnswerSection result={activeRanking} />
+                <HomeExploreAnswerSection
+                  result={activeRanking}
+                  loadState={rankingState}
+                  onRetry={() => {
+                    void retryActiveRanking();
+                  }}
+                />
               </HomeSectionCard>
             ) : null}
 
@@ -203,6 +231,16 @@ export default function HomeScreen() {
 
             {showExploreDefault ? (
               <>
+                {!isProfileLoading && educationalProfile ? (
+                  <HomeSectionCard title="Tu perfil educativo" borderless contentClassName="p-0">
+                    <HomeEducationalProfileCard
+                      profile={educationalProfile}
+                      onOpenSuggestedCatalog={handleOpenSuggestedCatalog}
+                      onRetakeQuestionnaire={handleLearnPress}
+                    />
+                  </HomeSectionCard>
+                ) : null}
+
                 <HomeSectionCard title="Para empezar" borderless contentClassName="p-0">
                   <View style={styles.starterRow}>
                     <HomeStarterCard

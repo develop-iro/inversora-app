@@ -10,6 +10,7 @@ import {
 import type { FeaturedFund } from '@/core/domain/fund';
 import { AppError } from '@/core/errors/app-error';
 import { FEATURED_FUNDS_MOCK } from '@/features/funds/mocks/featured-funds-mock';
+import { isBeginnerEligibleFeaturedFund } from '@/features/funds/utils/beginner-eligibility';
 
 export type GetFeaturedFundsOptions = {
   quarter?: string;
@@ -20,13 +21,14 @@ export type GetFeaturedFundsOptions = {
 };
 
 function resolveCarouselFunds(funds: FeaturedFund[]): FeaturedFund[] {
-  const featuredOnly = funds.filter((fund) => fund.isFeatured);
+  const eligible = funds.filter(isBeginnerEligibleFeaturedFund);
+  const featuredOnly = eligible.filter((fund) => fund.isFeatured);
 
   if (featuredOnly.length > 0) {
     return featuredOnly;
   }
 
-  return funds;
+  return eligible;
 }
 
 /**
@@ -42,7 +44,9 @@ export async function fetchFeaturedFundsForCarousel(
 }
 
 export function getFeaturedFundsMockFallback(): FeaturedFund[] {
-  return FEATURED_FUNDS_MOCK.filter((fund) => fund.isFeatured);
+  return FEATURED_FUNDS_MOCK.filter(
+    (fund) => fund.isFeatured && isBeginnerEligibleFeaturedFund(fund),
+  );
 }
 
 /**

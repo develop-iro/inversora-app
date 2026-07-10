@@ -15,7 +15,8 @@ Qué usa **este repositorio** frente a opciones mencionadas en el documento ofic
 | Validación | Zod | Planificado en boundaries API |
 | Backend | Supabase (PostgreSQL + Edge Functions) | Planificado |
 | IA | OpenAI o Vercel AI SDK en **backend** | Nunca API key en cliente |
-| Persistencia local | `core/storage` (favoritos, perfil) | Stub / AsyncStorage o SecureStore |
+| Persistencia local | `core/storage` con **SecureStore** en iOS/Android y AsyncStorage en web | Migración automática desde AsyncStorage |
+| Transporte API | HTTPS + plugin `with-ssl-pinning` en builds `pro` nativos | Ver `docs/security-hardening.md` en `inversora-api` |
 
 ## No adoptado (por ahora)
 

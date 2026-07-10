@@ -18,29 +18,47 @@ export const TAB_CROSSFADE_MS = 220;
 
 /** Shared stack options for full-screen routes pushed above the tab shell. */
 export const ROOT_STACK_SCREEN_OPTIONS = {
-  headerShown: false,
+  headerShown: false as const,
   animation: STACK_PUSH_ANIMATION,
-  gestureEnabled: true,
-} as const;
+  gestureEnabled: true as const,
+};
 
 /**
  * Learn / legal: modal sheet on iOS, slide from bottom on Android, fade on web.
  */
-export const ROOT_FLOW_SCREEN_OPTIONS = {
-  headerShown: false,
-  gestureEnabled: true,
-  ...Platform.select({
-    ios: {
-      presentation: 'modal' satisfies NativeStackPresentation,
-      animation: 'default' satisfies NativeStackAnimation,
-    },
-    android: {
-      presentation: 'card' satisfies NativeStackPresentation,
-      animation: 'slide_from_bottom' satisfies NativeStackAnimation,
-    },
-    default: {
-      presentation: 'card' satisfies NativeStackPresentation,
-      animation: 'fade' satisfies NativeStackAnimation,
-    },
-  }),
-} as const;
+function createRootFlowScreenOptions(): {
+  headerShown: false;
+  gestureEnabled: true;
+  presentation: NativeStackPresentation;
+  animation: NativeStackAnimation;
+} {
+  return (
+    Platform.select({
+      ios: {
+        headerShown: false as const,
+        gestureEnabled: true as const,
+        presentation: 'modal' as const,
+        animation: 'default' as const,
+      },
+      android: {
+        headerShown: false as const,
+        gestureEnabled: true as const,
+        presentation: 'card' as const,
+        animation: 'slide_from_bottom' as const,
+      },
+      default: {
+        headerShown: false as const,
+        gestureEnabled: true as const,
+        presentation: 'card' as const,
+        animation: 'fade' as const,
+      },
+    }) ?? {
+      headerShown: false as const,
+      gestureEnabled: true as const,
+      presentation: 'card' as const,
+      animation: 'fade' as const,
+    }
+  );
+}
+
+export const ROOT_FLOW_SCREEN_OPTIONS = createRootFlowScreenOptions();

@@ -14,11 +14,25 @@ import {
 } from '@/core/api/parse-fund-list-response';
 import { AppError } from '@/core/errors/app-error';
 import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
+import {
+  CATALOG_CACHE_TTL_MS,
+  fetchWithCache,
+  invalidateCache,
+} from '@/core/query/query-cache';
 import type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
 import { filterCatalogVisible } from '@/features/funds/utils/catalog-visibility';
 import { CATALOG_SUGGESTIONS_LIMIT } from '@/features/funds/utils/fund-search';
 
 export type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
+
+/** Clears cached catalog pages (e.g. on pull-to-refresh). */
+export function invalidateCatalogCache(): void {
+  invalidateCache('catalog:');
+}
+
+function buildCatalogCacheKey(filters: FundCatalogFilters | undefined, page: number): string {
+  return `catalog:${JSON.stringify(filters ?? {})}:${page}`;
+}
 
 /** Default page size for catalog infinite scroll (`GET /funds`). */
 export const CATALOG_PAGE_SIZE = 20;
@@ -118,6 +132,22 @@ export async function getFundsPage(
     return buildMockFundListPage(filters, page, CATALOG_PAGE_SIZE);
   }
 
+  if (signal) {
+    return loadFundsPageFromApi(filters, page, signal);
+  }
+
+  return fetchWithCache(
+    buildCatalogCacheKey(filters, page),
+    CATALOG_CACHE_TTL_MS,
+    () => loadFundsPageFromApi(filters, page),
+  );
+}
+
+async function loadFundsPageFromApi(
+  filters: FundCatalogFilters | undefined,
+  page: number,
+  signal?: AbortSignal,
+): Promise<FundListResponse> {
   try {
     const apiQuery: FundListApiQuery = {
       ...mapCatalogFiltersToApiQuery(filters),

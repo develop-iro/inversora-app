@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { validateWithSchema } from '@/core/forms/validate-with-schema';
+import { trackEvent } from '@/core/analytics/track-event';
 import {
   calculateCompoundInterest,
   DEFAULT_COMPOUND_INTEREST_INPUT,
@@ -13,6 +14,11 @@ import {
   deriveIllustrativeFundRate,
   type IllustrativeFundRate,
 } from '@/features/calculator/utils/derive-fund-illustrative-rate';
+import {
+  EDUCATIONAL_RATE_SCENARIOS,
+  matchEducationalScenario,
+  type EducationalRateScenario,
+} from '@/features/calculator/constants/educational-scenarios';
 import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
 
 export type CalculatorMode = 'free' | 'fund';
@@ -20,6 +26,8 @@ export type CalculatorMode = 'free' | 'fund';
 export type UseCompoundInterestCalculatorResult = {
   mode: CalculatorMode;
   setMode: (mode: CalculatorMode) => void;
+  rateScenario: EducationalRateScenario;
+  applyRateScenario: (scenario: EducationalRateScenario) => void;
   input: CompoundInterestInput;
   updateInput: (patch: Partial<CompoundInterestInput>) => void;
   selectedFund: CatalogFund | null;
@@ -54,6 +62,7 @@ export function useCompoundInterestCalculator(
   const [result, setResult] = useState<CompoundInterestResult | null>(null);
   const [hasCalculated, setHasCalculated] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [rateScenario, setRateScenario] = useState<EducationalRateScenario>('moderate');
 
   const loadFund = useCallback(async (fund: CatalogFund) => {
     setSelectedFund(fund);
@@ -78,6 +87,7 @@ export function useCompoundInterestCalculator(
       }
 
       setFundRate(derivedRate);
+      setRateScenario('custom');
       setInput((current) => ({
         ...current,
         annualRatePercent: derivedRate.annualRatePercent,
@@ -115,8 +125,44 @@ export function useCompoundInterestCalculator(
     [clearFund],
   );
 
+  const applyRateScenario = useCallback(
+    (scenario: EducationalRateScenario) => {
+      if (scenario === 'custom') {
+        setRateScenario('custom');
+        return;
+      }
+
+      const preset = EDUCATIONAL_RATE_SCENARIOS.find((entry) => entry.id === scenario);
+
+      if (!preset) {
+        return;
+      }
+
+      setRateScenario(scenario);
+      setInput((current) => ({
+        ...current,
+        annualRatePercent: preset.annualRatePercent,
+      }));
+      setHasCalculated(false);
+      setFieldErrors((current) => {
+        const next = { ...current };
+        delete next.annualRatePercent;
+        return next;
+      });
+    },
+    [],
+  );
+
   const updateInput = useCallback((patch: Partial<CompoundInterestInput>) => {
-    setInput((current) => ({ ...current, ...patch }));
+    setInput((current) => {
+      const next = { ...current, ...patch };
+
+      if (patch.annualRatePercent !== undefined) {
+        setRateScenario(matchEducationalScenario(patch.annualRatePercent));
+      }
+
+      return next;
+    });
     setHasCalculated(false);
     setFieldErrors((current) => {
       const next = { ...current };
@@ -141,11 +187,17 @@ export function useCompoundInterestCalculator(
     setFieldErrors({});
     setResult(calculateCompoundInterest(validation.data));
     setHasCalculated(true);
+    void trackEvent('calculator_run', 'calculator', {
+      mode,
+      rateScenario,
+      durationYears: validation.data.durationYears,
+    });
     return true;
-  }, [input]);
+  }, [input, mode, rateScenario]);
 
   const reset = useCallback(() => {
     setInput(DEFAULT_COMPOUND_INTEREST_INPUT);
+    setRateScenario('moderate');
     setResult(null);
     setHasCalculated(false);
     setFieldErrors({});
@@ -191,6 +243,8 @@ export function useCompoundInterestCalculator(
   return {
     mode,
     setMode,
+    rateScenario,
+    applyRateScenario,
     input,
     updateInput,
     selectedFund,

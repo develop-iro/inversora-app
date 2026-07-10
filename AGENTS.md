@@ -106,8 +106,9 @@ Target routes:
 ## Agent Working Rules
 
 - Use `docs/README.md` for product and architecture docs; `README.md` and `package.json` for quick onboarding and scripts.
-- Verification step for changes: run `npm run lint` before considering work complete.
-- There are no dedicated test scripts in this repository yet, so prefer lint + manual Expo verification for validation.
+- Verification step for changes: run `npm run test:ci` before considering work complete.
+- `npm run quality` is an alias for `npm run test:ci` (typecheck, lint with zero warnings, unit tests, script tests, Expo config).
+- CI also runs `build:web:ci`, `verify:prebuild`, and EAS preview Android when `EXPO_TOKEN` is set in GitHub Actions secrets.
 - Keep `src/app` thin. Add screens and feature logic under `src/features/*`, and place reusable UI/theme/helpers under `src/shared/*` or `src/core/*`.
 - Do not introduce broker flows, account management, real portfolio actions, or personalized financial advice into the MVP.
 - If a change touches Expo, React Native, routing, or native config, consult the exact Expo SDK 56 docs first instead of relying on older assumptions.

@@ -56,12 +56,48 @@ export function HomeExploreFundMatchPrompt({
 
 export type HomeExploreAnswerSectionProps = {
   result: HomeSearchResult;
+  loadState?: 'loading' | 'ready' | 'error' | 'empty';
+  onRetry?: () => void;
 };
 
 /** Educational answer card for concept questions on the Explorar tab. */
-export function HomeExploreAnswerSection({ result }: HomeExploreAnswerSectionProps) {
+export function HomeExploreAnswerSection({
+  result,
+  loadState = 'ready',
+  onRetry,
+}: HomeExploreAnswerSectionProps) {
   if (result.kind !== 'answer') {
     return null;
+  }
+
+  if (loadState === 'loading') {
+    return (
+      <TextParagraph variant="secondary" themeColor="textSecondary">
+        Buscando una respuesta educativa…
+      </TextParagraph>
+    );
+  }
+
+  if (loadState === 'error') {
+    return (
+      <View className="gap-sm">
+        <TextParagraph variant="secondary" themeColor="textSecondary">
+          No pudimos obtener una respuesta de SORA. Comprueba tu conexión o inténtalo de nuevo.
+        </TextParagraph>
+        {onRetry ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Reintentar búsqueda educativa"
+            onPress={onRetry}
+            className="min-h-[44px] self-start rounded-pill border px-lg py-sm active:opacity-[0.88]"
+          >
+            <TextParagraph variant="emphasis" themeColor="deepOcean">
+              Reintentar
+            </TextParagraph>
+          </Pressable>
+        ) : null}
+      </View>
+    );
   }
 
   return <HomeSearchAnswerCard query={result.query} answer={result.answer} />;

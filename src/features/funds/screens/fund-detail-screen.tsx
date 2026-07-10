@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -12,6 +12,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SoraChatSheet } from '@/features/assistant/components/sora-chat-sheet';
+import { trackEvent, trackPerfMark } from '@/core/analytics/track-event';
+import { parseOptionalFundIsinParam } from '@/core/domain/fund-isin';
 import type { FundDetail } from '@/core/domain/catalog';
 import type { FundPerformanceTimeframe } from '@/core/domain/fund-market';
 import { FundApiErrorState } from '@/features/funds/components/fund-api-error-state';
@@ -115,8 +117,17 @@ export default function FundDetailScreen() {
   const [timeframe, setTimeframe] = useState<FundPerformanceTimeframe>('3y');
   const [isSoraVisible, setIsSoraVisible] = useState(false);
   const [soraSession, setSoraSession] = useState(0);
+  const loadStartedAtRef = useRef(0);
 
-  const resolvedIsin = typeof isin === 'string' ? isin : '';
+  const resolvedIsin = parseOptionalFundIsinParam(isin) ?? '';
+
+  useEffect(() => {
+    loadStartedAtRef.current = performance.now();
+
+    if (resolvedIsin) {
+      void trackEvent('screen_view', 'fund_detail', { isin: resolvedIsin });
+    }
+  }, [resolvedIsin]);
   const { isFavorite, isLoading: isFavoriteLoading, toggle } = useFavorite(resolvedIsin);
   const {
     snapshot: liveMarketSnapshot,
@@ -139,6 +150,7 @@ export default function FundDetailScreen() {
       setIsLoading(true);
       setLoadError(null);
       setNotFound(false);
+      loadStartedAtRef.current = performance.now();
 
       try {
         const result = await getFundByIsin(resolvedIsin);
@@ -163,6 +175,7 @@ export default function FundDetailScreen() {
       } finally {
         if (!cancelled) {
           setIsLoading(false);
+          trackPerfMark('fund_detail', performance.now() - loadStartedAtRef.current);
         }
       }
     })();

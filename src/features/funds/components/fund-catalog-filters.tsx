@@ -1,41 +1,14 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import type { RiskLevel } from '@/core/domain/fund';
-import type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
+import type { FundCatalogFiltersState } from '@/features/funds/types/fund-catalog-filters';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { TabChip } from '@/shared/components/tabs/tab-chip';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius, Spacing } from '@/shared/theme/theme';
 
-export type FundCatalogFiltersState = {
-  query: string;
-  riskLevel: RiskLevel | 'all';
-  categoryLabel: string | 'all';
-  maxTerPercent: number | null;
-  minScore: number | null;
-  idealForBeginnersOnly: boolean;
-};
-
-export const DEFAULT_CATALOG_FILTERS: FundCatalogFiltersState = {
-  query: '',
-  riskLevel: 'all',
-  categoryLabel: 'all',
-  maxTerPercent: null,
-  minScore: null,
-  idealForBeginnersOnly: false,
-};
-
-export function toServiceFilters(state: FundCatalogFiltersState): FundCatalogFilters {
-  return {
-    query: state.query,
-    riskLevel: state.riskLevel,
-    categoryLabel: state.categoryLabel,
-    maxTerPercent: state.maxTerPercent,
-    minScore: state.minScore,
-    idealForBeginnersOnly: state.idealForBeginnersOnly,
-  };
-}
+export type { FundCatalogFiltersState } from '@/features/funds/types/fund-catalog-filters';
+export { DEFAULT_CATALOG_FILTERS, toServiceFilters } from '@/features/funds/types/fund-catalog-filters';
 
 type FundCatalogFiltersBarProps = {
   value: FundCatalogFiltersState;

@@ -36,6 +36,7 @@ export function getFundDetailMock(isin: string): FundDetail | null {
     logoUrl: catalogFund.logoUrl,
     name: catalogFund.name,
     categoryLabel: catalogFund.categoryLabel,
+    investmentTheme: catalogFund.investmentTheme,
     themeLabel: catalogFund.themeLabel,
     badge: catalogFund.badge,
     idealForBeginners: catalogFund.idealForBeginners,

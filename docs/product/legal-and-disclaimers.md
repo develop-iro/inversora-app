@@ -14,13 +14,13 @@ Inversora es **informativa y educativa**. Estos mensajes deben ser visibles en s
 
 | Superficie | Requisito |
 |------------|-----------|
-| Dashboard | Disclaimer global (implementado en home) |
-| Fondos destacados | Aviso de no recomendación en la sección (HU-02) |
-| Ranking / score | Contexto educativo; sin lenguaje de “mejor inversión” |
-| Ficha de fondo | No asesoramiento + advertencias DQ si aplican |
-| Rentabilidad histórica | Aviso HU-39 junto al dato |
-| Comparador | Advertencia si comparación no homogénea (HU-27) |
-| Calculadora | Escenarios ilustrativos, no promesa de rentabilidad |
+| Dashboard | Disclaimer global (implementado en home) | ✅ |
+| Fondos destacados | Aviso de no recomendación en la sección (HU-02) | ✅ `featured-funds-carousel` |
+| Ranking / score | Contexto educativo; sin lenguaje de “mejor inversión” | ✅ `home-dynamic-ranking-section` |
+| Ficha de fondo | No asesoramiento + advertencias DQ si aplican | ✅ |
+| Rentabilidad histórica | Aviso HU-39 junto al dato | ✅ `fund-performance-chart` |
+| Comparador | Advertencia si comparación no homogénea (HU-27) | ✅ |
+| Calculadora | Escenarios ilustrativos, no promesa de rentabilidad | ✅ |
 | `/legal` | Textos completos centralizados | ✅ `features/legal` + `app/legal.tsx` |
 
 ## Lenguaje a evitar (asistente y UI)
@@ -38,6 +38,8 @@ Inversora es **informativa y educativa**. Estos mensajes deben ser visibles en s
 
 - Disclaimer en `home-screen` — ✅ con enlace a `/legal`.
 - Ruta `/legal` y componente compartido — ✅ (`LegalNotice` + pantalla legal).
+- Snippets reutilizables — ✅ `features/legal/constants/disclaimer-snippets.ts`.
+- Cobertura HU-38/39 en gráfico, ranking y destacados — ✅ julio 2026.
 
 ## Ver también
 

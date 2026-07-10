@@ -132,10 +132,21 @@ EXPO_PUBLIC_API_URL=https://abcd1234.ngrok-free.app
 | Comisión máxima | `maxTer` |
 | Score mínimo | `minScore` |
 | Para empezar | `idealForBeginnersOnly=true` |
+| Ordenación | `sortBy` (`score` \| `ter` \| `return1y` \| `name`, …) + `sortOrder` (`asc` \| `desc`) |
 
 El filtro de **riesgo** (bajo/medio/alto) se aplica en cliente porque la API acepta un valor numérico exacto, no rangos.
 
 No se requiere autenticación en las rutas públicas del MVP.
+
+### Entornos y mocks
+
+| Entorno | `EXPO_PUBLIC_APP_ENV` | Fallback mock |
+|---------|------------------------|---------------|
+| Local | `local` | Sí (API caída o vacía) |
+| QA / staging | `qa` | No — errores visibles + reintentar |
+| Producción | `pro` | No |
+
+En `qa`/`pro`, home search, destacados y compare picker **no** degradan silenciosamente a mocks locales.
 
 ### SORA (`POST /assistant/explain`)
 
@@ -158,23 +169,29 @@ ASSISTANT_ENABLED=true
 OPENAI_API_KEY=sk-...
 ```
 
-Si el backend no tiene el asistente activo, la app degrada al mock local del home search.
+Si el backend no tiene el asistente activo, la app degrada al mock local del home search **solo en entorno `local`**. En `qa`/`pro` muestra error y botón reintentar.
 
 ## 4. Recorrido manual de verificación
 
-1. Abre la app y confirma que el carrusel de destacados carga (o queda vacío sin romper la pantalla).
-2. Navega a **Catálogo** y espera la carga inicial.
-3. Aplica filtros (comisión, score, categoría) y comprueba que los resultados cambian.
-4. Abre una ficha desde una tarjeta del catálogo.
-5. Compara datos con la API:
+1. Abre la app y confirma que el carrusel de destacados carga (o error + reintentar en QA).
+2. Navega a **Catálogo** y espera la carga inicial; prueba ordenación por score, TER y rentabilidad 1 año.
+3. Aplica filtros (comisión, score, categoría, perfil sugerido) y comprueba que los resultados cambian.
+4. Abre una ficha desde una tarjeta del catálogo; marca favorito.
+5. **Comparar**: selecciona dos fondos y verifica banner de homogeneidad si aplica.
+6. **Calculadora**: prueba escenarios prudente / medio / optimista y modo fondo.
+7. **Aprender**: completa cuestionario; verifica card de perfil en home y sugerencias en catálogo.
+8. **SORA**: busca un concepto en home (`ASSISTANT_ENABLED=true`); en local verifica badge “Respuesta offline” si aplica.
+9. Compara datos con la API:
 
 ```bash
 curl "http://localhost:3000/funds/US78462F1030"
-curl "http://localhost:3000/funds?maxTer=0.25&minScore=75"
+curl "http://localhost:3000/funds?maxTer=0.25&minScore=75&sortBy=return1y&sortOrder=desc"
 curl "http://localhost:3000/rankings"
+curl "http://localhost:3000/featured"
 ```
 
-6. Desconecta el backend y comprueba error + reintentar sin bloquear navegación.
+10. Desconecta el backend y comprueba error + reintentar sin bloquear navegación (en QA no debe aparecer mock silencioso).
+11. Ejecuta `npm run quality` en el front (typecheck + lint + unit tests).
 
 ## 5. Poblar ranking (`GET /rankings`)
 

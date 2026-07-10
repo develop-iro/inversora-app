@@ -33,6 +33,12 @@ module.exports = defineConfig([
       "react-native/no-color-literals": "off",
       "react-native/no-inline-styles": "off",
       "no-console": ["warn", { allow: ["warn", "error"] }],
+      "import/no-unresolved": [
+        "error",
+        {
+          ignore: ["^nativewind$", "^@/"],
+        },
+      ],
 
       ...a11yBasicRules,
 

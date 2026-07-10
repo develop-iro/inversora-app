@@ -5,8 +5,8 @@ import { parseInvestmentTheme } from '@/core/domain/investment-theme';
 export type FundListApiQuery = {
   page?: number;
   limit?: number;
-  sortBy: 'score';
-  sortOrder: 'desc';
+  sortBy: 'score' | 'ter' | 'return1y' | 'return3y' | 'name' | 'aum';
+  sortOrder: 'asc' | 'desc';
   q?: string;
   benchmark?: string;
   investmentTheme?: InvestmentTheme;
@@ -49,8 +49,8 @@ export function mapCatalogFiltersToApiQuery(
   filters?: FundCatalogFilters,
 ): FundListApiQuery {
   const query: FundListApiQuery = {
-    sortBy: 'score',
-    sortOrder: 'desc',
+    sortBy: filters?.sortBy ?? 'score',
+    sortOrder: filters?.sortOrder ?? 'desc',
   };
 
   if (filters === undefined) {

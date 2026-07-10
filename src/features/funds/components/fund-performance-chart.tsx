@@ -15,7 +15,8 @@ import {
   pickAxisLabelIndices,
   type ChartCoordinate,
 } from '@/features/funds/utils/fund-performance';
-import { TextLabel, TextParagraph } from '@/shared/components/text';
+import { TextLabel, TextLegal, TextParagraph } from '@/shared/components/text';
+import { DISCLAIMER_PAST_PERFORMANCE } from '@/features/legal/constants/disclaimer-snippets';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { useThemeGradients } from '@/shared/hooks/use-theme-gradients';
 import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
@@ -337,6 +338,10 @@ export function FundPerformanceChart({
           Valores liquidativos en EUR · Toca o desliza el gráfico para explorar
         </TextLabel>
       )}
+
+      <TextLegal themeColor="textSecondary" style={styles.hint}>
+        {DISCLAIMER_PAST_PERFORMANCE}
+      </TextLegal>
     </View>
   );
 }

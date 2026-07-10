@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { trackEvent } from '@/core/analytics/track-event';
+import { parseFundIsinList } from '@/core/domain/fund-isin';
 import { MIN_COMPARE_FUNDS } from '@/core/storage/compare-selection-storage-key';
 import { CompareEmptyBody } from '@/features/comparison/components/compare-empty-body';
 import { CompareFairnessBanner } from '@/features/comparison/components/compare-fairness-banner';
@@ -33,10 +35,12 @@ function parseIsinsParam(value: string | string[] | undefined): string[] {
 
   const raw = Array.isArray(value) ? value.join(',') : value;
 
-  return raw
-    .split(',')
-    .map((isin) => isin.trim().toUpperCase())
-    .filter((isin) => isin.length > 0);
+  return parseFundIsinList(
+    raw
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0),
+  );
 }
 
 export default function ComparisonScreen() {
@@ -89,6 +93,19 @@ export default function ComparisonScreen() {
   const isLoading = isSelectionLoading || isFundsLoading;
   const isEmpty = selectedIsins.length === 0;
   const needsSecondFund = selectedIsins.length === 1;
+  const hasTrackedCompareRef = useRef(false);
+
+  useEffect(() => {
+    if (!canCompare || isLoading || hasTrackedCompareRef.current) {
+      return;
+    }
+
+    hasTrackedCompareRef.current = true;
+    void trackEvent('compare_completed', 'compare', {
+      fundCount: loadedDetails.length,
+      isFair: fairness.isFair,
+    });
+  }, [canCompare, fairness.isFair, isLoading, loadedDetails.length]);
 
   const handleOpenPicker = useCallback(() => {
     setIsPickerVisible(true);

@@ -1,6 +1,6 @@
 # Mapa MVP por feature
 
-Estado del código a junio de 2026.
+Estado del código a julio de 2026.
 
 Referencias de producto: [docs/product/](../product/) · `README.md` · `AGENTS.md` · [Índice de HUs](../product/user-stories-index.md).
 
@@ -17,17 +17,17 @@ Leyenda de madurez:
 
 ## Resumen ejecutivo
 
-| Área MVP | Progreso global | Bloqueador principal |
-|----------|-----------------|----------------------|
-| Dashboard inicial | 🟡 ~60% | Datos duplicados; navegación a detalle inexistente |
-| Catálogo y rankings | 🟡 ~40% | Catálogo parcial; ficha ampliada en `/funds/[isin]` |
-| Modo educativo / perfil | ⬜ ~5% | CTA “Sora” sin ruta `/learn` |
-| Comparación | 🟡 ~10% | Solo shell de pantalla |
-| Favoritos locales | 🟡 ~5% | Sin storage ni estado |
-| Calculadora | 🟡 ~5% | Sin fórmulas ni escenarios |
-| Asistente (IA) | ⬜ 0% | Sin feature ni backend |
-| Avisos legales | 🟡 ~20% | Disclaimer en home; sin `/legal` global |
-| Infra (`core`, API) | 🟡 ~25% | `core/` con scoring mock, storage stub, domain; sin API ni Supabase |
+| Área MVP | Progreso global | Notas de cierre julio 2026 |
+|----------|-----------------|----------------------------|
+| Dashboard inicial | ✅ ~90% | Home con destacados, ranking, SORA, perfil educativo conectado |
+| Catálogo y rankings | ✅ ~90% | Filtros, ordenación (score/TER/rentab. 1y), ficha `/funds/[isin]` |
+| Modo educativo / perfil | ✅ ~85% | Cuestionario, perfil local, sugerencias en home y catálogo |
+| Comparación | ✅ ~80% | Hasta 2 fondos, fairness, picker contra API |
+| Favoritos locales | ✅ ~85% | AsyncStorage + toggle en ficha y catálogo |
+| Calculadora | ✅ ~85% | Motor + 3 escenarios educativos + modo fondo |
+| Asistente (SORA) | 🟡 ~70% | Home, ficha, comparación; degradación transparente |
+| Avisos legales | ✅ ~90% | `LegalNotice` en superficies sensibles + `/legal` |
+| Infra (`core`, API) | ✅ ~85% | Cliente HTTP, caché TTL, analytics, entornos local/qa/pro |
 
 ---
 
@@ -39,10 +39,10 @@ Leyenda de madurez:
 |----------|--------|-------|
 | Tabs: inicio, fondos, favoritos, comparar, calcular | ✅ | `_layout.tsx` + `NavTabBar` |
 | Re-export fino a `features/*/screens` | ✅ | Patrón consistente |
-| `/learn` | ⬜ | No existe |
-| `/funds/[isin]` | ✅ | `app/funds/[isin].tsx` → ficha ampliada |
-| `/legal` | ⬜ | No existe |
-| `explore.tsx` (oculto, `href: null`) | 🟡 | Duplica `funds`; home navega aquí vía `router.push("/explore")` — deuda de rutas |
+| `/learn` | ✅ | Cuestionario educativo |
+| `/funds/[isin]` | ✅ | Ficha ampliada |
+| `/legal` | ✅ | Textos legales centralizados |
+| `explore.tsx` (oculto, `href: null`) | 🟡 | Deuda menor de rutas legacy |
 
 ### `src/shared`
 
@@ -60,11 +60,12 @@ Leyenda de madurez:
 |--------|--------|-------|
 | `domain/fund.ts` | ✅ | Tipos de dominio compartidos |
 | `errors/app-error.ts` | ✅ | Errores tipados base |
-| `storage/favorites-store.ts` | 🟡 | Stub; ver ADR-001 |
-| `scoring/` | 🟡 | `score-fund.ts` mock + `criteria.ts`; alinear con [RN-04](../product/scoring.md) |
-| `api/` | ⬜ | Cliente Supabase / Edge Functions |
-| `query/` | ⬜ | Caché, estados loading/error, fecha de datos |
-| `config/` | ⬜ | URLs, flags de entorno |
+| `storage/favorites-store.ts` | ✅ | Favoritos locales AsyncStorage |
+| `scoring/` | 🟡 | Tipos y utilidades; score real en API |
+| `api/` | ✅ | Cliente HTTP + mapeo filtros |
+| `query/` | ✅ | Caché in-memory con TTL (catálogo 5 min, ficha 2 min) |
+| `config/` | ✅ | Entornos `local` / `qa` / `pro`, flags mock |
+| `analytics/` | ✅ | Eventos anónimos + `POST /analytics/events` |
 
 ---
 

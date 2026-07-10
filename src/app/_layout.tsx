@@ -13,6 +13,8 @@ import { useAppLaunchSplash } from '@/shared/hooks/use-app-launch-splash';
 import { useNavigationTheme } from '@/shared/hooks/use-navigation-theme';
 import { ROOT_FLOW_SCREEN_OPTIONS, ROOT_STACK_SCREEN_OPTIONS } from '@/shared/navigation/stack-screen-options';
 
+const IS_SERVER_RENDER = typeof window === 'undefined';
+
 SplashScreen.preventAutoHideAsync();
 
 /**
@@ -26,20 +28,22 @@ export default function RootLayout() {
   const { isLaunchSplashVisible, launchSplashOpacity } = useAppLaunchSplash(fontsLoaded);
   const navigationTheme = useNavigationTheme();
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded && !IS_SERVER_RENDER) {
     return null;
   }
+
+  const showLaunchSplash = isLaunchSplashVisible && !IS_SERVER_RENDER;
 
   return (
     <ThemeProvider value={navigationTheme}>
       <AppProviders>
-        <StatusBar barStyle={isLaunchSplashVisible ? 'light-content' : 'dark-content'} />
+        <StatusBar barStyle={showLaunchSplash ? 'light-content' : 'dark-content'} />
         <Stack screenOptions={ROOT_STACK_SCREEN_OPTIONS}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'none' }} />
           <Stack.Screen name="learn" options={ROOT_FLOW_SCREEN_OPTIONS} />
           <Stack.Screen name="legal" options={ROOT_FLOW_SCREEN_OPTIONS} />
         </Stack>
-        {isLaunchSplashVisible ? (
+        {showLaunchSplash ? (
           <AppLaunchSplash opacity={launchSplashOpacity} />
         ) : null}
       </AppProviders>

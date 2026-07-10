@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -12,7 +12,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FundCatalogSoraChip } from '@/features/assistant/components/fund-catalog-sora-chip';
 import { SoraChatSheet } from '@/features/assistant/components/sora-chat-sheet';
 import { isQuestionLikeQuery } from '@/features/assistant/utils/search-intent';
+import { trackEvent, trackPerfMark } from '@/core/analytics/track-event';
 import type { CatalogFund } from '@/core/domain/catalog';
+import { FundCatalogProfileHintsBanner } from '@/features/learn/components/fund-catalog-profile-hints-banner';
+import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
+import {
+  areProfileHintsApplied,
+  mapProfileToCatalogHints,
+} from '@/features/learn/services/map-profile-to-catalog-hints';
 import { FundApiErrorState } from '@/features/funds/components/fund-api-error-state';
 import { FundCatalogActiveFilterChips } from '@/features/funds/components/fund-catalog-active-filter-chips';
 import { FundCatalogCategorySections } from '@/features/funds/components/fund-catalog-category-sections';
@@ -29,6 +36,7 @@ import { FundCatalogSearchField } from '@/features/funds/components/fund-catalog
 import { FundCatalogToolbar } from '@/features/funds/components/fund-catalog-toolbar';
 import { useCatalogCategoryIndex } from '@/features/funds/hooks/use-catalog-category-index';
 import { useCatalogFundsPagination } from '@/features/funds/hooks/use-catalog-funds-pagination';
+import { invalidateCatalogCache } from '@/features/funds/services/get-funds';
 import { buildCatalogCategoryOptions } from '@/features/funds/utils/build-catalog-category-options';
 import {
   buildCatalogActiveFilterChips,
@@ -81,14 +89,53 @@ function isNearScrollEnd(event: NativeSyntheticEvent<NativeScrollEvent>): boolea
 
 export default function FundsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ applyProfileHints?: string | string[] }>();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const { profile: educationalProfile } = useEducationalProfile();
   const [filters, setFilters] = useState<FundCatalogFiltersState>(DEFAULT_CATALOG_FILTERS);
   const [reloadToken, setReloadToken] = useState(0);
   const [isSoraVisible, setIsSoraVisible] = useState(false);
   const [soraSession, setSoraSession] = useState(0);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
   const [filtersSheetSession, setFiltersSheetSession] = useState(0);
+  const [isProfileHintsDismissed, setIsProfileHintsDismissed] = useState(false);
+  const catalogLoadStartedAtRef = useRef(0);
+
+  useEffect(() => {
+    catalogLoadStartedAtRef.current = performance.now();
+    void trackEvent('screen_view', 'funds_catalog');
+  }, []);
+
+  const profileHints = useMemo(
+    () => (educationalProfile ? mapProfileToCatalogHints(educationalProfile) : null),
+    [educationalProfile],
+  );
+
+  const shouldAutoApplyProfileHints = useMemo(() => {
+    const raw = params.applyProfileHints;
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    return value === 'true';
+  }, [params.applyProfileHints]);
+
+  useEffect(() => {
+    if (!shouldAutoApplyProfileHints || !profileHints) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setFilters((current) => ({
+        ...current,
+        ...profileHints.filters,
+        query: current.query,
+      }));
+      setIsProfileHintsDismissed(true);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [profileHints, shouldAutoApplyProfileHints]);
 
   const debouncedQuery = useDebouncedValue(filters.query, CATALOG_SEARCH_DEBOUNCE_MS);
   const showSoraChip = isQuestionLikeQuery(debouncedQuery);
@@ -149,6 +196,12 @@ export default function FundsScreen() {
   const blockingError = error && funds.length === 0 ? error : null;
   const footerError = error && funds.length > 0 ? error : null;
 
+  useEffect(() => {
+    if (!isInitialLoading && status === 'ready') {
+      trackPerfMark('funds_catalog', performance.now() - catalogLoadStartedAtRef.current);
+    }
+  }, [isInitialLoading, status]);
+
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (!hasMore || isInitialLoading || isLoadingMore) {
@@ -201,15 +254,33 @@ export default function FundsScreen() {
   }, []);
 
   const handleRetryLoad = useCallback(() => {
+    invalidateCatalogCache();
     setReloadToken((current) => current + 1);
   }, []);
 
   const handleFundPress = useCallback(
     (fund: CatalogFund) => {
+      void trackEvent('fund_opened', 'funds_catalog', { isin: fund.isin });
       router.push(routes.fundDetail(fund.isin));
     },
     [router],
   );
+
+  const handleApplyProfileHints = useCallback(() => {
+    if (!profileHints) {
+      return;
+    }
+
+    setFilters((current) => ({
+      ...current,
+      ...profileHints.filters,
+      query: current.query,
+    }));
+    setIsProfileHintsDismissed(true);
+  }, [profileHints]);
+
+  const profileHintsApplied =
+    profileHints !== null && areProfileHintsApplied(filters, profileHints.filters);
 
   return (
     <ScrollView
@@ -246,9 +317,26 @@ export default function FundsScreen() {
           />
         ) : null}
 
+        {profileHints && !isProfileHintsDismissed ? (
+          <FundCatalogProfileHintsBanner
+            hints={profileHints}
+            isApplied={profileHintsApplied}
+            onApply={handleApplyProfileHints}
+            onDismiss={() => setIsProfileHintsDismissed(true)}
+          />
+        ) : null}
+
         <FundCatalogToolbar
           headline={resultsHeadline}
           activeFilterCount={activeFilterCount}
+          sort={{ sortBy: filters.sortBy, sortOrder: filters.sortOrder }}
+          onSortChange={(option) => {
+            setFilters((current) => ({
+              ...current,
+              sortBy: option.sortBy,
+              sortOrder: option.sortOrder,
+            }));
+          }}
           onOpenFilters={() => {
             setFiltersSheetSession((current) => current + 1);
             setIsFiltersVisible(true);

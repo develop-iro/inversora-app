@@ -18,23 +18,23 @@ Estado detallado por módulo: [mvp-feature-map.md](../architecture/mvp-feature-m
 
 | ID | Historia (resumen) | Prioridad | Estado |
 |----|-------------------|-----------|--------|
-| HU-01 | Dashboard inicial sin login; destacados; “Quiero aprender” | Alta | 🟡 |
-| HU-02 | Fondos destacados del último trimestre (tarjetas, score, aviso) | Alta | 🟡 |
-| HU-03 | Tarjeta resumida (pocos datos, favorito, detalle) | Alta | 🟡 |
+| HU-01 | Dashboard inicial sin login; destacados; “Quiero aprender” | Alta | ✅ |
+| HU-02 | Fondos destacados del último trimestre (tarjetas, score, aviso) | Alta | ✅ |
+| HU-03 | Tarjeta resumida (pocos datos, favorito, detalle) | Alta | ✅ |
 
 ## EP-02 — Catálogo y búsqueda
 
 | ID | Historia (resumen) | Prioridad | Estado |
 |----|-------------------|-----------|--------|
-| HU-04 | Catálogo de fondos indexados | Alta | ⬜ |
-| HU-05 | Búsqueda por nombre o ISIN | Alta | ⬜ |
+| HU-04 | Catálogo de fondos indexados | Alta | ✅ |
+| HU-05 | Búsqueda por nombre o ISIN | Alta | ✅ |
 | HU-06 | Búsqueda predictiva / sugerencias | Media | 🟡 |
-| HU-07 | Filtros básicos | Alta | ⬜ |
-| HU-08 | Ordenación (score, comisión, histórico) | Media | ⬜ |
-| HU-09 | Ficha de fondo | Alta | 🟡 |
+| HU-07 | Filtros básicos | Alta | ✅ |
+| HU-08 | Ordenación (score, comisión, histórico) | Media | ✅ |
+| HU-09 | Ficha de fondo | Alta | ✅ |
 | HU-10 | Desglose del score | Alta | ✅ |
 | HU-11 | Explicación sencilla del fondo | Alta | 🟡 |
-| HU-12 | Advertencias de datos en ficha | Alta | 🟡 |
+| HU-12 | Advertencias de datos en ficha | Alta | ✅ |
 
 ## EP-03 — Scoring y rankings
 
@@ -42,18 +42,18 @@ Estado detallado por módulo: [mvp-feature-map.md](../architecture/mvp-feature-m
 |----|-------------------|-----------|--------|
 | HU-13 | Calcular score técnico 0–100 | Alta | 🟡 |
 | HU-14 | Agrupar por benchmark | Alta | ⬜ |
-| HU-15 | Etiquetas UI por rango de score | Alta | ⬜ |
-| HU-16 | Excluir score &lt; 30 de destacados / compatibles | Alta | ⬜ |
+| HU-15 | Etiquetas UI por rango de score | Alta | ✅ |
+| HU-16 | Excluir score &lt; 30 de destacados / compatibles | Alta | ✅ |
 
 ## EP-04 — Modo educativo
 
 | ID | Historia (resumen) | Prioridad | Estado |
 |----|-------------------|-----------|--------|
-| HU-17 | Iniciar “Quiero aprender” | Alta | 🟡 |
-| HU-18 | Perfilado con tarjetas/botones (sin teclado) | Alta | ⬜ |
-| HU-19 | Explicar riesgo antes de preguntar | Alta | ⬜ |
-| HU-20 | Perfil orientativo (conservador/moderado/dinámico) | Alta | ⬜ |
-| HU-21 | Detectar respuestas inconsistentes | Media | ⬜ |
+| HU-17 | Iniciar “Quiero aprender” | Alta | ✅ |
+| HU-18 | Perfilado con tarjetas/botones (sin teclado) | Alta | ✅ |
+| HU-19 | Explicar riesgo antes de preguntar | Alta | ✅ |
+| HU-20 | Perfil orientativo (conservador/moderado/dinámico) | Alta | ✅ |
+| HU-21 | Detectar respuestas inconsistentes | Media | ✅ |
 
 ## EP-05 — Asistente Inversora
 
@@ -70,18 +70,18 @@ Estado detallado por módulo: [mvp-feature-map.md](../architecture/mvp-feature-m
 |----|-------------------|-----------|--------|
 | HU-25 | Añadir fondo al comparador | Media | ⬜ |
 | HU-26 | Comparar **máximo dos** fondos | Media | 🟡 |
-| HU-27 | Advertir comparación no homogénea | Media | ⬜ |
-| HU-28 | Abrir calculadora | Alta | 🟡 |
-| HU-29 | Inputs capital / aportación / horizonte | Alta | ⬜ |
-| HU-30 | Tres escenarios (prudente / medio / optimista) | Alta | ⬜ |
+| HU-27 | Advertir comparación no homogénea | Media | ✅ |
+| HU-28 | Abrir calculadora | Alta | ✅ |
+| HU-29 | Inputs capital / aportación / horizonte | Alta | ✅ |
+| HU-30 | Tres escenarios (prudente / medio / optimista) | Alta | ✅ |
 
 ## EP-07 — Favoritos
 
 | ID | Historia (resumen) | Prioridad | Estado |
 |----|-------------------|-----------|--------|
-| HU-31 | Guardar favorito local | Media | 🟡 |
-| HU-32 | Ver lista de favoritos | Media | 🟡 |
-| HU-33 | Eliminar favorito | Media | 🟡 |
+| HU-31 | Guardar favorito local | Media | ✅ |
+| HU-32 | Ver lista de favoritos | Media | ✅ |
+| HU-33 | Eliminar favorito | Media | ✅ |
 
 ## EP-08 — Validación y calidad de datos
 
@@ -96,10 +96,10 @@ Estado detallado por módulo: [mvp-feature-map.md](../architecture/mvp-feature-m
 
 | ID | Historia (resumen) | Prioridad | Estado |
 |----|-------------------|-----------|--------|
-| HU-38 | Aviso de no asesoramiento | Alta | 🟡 |
-| HU-39 | Aviso rentabilidad pasada | Alta | ⬜ |
-| HU-41 | Eventos analíticos anónimos | Media | ⬜ |
-| HU-42 | Medición de rendimiento (RNF) | Media | ⬜ |
+| HU-38 | Aviso de no asesoramiento | Alta | ✅ |
+| HU-39 | Aviso rentabilidad pasada | Alta | ✅ |
+| HU-41 | Eventos analíticos anónimos | Media | ✅ |
+| HU-42 | Medición de rendimiento (RNF) | Media | ✅ |
 
 ---
 

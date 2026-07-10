@@ -1,6 +1,7 @@
-import { Linking, View } from 'react-native';
+import { Linking, View, Alert } from 'react-native';
 
 import type { InvestmentNewsItem } from '@/core/domain/investment-news';
+import { isSafeExternalUrl } from '@/core/security/safe-external-url';
 import { HomeNewsCard } from '@/features/onboarding/components/home-news-card';
 import { HomeSectionCard } from '@/features/onboarding/components/home-section-card';
 import type { HomeSectionLoadState } from '@/features/onboarding/hooks/use-home-screen-data';
@@ -18,6 +19,14 @@ export type HomeNewsSectionProps = {
 export function HomeNewsSection({ items, loadState, onRetry }: HomeNewsSectionProps) {
   const handleNewsPress = (item: InvestmentNewsItem) => {
     if (!item.url) {
+      return;
+    }
+
+    if (!isSafeExternalUrl(item.url)) {
+      Alert.alert(
+        'Enlace no disponible',
+        'Este enlace no se puede abrir de forma segura desde la app.',
+      );
       return;
     }
 

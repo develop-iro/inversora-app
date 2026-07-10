@@ -1,5 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import type {
   EducationalProfile,
   InvestmentHorizon,
@@ -9,6 +7,12 @@ import type {
 } from '@/core/domain/educational-profile';
 import { AppError } from '@/core/errors/app-error';
 import { EDUCATIONAL_PROFILE_STORAGE_KEY } from '@/core/storage/educational-profile-storage-key';
+import {
+  deleteSecureValue,
+  migrateLegacyAsyncStorageValue,
+  readSecureValue,
+  writeSecureValue,
+} from '@/core/storage/secure-storage';
 
 type EducationalProfileListener = () => void;
 
@@ -110,7 +114,8 @@ export function subscribeEducationalProfile(listener: EducationalProfileListener
 export const educationalProfileStore = {
   async getProfile(): Promise<EducationalProfile | null> {
     try {
-      const raw = await AsyncStorage.getItem(EDUCATIONAL_PROFILE_STORAGE_KEY);
+      await migrateLegacyAsyncStorageValue(EDUCATIONAL_PROFILE_STORAGE_KEY);
+      const raw = await readSecureValue(EDUCATIONAL_PROFILE_STORAGE_KEY);
 
       if (!raw) {
         return null;
@@ -129,7 +134,10 @@ export const educationalProfileStore = {
 
   async saveProfile(profile: EducationalProfile): Promise<void> {
     try {
-      await AsyncStorage.setItem(EDUCATIONAL_PROFILE_STORAGE_KEY, JSON.stringify(profile));
+      await writeSecureValue(
+        EDUCATIONAL_PROFILE_STORAGE_KEY,
+        JSON.stringify(profile),
+      );
       notifyListeners();
     } catch (cause) {
       throw new AppError(
@@ -142,7 +150,7 @@ export const educationalProfileStore = {
 
   async clearProfile(): Promise<void> {
     try {
-      await AsyncStorage.removeItem(EDUCATIONAL_PROFILE_STORAGE_KEY);
+      await deleteSecureValue(EDUCATIONAL_PROFILE_STORAGE_KEY);
       notifyListeners();
     } catch (cause) {
       throw new AppError(

@@ -3,7 +3,8 @@ import type { FeaturedFund } from '@/core/domain/fund';
 import { resolveMockFundReturns } from '@/features/funds/mocks/mock-fund-returns';
 
 const BRANDFETCH_RENDER_PATH = '/w/64/h/64/theme/dark/fallback/lettermark';
-const BRANDFETCH_CLIENT_ID = '1idFIPVa2ymBOeqsfgS';
+const BRANDFETCH_CLIENT_ID =
+  process.env.EXPO_PUBLIC_BRANDFETCH_CLIENT_ID?.trim() ?? '';
 
 /**
  * Builds a Brandfetch CDN logo URL for local mocks (matches API shape).
@@ -11,6 +12,10 @@ const BRANDFETCH_CLIENT_ID = '1idFIPVa2ymBOeqsfgS';
  * @param domain - Asset manager domain (e.g. `ishares.com`).
  */
 function brandfetchDomainLogo(domain: string): string {
+  if (BRANDFETCH_CLIENT_ID.length === 0) {
+    return `https://cdn.brandfetch.io/domain/${domain}${BRANDFETCH_RENDER_PATH}`;
+  }
+
   return `https://cdn.brandfetch.io/domain/${domain}${BRANDFETCH_RENDER_PATH}?c=${BRANDFETCH_CLIENT_ID}`;
 }
 

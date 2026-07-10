@@ -33,6 +33,7 @@ describe('loadEnv', () => {
     resetLoadEnvForTests();
     delete process.env.EXPO_PUBLIC_APP_ENV;
     delete process.env.EXPO_PUBLIC_API_URL;
+    delete process.env.EXPO_PUBLIC_NEWS_API_ENABLED;
     delete process.env.INVERSORA_ENV;
 
     tempRoot = mkdtempSync(join(tmpdir(), 'inversora-app-load-env-'));
