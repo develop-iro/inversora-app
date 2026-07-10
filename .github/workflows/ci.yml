@@ -137,6 +137,8 @@ jobs:
     needs: [bundle-export, native-prebuild, unit-tests, script-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    outputs:
+      result_label: ${{ steps.eas-result.outputs.label }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -147,7 +149,20 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: cp .env.example .env
       - run: pnpm run generate:theme
+      - name: Check EXPO_TOKEN
+        id: eas-token
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::EXPO_TOKEN is not configured — skipping EAS preview build"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Trigger EAS preview build
+        id: eas-build
+        if: steps.eas-token.outputs.configured == 'true'
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
@@ -156,6 +171,15 @@ jobs:
             --profile preview \
             --non-interactive \
             --wait
+      - name: Set EAS job result label
+        id: eas-result
+        if: always()
+        run: |
+          if [ "${{ steps.eas-token.outputs.configured }}" = "true" ]; then
+            echo "label=${{ steps.eas-build.outcome }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "label=skipped (no EXPO_TOKEN)" >> "$GITHUB_OUTPUT"
+          fi
 
   # ── Phase 4: Report ──────────────────────────────────────────────────────
 
@@ -182,7 +206,7 @@ jobs:
           CONFIG_RESULT: ${{ needs.expo-config.result }}
           BUNDLE_EXPORT_RESULT: ${{ needs.bundle-export.result }}
           PREBUILD_RESULT: ${{ needs.native-prebuild.result }}
-          EAS_RESULT: ${{ needs.eas-preview.result }}
+          EAS_RESULT: ${{ needs.eas-preview.outputs.result_label }}
         run: |
           {
             echo "## CI report"
