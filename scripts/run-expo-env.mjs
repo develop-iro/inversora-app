@@ -3,10 +3,16 @@ import { loadEnv, normalizeProfile } from './load-env.mjs';
 
 const profileArg = process.argv[2];
 const expoArgs = process.argv.slice(3);
+const mcpFlagIndex = expoArgs.indexOf('--mcp');
+
+if (mcpFlagIndex !== -1) {
+  process.env.EXPO_UNSTABLE_MCP_SERVER = '1';
+  expoArgs.splice(mcpFlagIndex, 1);
+}
 
 if (profileArg === undefined || profileArg.trim().length === 0) {
   console.error(
-    'Usage: node scripts/run-expo-env.mjs <local|qa|pro> [expo args...]',
+    'Usage: node scripts/run-expo-env.mjs <local|qa|pro> [expo args...] [--mcp]',
   );
   console.error('');
   console.error('Profiles:');

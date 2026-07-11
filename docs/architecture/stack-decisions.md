@@ -7,7 +7,7 @@ Qué usa **este repositorio** frente a opciones mencionadas en el documento ofic
 | Capa | Decisión | Notas |
 |------|----------|--------|
 | Package manager | **pnpm 10.8.1** | Lockfile: `pnpm-lock.yaml` only; CI/EAS usan `pnpm install --frozen-lockfile` |
-| Cliente | Expo SDK 56 + React Native 0.85 + React 19 | Mobile-first; web vía `react-native-web` |
+| Cliente | Expo SDK 57 + React Native 0.86 + React 19 | Mobile-first; web vía `react-native-web` |
 | Lenguaje | TypeScript | |
 | Navegación | Expo Router | Rutas en `src/app` |
 | UI / estilo | **NativeWind v4** (Tailwind híbrido) + tokens en `shared/theme` | `className` por defecto; lista blanca StyleSheet para chrome/animaciones — ver [tailwind-stylesheet-whitelist.md](./tailwind-stylesheet-whitelist.md) |
@@ -41,7 +41,7 @@ pnpm run typecheck  # TypeScript
 pnpm run test:ci    # Misma cadena que GitHub Actions (sin build EAS)
 ```
 
-Documentación Expo: https://docs.expo.dev/versions/v56.0.0/
+Documentación Expo: https://docs.expo.dev/versions/v57.0.0/
 
 ## Convención NativeWind (híbrido)
 

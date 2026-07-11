@@ -1,0 +1,12 @@
+name: Development build (Android)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build_android:
+    name: Build Android development client
+    type: build
+    params:
+      platform: android
+      profile: development

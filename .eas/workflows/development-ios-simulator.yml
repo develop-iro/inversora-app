@@ -1,0 +1,12 @@
+name: Development build (iOS Simulator)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build_ios_simulator:
+    name: Build iOS Simulator development client
+    type: build
+    params:
+      platform: ios
+      profile: development-simulator

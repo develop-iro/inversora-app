@@ -30,6 +30,8 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-dev-client",
+      "@sentry/react-native",
       "expo-router",
       [
         "expo-splash-screen",
@@ -41,6 +43,8 @@
         }
       ],
       "expo-status-bar",
+      "expo-font",
+      "expo-secure-store",
       "expo-sharing",
       [
         "expo-build-properties",

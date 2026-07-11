@@ -1,4 +1,4 @@
-const { withAndroidManifest, withInfoPlist } = require('@expo/config-plugins');
+const { withAndroidManifest, withInfoPlist } = require('expo/config-plugins');
 
 const PINNED_HOSTS = [
   'inversora-api-production.up.railway.app',
@@ -8,8 +8,8 @@ const PINNED_HOSTS = [
 /**
  * Enables ATS hardening and disables cleartext traffic when SSL pinning is active.
  *
- * @param {import('@expo/config-plugins').ExpoConfig} config
- * @returns {import('@expo/config-plugins').ExpoConfig}
+ * @param {import('expo/config-plugins').ExpoConfig} config
+ * @returns {import('expo/config-plugins').ExpoConfig}
  */
 const withSslPinning = (config) => {
   const enabled = process.env.EXPO_PUBLIC_SSL_PINNING_ENABLED === 'true';

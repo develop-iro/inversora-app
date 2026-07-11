@@ -96,6 +96,16 @@ export const STYLESHEET_WHITELIST = [
     reason: 'Animated scale on press/hover',
     tailwindAllowed: 'static-wrapper-only',
   },
+  {
+    path: 'features/onboarding/components/home-starter-card.tsx',
+    reason: 'Portrait card panel heights for illustration + title stack',
+    tailwindAllowed: 'shell-only',
+  },
+  {
+    path: 'features/onboarding/components/home-starter-illustration.tsx',
+    reason: 'Animated SVG overlays and podium bar geometry',
+    tailwindAllowed: 'static-wrapper-only',
+  },
 ] as const satisfies readonly StylesheetWhitelistEntry[];
 
 /** Returns true when a source path is on the StyleSheet whitelist. */
