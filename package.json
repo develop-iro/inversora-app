@@ -18,7 +18,7 @@
     "expo-file-system": "~56.0.8",
     "expo-font": "^56.0.5",
     "expo-linear-gradient": "~56.0.4",
-    "expo-linking": "~8.0.4",
+    "expo-linking": "~56.0.15",
     "expo-router": "~56.2.6",
     "expo-secure-store": "~56.0.4",
     "expo-sharing": "~56.0.18",
