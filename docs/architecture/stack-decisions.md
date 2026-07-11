@@ -6,6 +6,7 @@ Qué usa **este repositorio** frente a opciones mencionadas en el documento ofic
 
 | Capa | Decisión | Notas |
 |------|----------|--------|
+| Package manager | **pnpm 10.8.1** | Lockfile: `pnpm-lock.yaml` only; CI/EAS usan `pnpm install --frozen-lockfile` |
 | Cliente | Expo SDK 56 + React Native 0.85 + React 19 | Mobile-first; web vía `react-native-web` |
 | Lenguaje | TypeScript | |
 | Navegación | Expo Router | Rutas en `src/app` |
@@ -31,11 +32,13 @@ Qué usa **este repositorio** frente a opciones mencionadas en el documento ofic
 ## Verificación local
 
 ```bash
-npm install
-npm start          # Expo dev
-npm run web        # Web
-npm run lint       # ESLint (obligatorio antes de merge)
-npm run typecheck  # TypeScript
+corepack enable
+pnpm install
+pnpm start          # Expo dev
+pnpm run web        # Web
+pnpm run lint       # ESLint (obligatorio antes de merge)
+pnpm run typecheck  # TypeScript
+pnpm run test:ci    # Misma cadena que GitHub Actions (sin build EAS)
 ```
 
 Documentación Expo: https://docs.expo.dev/versions/v56.0.0/
@@ -49,7 +52,7 @@ Documentación Expo: https://docs.expo.dev/versions/v56.0.0/
 - **`style` inline** para excepciones puntuales. Ver [styling-exceptions.md](./styling-exceptions.md).
 - **`useTheme()`** para iconos, `ActivityIndicator`, gráficos y APIs de terceros.
 - MVP en tema claro (`userInterfaceStyle: light`).
-- Tras cambiar tokens JSON, ejecutar `npm run generate:theme`.
+- Tras cambiar tokens JSON, ejecutar `pnpm run generate:theme`.
 
 ## Ver también
 
