@@ -9,6 +9,17 @@ import {
 import { AppError } from '@/core/errors/app-error';
 import type { RankedFund } from '@/core/scoring/types';
 import { getRankingsGroupedMock, getRankingsMock } from '@/features/funds/mocks/get-rankings-mock';
+import {
+  RANKINGS_BENCHMARK_DETAIL_LIMIT,
+  RANKINGS_GROUP_INDEX_LIMIT,
+  RANKINGS_HOME_GROUP_LIMIT,
+} from '@/features/funds/constants/rankings-limits';
+
+export {
+  RANKINGS_BENCHMARK_DETAIL_LIMIT,
+  RANKINGS_GROUP_INDEX_LIMIT,
+  RANKINGS_HOME_GROUP_LIMIT,
+} from '@/features/funds/constants/rankings-limits';
 
 export type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
 
@@ -41,7 +52,7 @@ async function fetchRankingsPayload(
     path: '/rankings',
     searchParams: {
       benchmark: options?.benchmark,
-      limit: options?.benchmark !== undefined ? options?.limit : undefined,
+      limit: options?.limit,
     },
     signal: options?.signal,
   });
@@ -115,7 +126,10 @@ export async function getRankingsGrouped(
 
   rankingsGroupedPromise ??= (async () => {
     try {
-      const loaded = await fetchRankingsGroupedFromApi({ signal });
+      const loaded = await fetchRankingsGroupedFromApi({
+        signal,
+        limit: limit ?? RANKINGS_HOME_GROUP_LIMIT,
+      });
       rankingsGroupedCache = loaded;
       return loaded;
     } catch (error) {
@@ -167,7 +181,10 @@ export async function getRankings(
 
   rankingsPromise ??= (async () => {
     try {
-      const loaded = await fetchRankingsFromApi({ signal });
+      const loaded = await fetchRankingsFromApi({
+        signal,
+        limit: limit ?? RANKINGS_HOME_GROUP_LIMIT,
+      });
       rankingsCache = loaded;
       return loaded;
     } catch (error) {

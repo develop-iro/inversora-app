@@ -5,7 +5,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DISCLAIMER_RANKING_EDUCATIONAL } from '@/features/legal/constants/disclaimer-snippets';
-import { getRankingsGrouped } from '@/features/funds/services/get-rankings';
+import { getRankingsGrouped, RANKINGS_GROUP_INDEX_LIMIT } from '@/features/funds/services/get-rankings';
 import {
   filterBeginnerEligibleRankingGroups,
   shouldApplyBeginnerSurfaceGuards,
@@ -48,7 +48,7 @@ export default function RankingsScreen() {
     }
 
     try {
-      const loaded = await getRankingsGrouped();
+      const loaded = await getRankingsGrouped({ limit: RANKINGS_GROUP_INDEX_LIMIT });
 
       if (loaded.length === 0) {
         setGroups([]);
@@ -69,7 +69,7 @@ export default function RankingsScreen() {
 
     void (async () => {
       try {
-        const loaded = await getRankingsGrouped();
+        const loaded = await getRankingsGrouped({ limit: RANKINGS_GROUP_INDEX_LIMIT });
 
         if (cancelled) {
           return;

@@ -3,6 +3,7 @@ import { allowsMockFallback } from '@/core/config/app-environment';
 import type { RankedFund } from '@/core/scoring/types';
 import { isQuestionLikeQuery } from '@/features/assistant/utils/search-intent';
 import { getRankings } from '@/features/funds/services/get-rankings';
+import { RANKINGS_HOME_GROUP_LIMIT } from '@/features/funds/constants/rankings-limits';
 import {
   matchHomeSearchAnswer,
   type HomeSearchAnswer,
@@ -143,7 +144,7 @@ export async function resolveHomeSearch(
   let allRanked: RankedFund[];
 
   try {
-    allRanked = await getRankings();
+    allRanked = await getRankings({ limit: RANKINGS_HOME_GROUP_LIMIT });
   } catch {
     allRanked = [];
   }
