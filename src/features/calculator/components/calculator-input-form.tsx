@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { CompoundInterestInput, DepositFrequency, DepositTiming } from '@/features/calculator/models/compound-interest.engine';
 import {
@@ -14,8 +14,7 @@ import { TextParagraph } from '@/shared/components/text';
 import { InputNumeric } from '@/shared/components/inputs';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type CalculatorInputFormProps = {
   input: CompoundInterestInput;
@@ -53,22 +52,20 @@ function OptionChip<T extends string>({
   selected: boolean;
   onPress: () => void;
 }) {
-  const theme = useTheme();
-
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={[
-        styles.chip,
-        {
-          backgroundColor: selected ? theme.backgroundSoft : theme.surface,
-          borderColor: selected ? theme.primary : theme.border,
-        },
-      ]}
+      className={cn(
+        'rounded-chip border px-md py-sm',
+        selected ? 'border-primary bg-background-soft' : 'border-border bg-surface',
+      )}
     >
-      <TextParagraph variant="secondary" style={{ color: selected ? theme.deepOcean : theme.text }}>
+      <TextParagraph
+        variant="secondary"
+        themeColor={selected ? 'deepOcean' : 'text'}
+      >
         {option.label}
       </TextParagraph>
     </Pressable>
@@ -89,7 +86,6 @@ export function CalculatorInputForm({
   onReset,
   rateHint,
 }: CalculatorInputFormProps) {
-  const theme = useTheme();
   const activeScenarioDescription = EDUCATIONAL_RATE_SCENARIOS.find(
     (scenario) => scenario.id === rateScenario,
   )?.description;
@@ -104,14 +100,14 @@ export function CalculatorInputForm({
   );
 
   return (
-    <Card variant="outlined" style={styles.card}>
+    <Card variant="outlined" contentClassName="gap-md">
       <TextParagraph variant="emphasis">¿Cuánto puedo ahorrar?</TextParagraph>
       <TextParagraph variant="secondary" themeColor="textSecondary">
         Introduce cantidades en euros. El resultado es una simulación educativa, no una previsión
         garantizada.
       </TextParagraph>
 
-      <View style={styles.row}>
+      <View className="flex-row gap-md">
         <InputNumeric
           label="Balance inicial"
           value={fieldValues.initialBalance}
@@ -130,11 +126,11 @@ export function CalculatorInputForm({
         />
       </View>
 
-      <View style={styles.fieldGroup}>
+      <View className="gap-sm">
         <TextParagraph variant="secondary" themeColor="textSecondary">
           Frecuencia de aportación
         </TextParagraph>
-        <View style={styles.chipRow}>
+        <View className="flex-row flex-wrap gap-sm">
           {FREQUENCY_OPTIONS.map((option) => (
             <OptionChip
               key={option.value}
@@ -146,11 +142,11 @@ export function CalculatorInputForm({
         </View>
       </View>
 
-      <View style={styles.fieldGroup}>
+      <View className="gap-sm">
         <TextParagraph variant="secondary" themeColor="textSecondary">
           Momento del aporte
         </TextParagraph>
-        <View style={styles.chipColumn}>
+        <View className="gap-sm">
           {TIMING_OPTIONS.map((option) => (
             <OptionChip
               key={option.value}
@@ -163,11 +159,11 @@ export function CalculatorInputForm({
       </View>
 
       {showEducationalScenarios ? (
-        <View style={styles.fieldGroup}>
+        <View className="gap-sm">
           <TextParagraph variant="secondary" themeColor="textSecondary">
             Escenario educativo de rentabilidad
           </TextParagraph>
-          <View style={styles.chipRow}>
+          <View className="flex-row flex-wrap gap-sm">
             {EDUCATIONAL_RATE_SCENARIOS.map((scenario) => (
               <OptionChip
                 key={scenario.id}
@@ -185,7 +181,7 @@ export function CalculatorInputForm({
         </View>
       ) : null}
 
-      <View style={styles.row}>
+      <View className="flex-row gap-md">
         <InputNumeric
           label="Tipo de interés anual"
           value={fieldValues.annualRatePercent}
@@ -216,46 +212,10 @@ export function CalculatorInputForm({
         </TextParagraph>
       ) : null}
 
-      <View style={[styles.actions, { borderTopColor: theme.border }]}>
+      <View className="mt-lg flex-row flex-wrap justify-end gap-md border-t border-border pt-lg">
         <Button label="Restablecer" variant="secondary" onPress={onReset} />
         <Button label="Calcular" onPress={onCalculate} />
       </View>
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    gap: Spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  fieldGroup: {
-    gap: Spacing.sm,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  chipColumn: {
-    gap: Spacing.sm,
-  },
-  chip: {
-    borderWidth: 1,
-    borderRadius: Radius.chip,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  actions: {
-    marginTop: Spacing.lg,
-    paddingTop: Spacing.lg,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: Spacing.md,
-    flexWrap: 'wrap',
-  },
-});

@@ -17,13 +17,27 @@ describe('mapCatalogFiltersToApiQuery', () => {
     );
   });
 
-  it('maps return sort preset', () => {
+  it('maps return threshold filter for one-year period', () => {
     assert.deepEqual(
       mapCatalogFiltersToApiQuery({
-        sortBy: 'return1y',
+        minReturnPercent: 5,
+        returnPeriod: '1y',
+      }),
+      {
+        sortBy: 'score',
         sortOrder: 'desc',
-      }).sortBy,
-      'return1y',
+        minReturn1y: 5,
+      },
+    );
+  });
+
+  it('maps return threshold filter for three-year period', () => {
+    assert.deepEqual(
+      mapCatalogFiltersToApiQuery({
+        minReturnPercent: 10,
+        returnPeriod: '3y',
+      }).minReturn3y,
+      10,
     );
   });
 });

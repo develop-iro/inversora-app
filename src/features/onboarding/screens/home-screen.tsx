@@ -1,10 +1,17 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { RefreshControl, View } from 'react-native';
+
+import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
+import { getRankingsGrouped } from '@/features/funds/services/get-rankings';
 
 import { HomeEducationalProfileCard } from '@/features/learn/components/home-educational-profile-card';
 import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
+import {
+  applyBeginnerGuardsToHomeSearchResult,
+  filterBeginnerEligibleRankingGroups,
+  shouldApplyBeginnerSurfaceGuards,
+} from '@/features/funds/utils/beginner-eligibility';
 import { FeaturedFundsCarousel } from '@/features/onboarding/components/featured-funds-carousel';
 import {
   HomeExploreAnswerSection,
@@ -23,29 +30,25 @@ import {
 import { useHomeScreenData } from '@/features/onboarding/hooks/use-home-screen-data';
 import type { HomeSearchResult } from '@/features/onboarding/services/resolve-home-search';
 import {
-  buildRankingThemeOptions,
-  filterRankingByTheme,
+  buildRankingThemeOptionsFromGroups,
   formatRankingThemeLabel,
+  getRankingFundsForBenchmark,
+  toHomeRankingEntries,
 } from '@/features/onboarding/utils/build-ranking-theme-options';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
-import {
-  NAV_TAB_BAR_BOTTOM_GAP,
-  NAV_TAB_BAR_CONTENT_GAP,
-  NAV_TAB_BAR_HEIGHT,
-} from '@/shared/components/navigation/nav-tab-bar';
-import { ContentEmptyState, SearchField, TabPill } from '@/shared/components/ui';
+import { TabScreenScroll } from '@/shared/components/layout';
+import { ContentEmptyState, ReloadState, SearchField, TabPill } from '@/shared/components/ui';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
-import { Spacing } from '@/shared/theme/theme';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { contentWidth } = useMobileLayout();
   const [activeTab, setActiveTab] = useState<HomeContentTab>('explore');
   const [selectedRankingTheme, setSelectedRankingTheme] = useState<string | 'all'>('all');
+  const [rankingGroups, setRankingGroups] = useState<BenchmarkRankingGroup[]>([]);
   const {
     searchQuery,
     hasQuery,
@@ -63,6 +66,23 @@ export default function HomeScreen() {
     retryActiveRanking,
   } = useHomeScreenData();
   const { profile: educationalProfile, isLoading: isProfileLoading } = useEducationalProfile();
+  const applyBeginnerGuards = shouldApplyBeginnerSurfaceGuards(educationalProfile);
+
+  const guardedRankingGroups = useMemo(
+    () =>
+      applyBeginnerGuards
+        ? filterBeginnerEligibleRankingGroups(rankingGroups)
+        : rankingGroups,
+    [applyBeginnerGuards, rankingGroups],
+  );
+
+  const guardedActiveRanking = useMemo(
+    () =>
+      applyBeginnerGuards
+        ? applyBeginnerGuardsToHomeSearchResult(activeRanking)
+        : activeRanking,
+    [activeRanking, applyBeginnerGuards],
+  );
 
   const handleOpenSuggestedCatalog = useCallback(() => {
     router.push(routes.fundsCatalogWithProfileHints);
@@ -101,70 +121,85 @@ export default function HomeScreen() {
     setActiveTab('ranking');
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    void getRankingsGrouped()
+      .then((groups) => {
+        if (!cancelled) {
+          setRankingGroups(groups);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRankingGroups([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const effectiveRankingTheme =
     hasQuery || activeTab !== 'ranking' ? 'all' : selectedRankingTheme;
 
   const rankingThemeOptions = useMemo(
-    () => buildRankingThemeOptions(activeRanking?.funds ?? []),
-    [activeRanking?.funds],
+    () => buildRankingThemeOptionsFromGroups(guardedRankingGroups),
+    [guardedRankingGroups],
   );
 
   const filteredRankingResult = useMemo((): HomeSearchResult | null => {
-    if (!activeRanking) {
+    if (!guardedActiveRanking) {
       return null;
     }
 
-    if (effectiveRankingTheme === 'all' || hasQuery) {
-      return activeRanking;
+    if (effectiveRankingTheme === 'all' || hasQuery || guardedRankingGroups.length === 0) {
+      return guardedActiveRanking;
     }
 
-    const filteredFunds = filterRankingByTheme(activeRanking.funds, effectiveRankingTheme).map(
-      (fund, index) => ({
-        ...fund,
-        displayRank: index + 1,
-        isHighlighted: index === 0,
-      }),
+    const selectedGroup = guardedRankingGroups.find(
+      (group) => group.benchmarkKey === effectiveRankingTheme,
+    );
+    const filteredFunds = toHomeRankingEntries(
+      getRankingFundsForBenchmark(guardedRankingGroups, effectiveRankingTheme),
     );
 
     return {
-      ...activeRanking,
+      ...guardedActiveRanking,
       funds: filteredFunds,
-      subtitle: `Observa el ranking de ${formatRankingThemeLabel(effectiveRankingTheme)} según el Score Inversora.`,
+      subtitle: selectedGroup
+        ? `Observa el ranking de ${selectedGroup.benchmark} (${selectedGroup.total} comparables) según el Score Inversora.`
+        : `Observa el ranking de ${formatRankingThemeLabel(effectiveRankingTheme)} según el Score Inversora.`,
     };
-  }, [activeRanking, effectiveRankingTheme, hasQuery]);
+  }, [guardedActiveRanking, effectiveRankingTheme, hasQuery, guardedRankingGroups]);
 
   const showExploreDefault = activeTab === 'explore' && !hasQuery;
-  const showExploreSearchResults = activeTab === 'explore' && hasQuery && activeRanking;
+  const showExploreSearchResults = activeTab === 'explore' && hasQuery && guardedActiveRanking;
   const showExploreSearchError = activeTab === 'explore' && hasQuery && rankingState === 'error';
 
   return (
-    <View className="flex-1 items-center" style={{ backgroundColor: theme.background }}>
-      <ScrollView
-        className="w-full flex-1"
-        contentContainerClassName="flex-grow gap-lg self-center pt-xs"
-        contentContainerStyle={{
-          width: contentWidth,
-          maxWidth: contentWidth,
-          paddingBottom:
-            NAV_TAB_BAR_HEIGHT +
-            NAV_TAB_BAR_BOTTOM_GAP +
-            NAV_TAB_BAR_CONTENT_GAP +
-            insets.bottom,
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={() => {
-              void refreshHome();
-            }}
-            tintColor={theme.primary}
-            colors={[theme.primary]}
-            progressBackgroundColor={theme.surface}
-          />
-        }
-      >
+    <TabScreenScroll
+      contentContainerClassName="gap-lg self-center pt-xs"
+      contentContainerStyle={{
+        width: contentWidth,
+        maxWidth: contentWidth,
+      }}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      nestedScrollEnabled
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={() => {
+            void refreshHome();
+          }}
+          tintColor={theme.primary}
+          colors={[theme.primary]}
+          progressBackgroundColor={theme.surface}
+        />
+      }
+    >
         <HomeHeroCarousel onSlideAction={handleHeroAction} />
 
         <HomeSectionCard contentClassName="py-md">
@@ -193,11 +228,9 @@ export default function HomeScreen() {
           <>
             {showExploreSearchError ? (
               <HomeSectionCard title="No pudimos resolver tu búsqueda">
-                <ContentEmptyState
-                  icon="cloud-off-outline"
+                <ReloadState
                   title="SORA no está disponible"
                   message="No pudimos obtener una respuesta educativa ni actualizar el ranking. Comprueba tu conexión o inténtalo de nuevo."
-                  actionLabel="Reintentar"
                   onAction={() => {
                     void retryActiveRanking();
                   }}
@@ -205,13 +238,13 @@ export default function HomeScreen() {
               </HomeSectionCard>
             ) : null}
 
-            {showExploreSearchResults && activeRanking.kind === 'answer' ? (
+            {showExploreSearchResults && guardedActiveRanking.kind === 'answer' ? (
               <HomeSectionCard
                 title="Respuesta educativa"
                 summary="Contexto sobre tu consulta, sin recomendaciones personalizadas."
               >
                 <HomeExploreAnswerSection
-                  result={activeRanking}
+                  result={guardedActiveRanking}
                   loadState={rankingState}
                   onRetry={() => {
                     void retryActiveRanking();
@@ -220,10 +253,10 @@ export default function HomeScreen() {
               </HomeSectionCard>
             ) : null}
 
-            {showExploreSearchResults && activeRanking.kind === 'fund-match' ? (
+            {showExploreSearchResults && guardedActiveRanking.kind === 'fund-match' ? (
               <HomeSectionCard title="Coincidencias en el ranking">
                 <HomeExploreFundMatchPrompt
-                  result={activeRanking}
+                  result={guardedActiveRanking}
                   onOpenRanking={handleOpenRankingTab}
                 />
               </HomeSectionCard>
@@ -242,7 +275,7 @@ export default function HomeScreen() {
                 ) : null}
 
                 <HomeSectionCard title="Para empezar" borderless contentClassName="p-0">
-                  <View style={styles.starterRow}>
+                  <View className="w-full flex-row items-stretch gap-md">
                     <HomeStarterCard
                       title="Conceptos básicos"
                       iconName="book-open-page-variant-outline"
@@ -268,19 +301,18 @@ export default function HomeScreen() {
                 >
                   {featuredState === 'loading' ? (
                     <FeaturedFundsCarousel loading />
-                  ) : featuredState === 'error' || featuredState === 'empty' ? (
+                  ) : featuredState === 'error' ? (
+                    <ReloadState
+                      title="Los destacados no han cargado"
+                      message="Tira hacia abajo para actualizar o reintenta. Los datos educativos volverán en cuanto la API responda."
+                      onAction={() => {
+                        void retryFeatured();
+                      }}
+                    />
+                  ) : featuredState === 'empty' ? (
                     <ContentEmptyState
-                      icon="star-four-points-outline"
-                      title={
-                        featuredState === 'error'
-                          ? 'Los destacados no han cargado'
-                          : 'Sin fondos destacados ahora mismo'
-                      }
-                      message={
-                        featuredState === 'error'
-                          ? 'Tira hacia abajo para actualizar o reintenta. Los datos educativos volverán en cuanto la API responda.'
-                          : 'Cuando haya una selección editorial disponible, aparecerá aquí en formato carrusel.'
-                      }
+                      title="Sin fondos destacados ahora mismo"
+                      message="Cuando haya una selección editorial disponible, aparecerá aquí en formato carrusel."
                       actionLabel="Reintentar"
                       onAction={() => {
                         void retryFeatured();
@@ -321,21 +353,11 @@ export default function HomeScreen() {
           />
         )}
 
-        <LegalNotice
-          body="Inversora no ofrece asesoramiento financiero personalizado. La información mostrada es educativa y orientativa."
-          onLearnMorePress={handleOpenLegal}
-          className="mx-lg"
-        />
-      </ScrollView>
-    </View>
+      <LegalNotice
+        body="Inversora no ofrece asesoramiento financiero personalizado. La información mostrada es educativa y orientativa."
+        onLearnMorePress={handleOpenLegal}
+        className="mx-lg"
+      />
+    </TabScreenScroll>
   );
 }
-
-const styles = StyleSheet.create({
-  starterRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: Spacing.md,
-    width: '100%',
-  },
-});

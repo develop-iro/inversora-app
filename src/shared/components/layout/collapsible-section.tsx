@@ -1,16 +1,17 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type CollapsibleSectionProps = {
   readonly title: string;
   readonly subtitle?: string;
   readonly defaultExpanded?: boolean;
   readonly children: ReactNode;
+  readonly className?: string;
 };
 
 /**
@@ -21,25 +22,21 @@ export function CollapsibleSection({
   subtitle,
   defaultExpanded = false,
   children,
+  className,
 }: CollapsibleSectionProps) {
-  const theme = useTheme();
+  const theme = useTheme(); // tailwind-exception: chevron icon color
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <View
-      style={[
-        styles.section,
-        { borderColor: theme.border, backgroundColor: theme.surface },
-      ]}
-    >
+    <View className={cn('overflow-hidden rounded-card border border-border bg-surface', className)}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: isExpanded }}
         accessibilityLabel={`${title}. ${isExpanded ? 'Contraer' : 'Expandir'} sección`}
         onPress={() => setIsExpanded((current) => !current)}
-        style={({ pressed }) => [styles.header, pressed && styles.headerPressed]}
+        className="flex-row items-center justify-between gap-sm px-md py-md active:opacity-90"
       >
-        <View style={styles.headerCopy}>
+        <View className="flex-1 gap-xs">
           <TextParagraph variant="emphasis">{title}</TextParagraph>
           {subtitle ? (
             <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={2}>
@@ -54,35 +51,7 @@ export function CollapsibleSection({
         />
       </Pressable>
 
-      {isExpanded ? <View style={styles.body}>{children}</View> : null}
+      {isExpanded ? <View className="gap-md px-md pb-md">{children}</View> : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-  },
-  headerPressed: {
-    opacity: 0.9,
-  },
-  headerCopy: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-  body: {
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
-    gap: Spacing.md,
-  },
-});

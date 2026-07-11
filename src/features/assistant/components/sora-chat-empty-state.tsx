@@ -1,9 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type SoraChatEmptyStateProps = {
   prompts: readonly string[];
@@ -17,33 +16,26 @@ export function SoraChatEmptyState({ prompts, onPromptPress }: SoraChatEmptyStat
   const theme = useTheme();
 
   return (
-    <View style={styles.root}>
-      <View style={[styles.iconWrap, { backgroundColor: theme.primaryIconSurface }]}>
+    <View className="min-h-[280px] flex-grow items-center justify-center gap-sm px-lg py-xl">
+      <View className="mb-xs h-14 w-14 items-center justify-center rounded-full bg-primary-icon-surface">
         <MaterialCommunityIcons name="creation" size={28} color={theme.deepOcean} />
       </View>
 
-      <TextHeading variant="section" style={styles.title}>
+      <TextHeading variant="section" className="text-center">
         ¿En qué puedo ayudarte?
       </TextHeading>
-      <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.message}>
+      <TextParagraph variant="secondary" themeColor="textSecondary" className="max-w-[300px] text-center leading-5">
         Pregunta conceptos, métricas o diferencias usando el contexto de esta pantalla.
       </TextParagraph>
 
-      <View style={styles.prompts}>
+      <View className="mt-md w-full gap-sm">
         {prompts.map((prompt) => (
           <Pressable
             key={prompt}
             accessibilityRole="button"
             accessibilityLabel={`Preguntar: ${prompt}`}
             onPress={() => onPromptPress(prompt)}
-            style={({ pressed }) => [
-              styles.promptChip,
-              {
-                borderColor: theme.border,
-                backgroundColor: theme.surface,
-              },
-              pressed && styles.promptChipPressed,
-            ]}
+            className="rounded-pill border border-border bg-surface px-md py-sm active:opacity-[0.88]"
           >
             <TextParagraph variant="secondary">{prompt}</TextParagraph>
           </Pressable>
@@ -52,45 +44,3 @@ export function SoraChatEmptyState({ prompts, onPromptPress }: SoraChatEmptyStat
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
-    gap: Spacing.sm,
-    minHeight: 280,
-  },
-  iconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xs,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  message: {
-    textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: 300,
-  },
-  prompts: {
-    width: '100%',
-    marginTop: Spacing.md,
-    gap: Spacing.sm,
-  },
-  promptChip: {
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  promptChipPressed: {
-    opacity: 0.88,
-  },
-});

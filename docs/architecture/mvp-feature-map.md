@@ -2,7 +2,7 @@
 
 Estado del código a julio de 2026.
 
-Referencias de producto: [docs/product/](../product/) · `README.md` · `AGENTS.md` · [Índice de HUs](../product/user-stories-index.md).
+Referencias de producto: [docs/product/](../product/) · [objectives.md](../product/objectives.md) · `README.md` · `AGENTS.md` · [Índice de HUs](../product/user-stories-index.md).
 
 Leyenda de madurez:
 
@@ -19,15 +19,15 @@ Leyenda de madurez:
 
 | Área MVP | Progreso global | Notas de cierre julio 2026 |
 |----------|-----------------|----------------------------|
-| Dashboard inicial | ✅ ~90% | Home con destacados, ranking, SORA, perfil educativo conectado |
-| Catálogo y rankings | ✅ ~90% | Filtros, ordenación (score/TER/rentab. 1y), ficha `/funds/[isin]` |
-| Modo educativo / perfil | ✅ ~85% | Cuestionario, perfil local, sugerencias en home y catálogo |
-| Comparación | ✅ ~80% | Hasta 2 fondos, fairness, picker contra API |
+| Dashboard inicial | ✅ ~95% | Home con destacados, ranking por benchmark, SORA, perfil educativo |
+| Catálogo y rankings | ✅ ~95% | Filtros incl. minReturn, `/rankings`, ficha `/funds/[isin]` |
+| Modo educativo / perfil | ✅ ~90% | Cuestionario, perfil local, sync anónimo, sugerencias en catálogo |
+| Comparación | ✅ ~85% | Hasta 2 fondos, fairness, picker contra API |
 | Favoritos locales | ✅ ~85% | AsyncStorage + toggle en ficha y catálogo |
 | Calculadora | ✅ ~85% | Motor + 3 escenarios educativos + modo fondo |
-| Asistente (SORA) | 🟡 ~70% | Home, ficha, comparación; degradación transparente |
+| Asistente (SORA) | ✅ ~90% | Home, ficha inline, catálogo, comparación; guardrails HU-40 |
 | Avisos legales | ✅ ~90% | `LegalNotice` en superficies sensibles + `/legal` |
-| Infra (`core`, API) | ✅ ~85% | Cliente HTTP, caché TTL, analytics, entornos local/qa/pro |
+| Infra (`core`, API) | ✅ ~90% | Cliente HTTP, caché TTL, analytics, dispositivos anónimos |
 
 ---
 
@@ -65,7 +65,7 @@ Leyenda de madurez:
 | `api/` | ✅ | Cliente HTTP + mapeo filtros |
 | `query/` | ✅ | Caché in-memory con TTL (catálogo 5 min, ficha 2 min) |
 | `config/` | ✅ | Entornos `local` / `qa` / `pro`, flags mock |
-| `analytics/` | ✅ | Eventos anónimos + `POST /analytics/events` |
+| `analytics/` | ✅ | Eventos anónimos + `POST /analytics/events` + PostgreSQL + funnel learn |
 
 ---
 
@@ -79,7 +79,7 @@ Leyenda de madurez:
 |---------------|--------|-------------------|
 | Dashboard inicial | 🟡 | `HomeHero`, panel de contenido, ranking top 3 |
 | Fondos destacados (carousel) | ✅ | `FeaturedFundsCarousel` + `FEATURED_FUNDS_MOCK` |
-| Ranking resumido (Score Inversora) | 🟡 | `RANKING_FUNDS` inline en `home-screen.tsx` (5 fondos, muestra 3) |
+| Ranking resumido (Score Inversora) | ✅ | `use-home-screen-data` + pestaña Ranking; HU-16 vía `beginner-eligibility.ts` |
 | Búsqueda / asistente en barra | 🟡 | `SearchField` con placeholders animados; sin submit ni backend |
 | CTA “Quiero invertir” / explorar | 🟡 | Navega a `/explore` (pantalla oculta = fondos) |
 | Guía “Sora” (perfil educativo) | 🟡 | Card UI; navega a `/explore`, no a `/learn` |
@@ -116,7 +116,7 @@ Leyenda de madurez:
 | Pantalla catálogo | 🟡 | `funds-screen.tsx` — placeholder “Next Functional Block” |
 | Búsqueda por nombre / ISIN / categoría | ⬜ | |
 | Filtros (comisión, riesgo, categoría, histórico) | ⬜ | |
-| Rankings por categoría | ⬜ | Solo preview en home |
+| Rankings por categoría | ✅ | `/rankings` + `/rankings/[benchmarkKey]` (HU-14); API por benchmark |
 | Detalle ampliado `/funds/[isin]` | ✅ | `fund-detail-screen.tsx` + secciones Información, Rentabilidad, Ratios, Exposición |
 | Desglose Score Inversora en ficha | ✅ | `FundScoreBreakdown` visible; dominio `FundDetailProfile` |
 | Estados de calidad de datos | 🟡 | `FundDataQualityBanner` si `scoringStatus` ≠ ok |
@@ -128,7 +128,7 @@ Leyenda de madurez:
 1. `services/funds-repository.ts` (mock → API).
 2. Pantalla catálogo con lista + filtros.
 3. Conectar catálogo y ranking a detalle ampliado (deep links consistentes).
-4. Sustituir mocks de `fund-detail-profile-mock.ts` por API/Supabase cuando exista.
+4. Sustituir mocks de `fund-detail-profile-mock.ts` por `inversora-api` (`GET /funds/:isin` BFF).
 
 ---
 
@@ -138,10 +138,10 @@ Leyenda de madurez:
 
 | Capacidad MVP | Estado |
 |---------------|--------|
-| Pantalla comparación | 🟡 Shell con título y subtítulo |
-| Selección de 2+ fondos | ⬜ |
-| Tabla métricas (TER, riesgo, score, …) | ⬜ |
-| Avisos legales en comparación | ⬜ |
+| Pantalla comparación | ✅ | `comparison-screen.tsx` |
+| Selección de hasta 2 fondos | ✅ | `MAX_COMPARE_FUNDS = 2`, `compare-selection-store.ts` |
+| Tabla métricas (TER, riesgo, score, …) | ✅ | `compare-metrics-table.tsx` |
+| Avisos legales en comparación | ✅ | `LegalNotice` + `CompareFairnessBanner` |
 | Enlace desde favoritos / catálogo | ⬜ |
 
 **Dependencias:** reutilizar `FundMetricRow`, modelos de `funds`, posible estado en Zustand (`comparisonSelection`).
@@ -268,7 +268,7 @@ Fases pensadas para minimizar retrabajo y respetar “educar primero”:
 
 ### Fase E — Datos reales
 
-13. Supabase + validación Zod en boundaries.
+13. `inversora-api` + validación Zod en boundaries.
 14. Scoring en backend; cliente solo muestra y explica.
 
 ---

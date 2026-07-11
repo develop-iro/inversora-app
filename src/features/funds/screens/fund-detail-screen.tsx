@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ScrollView,
-  StyleSheet,
   View,
   type StyleProp,
   type ViewStyle,
@@ -12,7 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SoraChatSheet } from '@/features/assistant/components/sora-chat-sheet';
-import { trackEvent, trackPerfMark } from '@/core/analytics/track-event';
+import { trackPerfMark } from '@/core/analytics/track-event';
 import { parseOptionalFundIsinParam } from '@/core/domain/fund-isin';
 import type { FundDetail } from '@/core/domain/catalog';
 import type { FundPerformanceTimeframe } from '@/core/domain/fund-market';
@@ -61,14 +60,16 @@ import { useTheme } from '@/shared/hooks/use-theme';
 import { getDiversificationLabel } from '@/shared/utils/fund-diversification';
 import { getRiskLabel } from '@/shared/utils/fund-risk';
 import { Layout, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 type FundDetailShellProps = {
   children: ReactNode;
+  bodyClassName?: string;
   bodyStyle?: StyleProp<ViewStyle>;
   onSoraPress?: () => void;
 };
 
-function FundDetailShell({ children, bodyStyle, onSoraPress }: FundDetailShellProps) {
+function FundDetailShell({ children, bodyClassName, bodyStyle, onSoraPress }: FundDetailShellProps) {
   const router = useRouter();
 
   return (
@@ -84,7 +85,11 @@ function FundDetailShell({ children, bodyStyle, onSoraPress }: FundDetailShellPr
           }}
         />
       }
-      body={<View style={[styles.body, bodyStyle]}>{children}</View>}
+      body={
+        <View className={cn('flex-1', bodyClassName)} style={bodyStyle}>
+          {children}
+        </View>
+      }
     />
   );
 }
@@ -123,10 +128,6 @@ export default function FundDetailScreen() {
 
   useEffect(() => {
     loadStartedAtRef.current = performance.now();
-
-    if (resolvedIsin) {
-      void trackEvent('screen_view', 'fund_detail', { isin: resolvedIsin });
-    }
   }, [resolvedIsin]);
   const { isFavorite, isLoading: isFavoriteLoading, toggle } = useFavorite(resolvedIsin);
   const {
@@ -253,7 +254,7 @@ export default function FundDetailScreen() {
 
   if (isLoading) {
     return (
-      <FundDetailShell bodyStyle={styles.centered}>
+      <FundDetailShell bodyClassName="items-center justify-center">
         <Spinner fullscreen size="lg" accessibilityLabel="Cargando ficha del fondo" />
       </FundDetailShell>
     );
@@ -261,22 +262,32 @@ export default function FundDetailScreen() {
 
   if (loadError) {
     return (
-      <FundDetailShell bodyStyle={[styles.centered, styles.notFound]}>
+      <FundDetailShell bodyClassName="min-h-0 flex-1">
         <FundApiErrorState
           title="No se pudo cargar la ficha"
           message={loadError}
           onRetry={handleRetryLoad}
+          secondaryActionLabel="Volver al catálogo"
+          onSecondaryAction={() => router.back()}
+          layout="screen"
+          className="flex-1"
         />
-        <Button label="Volver al catálogo" variant="outline" onPress={() => router.back()} />
       </FundDetailShell>
     );
   }
 
   if (notFound || !detail) {
     return (
-      <FundDetailShell bodyStyle={[styles.centered, styles.notFound]}>
-        <TextHeading variant="section">Fondo no encontrado</TextHeading>
-        <Button label="Volver al catálogo" variant="outline" onPress={() => router.back()} />
+      <FundDetailShell bodyClassName="min-h-0 flex-1">
+        <FundApiErrorState
+          title="Fondo no encontrado"
+          message="No encontramos una ficha para este ISIN en el catálogo educativo."
+          variant="warning"
+          secondaryActionLabel="Volver al catálogo"
+          onSecondaryAction={() => router.back()}
+          layout="screen"
+          className="flex-1"
+        />
       </FundDetailShell>
     );
   }
@@ -287,33 +298,32 @@ export default function FundDetailScreen() {
   return (
     <FundDetailShell onSoraPress={handleOpenSora}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingBottom: insets.bottom + Spacing.xl,
-          },
-        ]}
+        className="min-h-0 flex-1"
+        contentContainerClassName="items-center"
+        // tailwind-exception: safe-area bottom inset is runtime-only
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + Spacing.xl,
+        }}
         showsVerticalScrollIndicator={false}
       >
         <View
-          style={[
-            styles.inner,
-            {
-              width: contentWidth,
-              maxWidth: contentWidth,
-            },
-          ]}
+          className="gap-md self-center pt-sm"
+          // tailwind-exception: content width follows mobile layout breakpoint
+          style={{
+            width: contentWidth,
+            maxWidth: contentWidth,
+            paddingHorizontal: Layout.screenPaddingHorizontal,
+          }}
         >
-          <View style={styles.hero}>
+          <View className="gap-xs">
             {detail.rank != null ? (
               <TextLabel variant="meta" themeColor="deepOcean">
                 Ranking #{detail.rank}
               </TextLabel>
             ) : null}
-            <View style={styles.heroMain}>
-              <View style={styles.titleBlock}>
-                <TextHeading variant="card" style={styles.fundName} numberOfLines={3}>
+            <View className="flex-row items-start gap-sm">
+              <View className="min-w-0 flex-1 gap-xs">
+                <TextHeading variant="card" className="tracking-[-0.36px]" numberOfLines={3}>
                   {fund.name}
                 </TextHeading>
                 <TextParagraph variant="secondary" themeColor="textSecondary">
@@ -325,7 +335,7 @@ export default function FundDetailScreen() {
                   isLoading={isLiveMarketLoading}
                 />
               </View>
-              <View style={styles.favoriteSlot}>
+              <View className="mt-half shrink-0">
                 <FavoriteToggleButton
                   isin={fund.isin}
                   isFavorite={isFavorite}
@@ -336,7 +346,7 @@ export default function FundDetailScreen() {
             </View>
 
             {performanceSeries && performanceSeries.points.length >= 2 ? (
-              <View style={styles.performanceRow}>
+              <View className="mt-xs flex-row items-center gap-xs">
                 <MaterialCommunityIcons
                   name={performanceTrendUp ? 'trending-up' : 'trending-down'}
                   size={18}
@@ -344,7 +354,7 @@ export default function FundDetailScreen() {
                   accessibilityElementsHidden
                   importantForAccessibility="no"
                 />
-                <TextParagraph variant="emphasis" style={{ color: theme.primary }}>
+                <TextParagraph variant="emphasis" themeColor="primary">
                   {formatPerformanceChange(performanceChange)}
                 </TextParagraph>
                 <TextParagraph variant="secondary" themeColor="textSecondary">
@@ -366,11 +376,11 @@ export default function FundDetailScreen() {
 
           <FundDataQualityBanner status={detail.scoringStatus} />
 
-          <View style={styles.actionsRow}>
+          <View className="flex-row gap-sm">
             <Button
               label="Pregúntale a Sora"
               variant="primary"
-              style={styles.actionButton}
+              className="flex-1"
               accessibilityLabel="Pregúntale a Sora, asistente educativo"
               accessibilityHint="Abre el asistente educativo con contexto de este fondo"
               onPress={handleOpenSora}
@@ -378,7 +388,7 @@ export default function FundDetailScreen() {
             <Button
               label="Comparar"
               variant="primary"
-              style={[styles.actionButton, { backgroundColor: theme.deepOcean }]}
+              className="flex-1 bg-deep-ocean"
               accessibilityLabel={`Comparar ${fund.name} con otros fondos`}
               onPress={() => router.push(routes.compareWithIsins([fund.isin]))}
             />
@@ -394,7 +404,7 @@ export default function FundDetailScreen() {
           />
 
           {showPerformanceHistory ? (
-            <View style={styles.performanceSection}>
+            <View className="gap-sm self-stretch">
               <TabChipFund value={timeframe} onChange={setTimeframe} />
 
               {performanceSeries && performanceSeries.points.length > 1 ? (
@@ -456,67 +466,3 @@ export default function FundDetailScreen() {
     </FundDetailShell>
   );
 }
-
-const styles = StyleSheet.create({
-  body: {
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    alignItems: 'center',
-  },
-  inner: {
-    alignSelf: 'center',
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    gap: Spacing.md,
-    paddingTop: Spacing.sm,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  notFound: {
-    gap: Spacing.lg,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-  },
-  hero: {
-    gap: Spacing.xs,
-  },
-  heroMain: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-  },
-  titleBlock: {
-    flex: 1,
-    minWidth: 0,
-    gap: Spacing.xs,
-  },
-  favoriteSlot: {
-    flexShrink: 0,
-    marginTop: Spacing.half,
-  },
-  fundName: {
-    letterSpacing: -0.36,
-  },
-  performanceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    marginTop: Spacing.xs,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  performanceSection: {
-    gap: Spacing.sm,
-    alignSelf: 'stretch',
-  },
-  actionButton: {
-    flex: 1,
-  },
-});

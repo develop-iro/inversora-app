@@ -5,7 +5,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import type { RankingThemeOption } from '@/features/onboarding/utils/build-ranking-theme-options';
 import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { palette } from '@/shared/theme/palette';
+import { cn } from '@/shared/utils/cn';
 
 export type HomeRankingThemeFiltersProps = {
   themes: readonly RankingThemeOption[];
@@ -65,7 +65,7 @@ export function HomeRankingThemeFilters({
           onPress={() => onThemeChange('all')}
           className="min-h-[36px] flex-row items-center gap-xs self-start active:opacity-[0.85]"
         >
-          <TextParagraph variant="emphasis" style={{ color: theme.primary }}>
+          <TextParagraph variant="emphasis" themeColor="primary">
             Ver todas las temáticas
           </TextParagraph>
           <MaterialCommunityIcons name="chevron-right" size={18} color={theme.primary} />
@@ -100,17 +100,16 @@ function ThemeFilterCard({
       accessibilityState={{ selected }}
       accessibilityLabel={`${label}, ${valueLabel} ${valueCaption}`}
       onPress={onPress}
-      className="min-h-[132px] w-28 items-center gap-xs rounded-card border px-sm py-md active:opacity-90"
-      style={{
-        backgroundColor: selected ? theme.backgroundSoft : theme.surface,
-        borderColor: selected ? theme.primary : theme.border,
-      }}
+      className={cn(
+        'min-h-[132px] w-28 items-center gap-xs rounded-card border px-sm py-md active:opacity-90',
+        selected ? 'border-primary bg-background-soft' : 'border-border bg-surface',
+      )}
     >
       <View
-        className="h-10 w-10 items-center justify-center rounded-full"
-        style={{
-          backgroundColor: selected ? palette.mintAccent : theme.backgroundSoft,
-        }}
+        className={cn(
+          'h-10 w-10 items-center justify-center rounded-full',
+          selected ? 'bg-accent-mint' : 'bg-background-soft',
+        )}
       >
         <MaterialCommunityIcons name={icon} size={22} color={theme.primary} />
       </View>

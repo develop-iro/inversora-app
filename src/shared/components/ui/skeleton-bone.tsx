@@ -1,19 +1,30 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
+import {
+  Animated,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { useSkeletonShimmerSweep } from '@/shared/components/ui/skeleton-shimmer-provider';
-import { getSkeletonTokens } from '@/shared/components/ui/skeleton-tokens';
+import { getSkeletonShimmerGradient, getSkeletonTokens } from '@/shared/components/ui/skeleton-tokens';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { Radius } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type SkeletonBoneProps = {
   width?: number | `${number}%`;
   height?: number;
   borderRadius?: number;
+  className?: string;
   style?: StyleProp<ViewStyle>;
 };
+
+const SHIMMER_STREAK_WIDTH_RATIO = 0.5;
+const MIN_SHIMMER_STREAK_WIDTH = 40;
 
 function resolveBorderRadius(height: number, borderRadius?: number): number {
   if (borderRadius !== undefined) {
@@ -23,83 +34,85 @@ function resolveBorderRadius(height: number, borderRadius?: number): number {
   return height <= 20 ? height / 2 : Radius.chip;
 }
 
+function resolveShimmerStreakWidth(layoutWidth: number): number {
+  return Math.max(layoutWidth * SHIMMER_STREAK_WIDTH_RATIO, MIN_SHIMMER_STREAK_WIDTH);
+}
+
 /**
- * Animated placeholder block with a high-contrast sweeping shimmer.
+ * Animated placeholder block with a sweeping shimmer highlight.
  */
 export function SkeletonBone({
   width = '100%',
   height = 16,
   borderRadius,
+  className,
   style,
 }: SkeletonBoneProps) {
-  const theme = useTheme();
+  const theme = useTheme(); // tailwind-exception: skeleton shimmer gradient colors
   const skeletonTokens = useMemo(() => getSkeletonTokens(theme), [theme]);
+  const shimmerGradient = useMemo(() => getSkeletonShimmerGradient(theme), [theme]);
   const { progress, reducedMotionEnabled } = useSkeletonShimmerSweep();
   const [layoutWidth, setLayoutWidth] = useState(0);
   const resolvedRadius = resolveBorderRadius(height, borderRadius);
+  const shimmerStreakWidth = resolveShimmerStreakWidth(layoutWidth);
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const nextWidth = event.nativeEvent.layout.width;
-    if (nextWidth > 0) {
+    if (nextWidth > 0 && nextWidth !== layoutWidth) {
       setLayoutWidth(nextWidth);
     }
   };
 
-  const streakAnimatedStyle = useAnimatedStyle(() => {
-    if (layoutWidth <= 0 || reducedMotionEnabled) {
-      return { transform: [{ translateX: 0 }] };
+  const shimmerTranslateX = useMemo(() => {
+    if (layoutWidth <= 0) {
+      return progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 0],
+      });
     }
 
-    const streakWidth = layoutWidth * 2;
-    const translateX = interpolate(
-      progress.value,
-      [0, 1],
-      [-streakWidth, layoutWidth],
-    );
+    return progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-shimmerStreakWidth, layoutWidth],
+    });
+  }, [layoutWidth, progress, shimmerStreakWidth]);
 
-    return {
-      transform: [{ translateX }],
-    };
-  }, [layoutWidth, reducedMotionEnabled]);
+  const showShimmer = layoutWidth > 0 && !reducedMotionEnabled;
 
   return (
     <View
       onLayout={handleLayout}
-      style={[styles.shell, { width, height, borderRadius: resolvedRadius }, style]}
+      className={cn('relative overflow-hidden', className)}
+      // tailwind-exception: dynamic width, height, and border radius
+      style={[{ width, height, borderRadius: resolvedRadius }, style]}
       accessibilityElementsHidden
       importantForAccessibility="no"
     >
       <View
-        style={[
-          StyleSheet.absoluteFill,
-          { borderRadius: resolvedRadius, backgroundColor: skeletonTokens.base },
-        ]}
+        className="absolute inset-0"
+        style={{ borderRadius: resolvedRadius, backgroundColor: skeletonTokens.base }}
       />
 
-      {layoutWidth > 0 && !reducedMotionEnabled ? (
+      {showShimmer ? (
         <Animated.View
           pointerEvents="none"
+          // tailwind-exception: shimmer sweep uses native-driver transform
           style={[
-            styles.streakTrack,
+            styles.shimmerStreak,
             {
-              width: layoutWidth * 2,
+              width: shimmerStreakWidth,
               borderRadius: resolvedRadius,
+              transform: [{ translateX: shimmerTranslateX }],
             },
-            streakAnimatedStyle,
           ]}
         >
           <LinearGradient
-            colors={[
-              skeletonTokens.base,
-              skeletonTokens.shimmerHighlight,
-              skeletonTokens.shimmerAccent,
-              skeletonTokens.shimmerDeep,
-              skeletonTokens.base,
-            ]}
-            locations={[0, 0.28, 0.5, 0.72, 1]}
+            colors={[...shimmerGradient.colors]}
+            locations={[...shimmerGradient.locations]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
-            style={styles.streakGradient}
+            // tailwind-exception: gradient must fill the animated streak
+            style={styles.shimmerGradient}
           />
         </Animated.View>
       ) : null}
@@ -108,18 +121,13 @@ export function SkeletonBone({
 }
 
 const styles = StyleSheet.create({
-  shell: {
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  streakTrack: {
+  shimmerStreak: {
     position: 'absolute',
     top: 0,
     bottom: 0,
     left: 0,
   },
-  streakGradient: {
+  shimmerGradient: {
     flex: 1,
-    width: '100%',
   },
 });

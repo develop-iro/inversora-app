@@ -1,8 +1,6 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type CompareLoadErrorsBannerProps = {
   notFoundIsins: readonly string[];
@@ -12,8 +10,6 @@ export type CompareLoadErrorsBannerProps = {
  * Surfaces ISINs that failed to load during comparison hydration.
  */
 export function CompareLoadErrorsBanner({ notFoundIsins }: CompareLoadErrorsBannerProps) {
-  const theme = useTheme();
-
   if (notFoundIsins.length === 0) {
     return null;
   }
@@ -26,13 +22,7 @@ export function CompareLoadErrorsBanner({ notFoundIsins }: CompareLoadErrorsBann
   return (
     <View
       accessibilityRole="alert"
-      style={[
-        styles.banner,
-        {
-          backgroundColor: theme.backgroundSoft,
-          borderColor: theme.border,
-        },
-      ]}
+      className="gap-xs rounded-card border border-border bg-background-soft p-md"
     >
       <TextParagraph variant="emphasis">Carga incompleta</TextParagraph>
       <TextParagraph variant="secondary" themeColor="textSecondary">
@@ -41,12 +31,3 @@ export function CompareLoadErrorsBanner({ notFoundIsins }: CompareLoadErrorsBann
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    padding: Spacing.md,
-    gap: Spacing.xs,
-  },
-});

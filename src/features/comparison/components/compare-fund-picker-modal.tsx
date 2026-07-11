@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { MAX_COMPARE_FUNDS } from '@/core/storage/compare-selection-storage-key';
@@ -15,10 +15,9 @@ import {
 import { AppModalShell } from '@/shared/components/overlay';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { FundListRow } from '@/features/funds/components/fund-list-row';
-import { Button, ContentEmptyState, SearchField } from '@/shared/components/ui';
+import { Button, ContentEmptyState, ReloadState, SearchField, SkeletonShimmerProvider } from '@/shared/components/ui';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type CompareFundPickerModalProps = {
   visible: boolean;
@@ -30,16 +29,18 @@ export type CompareFundPickerModalProps = {
 
 function PickerLoadingSkeleton() {
   return (
-    <View style={styles.skeletonList} accessibilityLabel="Cargando catálogo">
-      {Array.from({ length: 4 }, (_, index) => (
-        <FundListRow key={`picker-loading-${index}`} loading />
-      ))}
-    </View>
+    <SkeletonShimmerProvider>
+      <View className="gap-sm" accessibilityLabel="Cargando catálogo">
+        {Array.from({ length: 4 }, (_, index) => (
+          <FundListRow key={`picker-loading-${index}`} loading />
+        ))}
+      </View>
+    </SkeletonShimmerProvider>
   );
 }
 
 function ListSeparator() {
-  return <View style={styles.separator} />;
+  return <View className="h-sm" />;
 }
 
 /**
@@ -122,14 +123,14 @@ export function CompareFundPickerModal({
     const trimmedQuery = debouncedQuery.trim();
 
     return (
-      <View style={styles.listHeader}>
-        <TextLabel variant="meta" themeColor="textSecondary" style={styles.sectionEyebrow}>
+      <View className="mb-sm gap-sm">
+        <TextLabel variant="meta" themeColor="textSecondary" className="uppercase tracking-[0.6px]">
           {trimmedQuery.length > 0
             ? `${filteredFunds.length} resultado${filteredFunds.length === 1 ? '' : 's'}`
             : 'Fondos del catálogo educativo'}
         </TextLabel>
         {!canAddMore ? (
-          <View style={[styles.limitChip, { backgroundColor: theme.backgroundSoft }]}>
+          <View className="self-start rounded-full bg-background-soft px-md py-xs">
             <TextParagraph variant="secondary" themeColor="textSecondary">
               Máximo de {MAX_COMPARE_FUNDS} fondos en comparación
             </TextParagraph>
@@ -137,7 +138,7 @@ export function CompareFundPickerModal({
         ) : null}
       </View>
     );
-  }, [canAddMore, debouncedQuery, filteredFunds.length, theme.backgroundSoft]);
+  }, [canAddMore, debouncedQuery, filteredFunds.length]);
 
   const handleRetry = useCallback(() => {
     setReloadToken((current) => current + 1);
@@ -158,12 +159,12 @@ export function CompareFundPickerModal({
 
     if (errorMessage !== null) {
       return (
-        <ContentEmptyState
-          icon="cloud-off-outline"
+        <ReloadState
           title="No se pudo cargar el catálogo"
           message={errorMessage}
-          actionLabel="Reintentar"
           onAction={handleRetry}
+          layout="screen"
+          className="flex-1"
         />
       );
     }
@@ -173,7 +174,6 @@ export function CompareFundPickerModal({
 
       return (
         <ContentEmptyState
-          icon={trimmedQuery.length > 0 ? 'magnify-close' : 'database-off-outline'}
           title={trimmedQuery.length > 0 ? 'Sin coincidencias' : 'Catálogo vacío'}
           message={
             trimmedQuery.length > 0
@@ -192,7 +192,7 @@ export function CompareFundPickerModal({
         keyExtractor={(fund) => fund.isin}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
+        contentContainerClassName="gap-sm pb-xl"
         ItemSeparatorComponent={ListSeparator}
         ListHeaderComponent={listHeader}
         renderItem={({ item }) => (
@@ -215,7 +215,7 @@ export function CompareFundPickerModal({
         <ScreenBody>
           <ScreenBodyIntro description="Busca por nombre, ISIN o categoría y añádelo a la comparación.">
             {selectedIsins.length > 0 ? (
-              <View style={[styles.selectionChip, { backgroundColor: theme.backgroundSoft }]}>
+              <View className="flex-row items-center gap-sm self-start rounded-full bg-background-soft px-md py-xs">
                 <MaterialCommunityIcons name="scale-balance" size={16} color={theme.primary} />
                 <TextParagraph variant="secondary" themeColor="textSecondary">
                   {selectedIsins.length} fondo{selectedIsins.length === 1 ? '' : 's'} en comparación
@@ -235,12 +235,12 @@ export function CompareFundPickerModal({
             returnKeyType="search"
           />
 
-          <View style={styles.listArea}>{renderListContent()}</View>
+          <View className="min-h-0 flex-1 pt-md">{renderListContent()}</View>
         </ScreenBody>
       }
       footer={
         <ScreenFooter>
-          <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.footerSummary}>
+          <TextParagraph variant="secondary" themeColor="textSecondary" className="text-center">
             {selectedIsins.length > 0
               ? `${selectedIsins.length} de ${MAX_COMPARE_FUNDS} fondos seleccionados`
               : 'Selecciona al menos dos fondos para comparar'}
@@ -251,47 +251,3 @@ export function CompareFundPickerModal({
     />
   );
 }
-
-const styles = StyleSheet.create({
-  selectionChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    alignSelf: 'flex-start',
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-  },
-  listArea: {
-    flex: 1,
-    minHeight: 0,
-    paddingTop: Spacing.md,
-  },
-  listHeader: {
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  sectionEyebrow: {
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  limitChip: {
-    alignSelf: 'flex-start',
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-  },
-  listContent: {
-    paddingBottom: Spacing.xl,
-    gap: Spacing.sm,
-  },
-  separator: {
-    height: Spacing.sm,
-  },
-  skeletonList: {
-    gap: Spacing.sm,
-  },
-  footerSummary: {
-    textAlign: 'center',
-  },
-});

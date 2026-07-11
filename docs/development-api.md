@@ -4,7 +4,8 @@ Guía para conectar la app Expo (`inversora`) al backend NestJS (`inversora-api`
 
 ## Requisitos
 
-- Node.js 20+ y npm 10+ en ambos repositorios.
+- Node.js 22+ (`inversora`: `.nvmrc`; `inversora-api`: npm + package-lock).
+- **pnpm 10.8.1** en `inversora` (`packageManager` en `package.json`).
 - Docker Desktop (PostgreSQL local del backend).
 - Backend sincronizado con fondos visibles en catálogo.
 
@@ -36,7 +37,8 @@ Swagger: `http://localhost:3000/api/docs`
 En `inversora`:
 
 ```bash
-npm install
+corepack enable
+pnpm install
 cp .env.example .env
 ```
 
@@ -47,22 +49,22 @@ Ajusta `EXPO_PUBLIC_API_URL` según dónde ejecutes la app:
 | iOS Simulator | `http://localhost:3000` | No aplica |
 | Android Emulator | `http://10.0.2.2:3000` | No aplica |
 | Dispositivo físico (LAN) | `http://192.168.x.x:3000` | No aplica |
-| Expo web (`npm run web`) | `http://localhost:3000` | **Sí** — orígenes `8081` / `19006` |
+| Expo web (`pnpm run web`) | `http://localhost:3000` | **Sí** — orígenes `8081` / `19006` |
 | Staging (Railway) | `https://tu-api.railway.app` | Solo web; ver CORS en backend |
 
 Atajo para imprimir URLs recomendadas:
 
 ```bash
-npm run api:url
-npm run api:url -- --lan
-npm run api:url -- --android
-npm run api:url -- --staging https://tu-api.railway.app
+pnpm run api:url
+pnpm run api:url -- --lan
+pnpm run api:url -- --android
+pnpm run api:url -- --staging https://tu-api.railway.app
 ```
 
 Reinicia Metro después de cambiar `.env`:
 
 ```bash
-npm start
+pnpm start
 ```
 
 ### Expo web y CORS
@@ -86,7 +88,7 @@ Si ves *blocked by CORS policy* en la consola del navegador:
 ### Dispositivo físico en la red local
 
 1. PC y móvil en la misma Wi‑Fi.
-2. Obtén la IP LAN del PC: `npm run api:url -- --lan`.
+2. Obtén la IP LAN del PC: `pnpm run api:url -- --lan`.
 3. Pon ese valor en `EXPO_PUBLIC_API_URL`.
 4. Asegúrate de que el firewall de Windows permite conexiones entrantes al puerto `3000`.
 5. Reinicia Expo.
@@ -191,7 +193,7 @@ curl "http://localhost:3000/featured"
 ```
 
 10. Desconecta el backend y comprueba error + reintentar sin bloquear navegación (en QA no debe aparecer mock silencioso).
-11. Ejecuta `npm run quality` en el front (typecheck + lint + unit tests).
+11. Ejecuta `pnpm run quality` en el front (typecheck + lint + unit tests).
 
 ## 5. Poblar ranking (`GET /rankings`)
 
@@ -235,7 +237,7 @@ curl http://localhost:3000/rankings
 |---------|----------------|--------|
 | "No se pudo conectar con la API" | URL incorrecta o backend apagado | Revisa `EXPO_PUBLIC_API_URL` y `npm run start:dev` |
 | CORS / *blocked by CORS policy* (solo web) | `CORS_ORIGINS` vacío en staging o API distinta | Ver § Expo web y CORS; [cors-and-expo-client.md](../../inversora-api/docs/cors-and-expo-client.md) |
-| Dispositivo no alcanza la API | IP LAN incorrecta o firewall | `npm run api:url -- --lan`; abre puerto 3000 |
+| Dispositivo no alcanza la API | IP LAN incorrecta o firewall | `pnpm run api:url -- --lan`; abre puerto 3000 |
 | Catálogo vacío sin error | Sin fondos `visible` en BD | Ejecuta sync/admin en el backend |
 | Ranking vacío (`{"data":[]}`) | Fondos sin `benchmark` o sin `score` calculado | Ejecuta sync completo (metadata + scoring); ver §5 |
 | Ficha 404 | ISIN inexistente o fondo no visible | Usa un ISIN del catálogo |

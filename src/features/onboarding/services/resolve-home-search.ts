@@ -105,12 +105,16 @@ function buildRelatedFunds(
   return toRankingEntries([related, ...others], relatedIsin);
 }
 
-async function resolveAssistantAnswer(query: string): Promise<HomeSearchAnswer> {
+async function resolveAssistantAnswer(
+  query: string,
+  relatedFundIsin?: string,
+): Promise<HomeSearchAnswer> {
   try {
     const response = await explainAssistant({
       surface: 'home',
       message: query,
       locale: 'es',
+      ...(relatedFundIsin ? { fund: { isin: relatedFundIsin } } : {}),
     });
 
     return {
@@ -175,7 +179,8 @@ export async function resolveHomeSearch(
   }
 
   if (questionLike || !hasFundMatches) {
-    const answer = await resolveAssistantAnswer(trimmedQuery);
+    const bestMatchIsin = fundMatches[0]?.isin;
+    const answer = await resolveAssistantAnswer(trimmedQuery, bestMatchIsin);
 
     return {
       kind: 'answer',

@@ -1,4 +1,9 @@
-import type { ModalAlertInput, ModalButton, ModalSheetInput } from '@/core/overlay/overlay.types';
+import type {
+  ModalAlertInput,
+  ModalButton,
+  ModalConfirmOptions,
+  ModalSheetInput,
+} from '@/core/overlay/overlay.types';
 import { useModalStore } from '@/core/overlay/modal-store';
 
 /**
@@ -16,6 +21,7 @@ export const modal = {
     useModalStore.getState().openAlert({
       title,
       message,
+      backdrop: 'blur-scrim',
       buttons:
         buttons ??
         [
@@ -24,6 +30,48 @@ export const modal = {
             variant: 'primary',
           },
         ],
+    }),
+
+  /**
+   * Confirmation dialog that resolves to `true` when the user confirms.
+   */
+  confirm: (title: string, message: string, options?: ModalConfirmOptions): Promise<boolean> =>
+    new Promise((resolve) => {
+      let settled = false;
+
+      const settle = (value: boolean): void => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        resolve(value);
+      };
+
+      useModalStore.getState().openAlert({
+        title,
+        message,
+        backdrop: options?.backdrop ?? 'blur-scrim',
+        buttons: [
+          {
+            label: options?.cancelLabel ?? 'Cancelar',
+            variant: 'secondary',
+            onPress: () => {
+              settle(false);
+            },
+          },
+          {
+            label: options?.confirmLabel ?? 'Confirmar',
+            variant: options?.destructive ? 'danger' : 'primary',
+            onPress: () => {
+              settle(true);
+            },
+          },
+        ],
+        onClose: () => {
+          settle(false);
+        },
+      });
     }),
 
   close: (id?: string): void => {

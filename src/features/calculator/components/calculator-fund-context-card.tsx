@@ -1,12 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import type { IllustrativeFundRate } from '@/features/calculator/utils/derive-fund-illustrative-rate';
 import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
 import { Button, Card, Spinner } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type CalculatorFundContextCardProps = {
   selectedFund: CatalogFund | null;
@@ -32,12 +31,12 @@ export function CalculatorFundContextCard({
 
   if (selectedFund === null) {
     return (
-      <Card variant="outlined" style={styles.card}>
-        <View style={styles.emptyState}>
-          <View style={[styles.iconWrap, { backgroundColor: theme.backgroundSoft }]}>
+      <Card variant="outlined" contentClassName="gap-md">
+        <View className="gap-md">
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-background-soft">
             <MaterialCommunityIcons name="chart-line-variant" size={20} color={theme.deepOcean} />
           </View>
-          <View style={styles.copy}>
+          <View className="gap-xs">
             <TextParagraph variant="emphasis">Simular con un fondo concreto</TextParagraph>
             <TextParagraph variant="secondary" themeColor="textSecondary">
               Usamos un tipo anual ilustrativo basado en su histórico reciente y la comisión
@@ -51,9 +50,9 @@ export function CalculatorFundContextCard({
   }
 
   return (
-    <Card variant="outlined" style={styles.card}>
-      <View style={styles.selectedHeader}>
-        <View style={styles.selectedCopy}>
+    <Card variant="outlined" contentClassName="gap-md">
+      <View className="flex-row items-start justify-between gap-sm">
+        <View className="flex-1 gap-xs">
           <TextLabel variant="meta" themeColor="textSecondary">
             Fondo seleccionado
           </TextLabel>
@@ -75,13 +74,13 @@ export function CalculatorFundContextCard({
       </View>
 
       {isLoading ? (
-        <Spinner size="sm" accessibilityLabel="Cargando datos del fondo" style={styles.loader} />
+        <Spinner size="sm" accessibilityLabel="Cargando datos del fondo" style={{ alignSelf: 'flex-start' }} />
       ) : fundRate ? (
-        <View style={[styles.rateBox, { backgroundColor: theme.backgroundSoft }]}>
+        <View className="gap-xs rounded-card bg-background-soft p-md">
           <TextParagraph variant="secondary" themeColor="textSecondary">
             Tipo anual ilustrativo (neto de TER)
           </TextParagraph>
-          <TextHeading variant="section" style={styles.rateValue}>
+          <TextHeading variant="section" className="leading-7">
             {fundRate.annualRatePercent.toFixed(2).replace('.', ',')}%
           </TextHeading>
           <TextParagraph variant="secondary" themeColor="textSecondary">
@@ -101,43 +100,3 @@ export function CalculatorFundContextCard({
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    gap: Spacing.md,
-  },
-  emptyState: {
-    gap: Spacing.md,
-  },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  copy: {
-    gap: Spacing.xs,
-  },
-  selectedHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  selectedCopy: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-  loader: {
-    alignSelf: 'flex-start',
-  },
-  rateBox: {
-    borderRadius: Radius.card,
-    padding: Spacing.md,
-    gap: Spacing.xs,
-  },
-  rateValue: {
-    lineHeight: 28,
-  },
-});

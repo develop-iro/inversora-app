@@ -15,6 +15,7 @@ interface AppLaunchSplashProps {
 export function AppLaunchSplash({ opacity }: AppLaunchSplashProps) {
   return (
     <Animated.View
+      // tailwind-exception: Animated.View does not honor absolute-fill className reliably on web
       style={[styles.overlay, { opacity }]}
       accessibilityRole="image"
       accessibilityLabel="Inversora"

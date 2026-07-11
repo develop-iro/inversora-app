@@ -21,3 +21,5 @@ export {
   type SectionCardInsetScrollProps,
 } from '@/shared/components/layout/section-card-inset-scroll';
 export { ScreenShell, type ScreenShellProps } from '@/shared/components/layout/screen-shell';
+export { TabScrollViewport, type TabScrollViewportProps } from '@/shared/components/layout/tab-scroll-viewport';
+export { TabScreenScroll, type TabScreenScrollProps } from '@/shared/components/layout/tab-screen-scroll';

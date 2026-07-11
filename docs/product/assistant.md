@@ -61,7 +61,8 @@ Campos típicos (ver ADR-001 para el tipo completo):
 
 - Feature `features/assistant`: **implementada (Fase 1 + 2 parcial)** — explain en home, catálogo y ficha; chat multi-turn en ficha y comparador.
 - Cliente explain: `core/api/assistant-client.ts` → `POST /assistant/explain`.
-- Cliente chat: `chatAssistant()` → `POST /assistant/chat` con `sessionId` y hasta 5 fondos.
+- Cliente chat: `chatAssistant()` → `POST /assistant/chat` con `sessionId` y hasta 2 fondos (comparador MVP).
+- Guardrails HU-40: `features/assistant/utils/assistant-output-guardrails.ts` + API `assistant-output.guardrails.ts`.
 - Comparador `/compare`: selección local de fondos, tabla métricas y SORA con `surface: 'compare'`.
 - Cache híbrido en backend: glosario estático + PostgreSQL (`assistant_response_cache`).
 - UI: `SoraAnswerCard`, `SoraChatSheet`, chip en catálogo, integración en `resolveHomeSearch`.

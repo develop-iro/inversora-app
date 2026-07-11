@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { MIN_COMPARE_FUNDS } from '@/core/storage/compare-selection-storage-key';
@@ -10,17 +9,14 @@ import { useFavoritesList } from '@/features/funds/hooks/use-favorites-list';
 import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
 import { mapFundDetailToCatalogFund } from '@/features/funds/utils/map-fund-detail-to-catalog';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
-import { ScreenQuickAction, ScreenQuickActionsRow } from '@/shared/components/layout';
+import { ScreenQuickAction, ScreenQuickActionsRow, TabScreenScroll } from '@/shared/components/layout';
 import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { Button, Spinner } from '@/shared/components/ui';
-import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
-import { BottomTabInset, Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
+import { Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
 
 export default function FavoritesScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const theme = useTheme();
   const { isins, isLoading: isFavoritesLoading } = useFavoritesList();
   const [funds, setFunds] = useState<CatalogFund[]>([]);
   const [isCatalogLoading, setIsCatalogLoading] = useState(false);
@@ -92,18 +88,19 @@ export default function FavoritesScreen() {
   }, [router]);
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: theme.background }]}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingBottom: insets.bottom + BottomTabInset + Spacing.xl,
-        },
-      ]}
+    <TabScreenScroll
+      extraBottomPadding={Spacing.xl}
+      contentContainerClassName="items-center pt-xl"
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.inner}>
-        <View style={styles.headerBlock}>
+      <View
+        className="w-full gap-lg"
+        style={{
+          maxWidth: MaxContentWidth,
+          paddingHorizontal: Layout.screenPaddingHorizontal,
+        }}
+      >
+        <View className="gap-sm">
           <TextHeading variant="section">Favoritos</TextHeading>
           <TextParagraph variant="secondary" themeColor="textSecondary">
             Guarda fondos para revisarlos con calma. No constituye una recomendación
@@ -112,9 +109,9 @@ export default function FavoritesScreen() {
         </View>
 
         {isLoading ? (
-          <Spinner size="lg" accessibilityLabel="Cargando favoritos" style={styles.loader} />
+          <Spinner size="lg" accessibilityLabel="Cargando favoritos" style={{ marginVertical: Spacing.lg }} />
         ) : isins.length === 0 ? (
-          <View style={styles.empty}>
+          <View className="gap-sm py-md">
             <TextParagraph variant="emphasis">Aún no tienes favoritos</TextParagraph>
             <TextParagraph variant="secondary" themeColor="textSecondary">
               Abre un fondo en el catálogo y pulsa «Guardar en favoritos» para verlo
@@ -125,11 +122,11 @@ export default function FavoritesScreen() {
               variant="secondary"
               onPress={handleExploreCatalog}
               accessibilityLabel="Explorar catálogo de fondos"
-              style={styles.emptyAction}
+              className="self-start"
             />
           </View>
         ) : displayFunds.length === 0 ? (
-          <View style={styles.empty}>
+          <View className="gap-sm py-md">
             <TextParagraph variant="secondary" themeColor="textSecondary">
               Tus favoritos guardados ya no están disponibles en el catálogo actual.
             </TextParagraph>
@@ -138,7 +135,7 @@ export default function FavoritesScreen() {
               variant="secondary"
               onPress={handleExploreCatalog}
               accessibilityLabel="Explorar catálogo de fondos"
-              style={styles.emptyAction}
+              className="self-start"
             />
           </View>
         ) : (
@@ -165,7 +162,7 @@ export default function FavoritesScreen() {
               </TextParagraph>
             )}
 
-            <View style={styles.list}>
+            <View className="gap-md">
               {displayFunds.map((fund) => (
                 <FundListRow
                   key={fund.isin}
@@ -182,38 +179,6 @@ export default function FavoritesScreen() {
           onLearnMorePress={handleOpenLegal}
         />
       </View>
-    </ScrollView>
+    </TabScreenScroll>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  content: {
-    alignItems: 'center',
-    paddingTop: Spacing.xl,
-  },
-  inner: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    gap: Spacing.lg,
-  },
-  headerBlock: {
-    gap: Spacing.sm,
-  },
-  loader: {
-    marginVertical: Spacing.lg,
-  },
-  empty: {
-    gap: Spacing.sm,
-    paddingVertical: Spacing.md,
-  },
-  emptyAction: {
-    alignSelf: 'flex-start',
-  },
-  list: {
-    gap: Spacing.md,
-  },
-});

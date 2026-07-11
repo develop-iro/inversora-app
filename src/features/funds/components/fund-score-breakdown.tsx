@@ -1,27 +1,25 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { ScoreBreakdown } from '@/core/scoring/types';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FundScoreBreakdownProps = {
   breakdown: ScoreBreakdown;
+  className?: string;
 };
 
-export function FundScoreBreakdown({ breakdown }: FundScoreBreakdownProps) {
-  const theme = useTheme();
-
+export function FundScoreBreakdown({ breakdown, className }: FundScoreBreakdownProps) {
   return (
-    <View style={styles.wrapper}>
+    <View className={cn('gap-md', className)}>
       {breakdown.map((criterion) => (
-        <View key={criterion.id} style={styles.row}>
-          <View style={styles.labelBlock}>
+        <View key={criterion.id} className="flex-row items-end gap-md">
+          <View className="flex-1 gap-xs">
             <TextParagraph variant="secondary" themeColor="textSecondary">
               {criterion.label}
             </TextParagraph>
             <View
-              style={[styles.track, { backgroundColor: theme.surfaceMuted }]}
+              className="h-[6px] overflow-hidden rounded-full bg-surface-muted"
               accessibilityRole="progressbar"
               accessibilityValue={{
                 min: 0,
@@ -30,13 +28,11 @@ export function FundScoreBreakdown({ breakdown }: FundScoreBreakdownProps) {
               }}
             >
               <View
-                style={[
-                  styles.fill,
-                  {
-                    backgroundColor: theme.primary,
-                    width: `${Math.max(8, (criterion.points / Math.max(criterion.maxPoints, 1)) * 100)}%`,
-                  },
-                ]}
+                className="h-full rounded-full bg-primary"
+                // tailwind-exception: progress bar width is data-driven
+                style={{
+                  width: `${Math.max(8, (criterion.points / Math.max(criterion.maxPoints, 1)) * 100)}%`,
+                }}
               />
             </View>
           </View>
@@ -48,27 +44,3 @@ export function FundScoreBreakdown({ breakdown }: FundScoreBreakdownProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: Spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: Spacing.md,
-  },
-  labelBlock: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-  track: {
-    height: 6,
-    borderRadius: Radius.full,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: Radius.full,
-  },
-});

@@ -4,9 +4,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import type { HomeHeroSlide } from '@/features/onboarding/constants/home-hero-slides';
 import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { Button } from '@/shared/components/ui/button';
-import { useTheme } from '@/shared/hooks/use-theme';
 import { useThemeGradients } from '@/shared/hooks/use-theme-gradients';
-import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
 
 const ILLUSTRATION_HEIGHT = 140;
 
@@ -20,42 +18,37 @@ export type HomeHeroSlideCardProps = {
  * Illustration strip on top, copy and CTA below.
  */
 export function HomeHeroSlideCard({ slide, onCtaPress }: HomeHeroSlideCardProps) {
-  const theme = useTheme();
   const gradients = useThemeGradients();
-  const shadows = useThemeShadows();
   const illustrationFade = gradients.heroSlideIllustrationFade;
 
   return (
     <View
       accessibilityLabel={`${slide.headline}. ${slide.subtitle}`}
-      className="flex-1 overflow-hidden rounded-card border"
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.surface,
-          borderColor: theme.border,
-        },
-        shadows.card,
-      ]}
+      className="min-h-[320px] flex-1 overflow-hidden rounded-card border border-border bg-surface shadow-card"
     >
       <View
-        className="w-full overflow-hidden"
-        style={{ height: ILLUSTRATION_HEIGHT, backgroundColor: theme.backgroundSoft }}
+        className="w-full overflow-hidden bg-background-soft"
+        // tailwind-exception: fixed illustration strip height from design spec
+        style={{ height: ILLUSTRATION_HEIGHT }}
       >
         <Image
           source={slide.illustration}
+          // tailwind-exception: NativeWind does not size absolute-fill hero images reliably on web
           style={styles.illustrationImage}
           resizeMode="cover"
           accessibilityRole="image"
           accessibilityLabel={slide.illustrationLabel}
         />
         <View
-          style={[styles.illustrationScrim, { backgroundColor: theme.borderSubtle }]}
+          // tailwind-exception: absolute scrim over illustration strip
+          style={styles.illustrationScrim}
+          className="bg-border-subtle"
           pointerEvents="none"
         />
         <LinearGradient
           colors={[...illustrationFade.colors]}
           locations={illustrationFade.locations ? [...illustrationFade.locations] : undefined}
+          // tailwind-exception: gradient fade anchor at illustration bottom edge
           style={styles.illustrationFade}
           pointerEvents="none"
         />
@@ -87,9 +80,6 @@ export function HomeHeroSlideCard({ slide, onCtaPress }: HomeHeroSlideCardProps)
 }
 
 const styles = StyleSheet.create({
-  card: {
-    minHeight: 320,
-  },
   illustrationImage: {
     ...StyleSheet.absoluteFill,
     width: '100%',

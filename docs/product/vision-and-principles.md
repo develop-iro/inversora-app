@@ -24,8 +24,11 @@ Implicaciones prácticas:
 
 ## Público objetivo del MVP
 
-- Usuarios **principiantes** y visitantes sin cuenta.
+- Usuarios **principiantes** (perfil prioritario) y visitantes sin cuenta.
+- Perfil secundario: inversor con conocimientos **intermedios** que compara fondos con filtros y métricas objetivas.
 - Perfil educativo **orientativo**, no test MiFID ni recomendación regulada.
+
+Detalle de características, necesidades y funcionalidades por perfil: [target-audience-and-profiles.md](./target-audience-and-profiles.md) (documento oficial §4).
 
 ## Límites no negociables
 
@@ -52,6 +55,10 @@ Dashboard → Catálogo / Buscador → Ficha de fondo
 
 ## Relación con otras docs
 
+- Problema que resuelve Inversora (§5): [problem-statement.md](./problem-statement.md)
+- Objetivos del documento oficial (§2.1 y §2.2): [objectives.md](./objectives.md)
+- Público objetivo y perfiles (§4): [target-audience-and-profiles.md](./target-audience-and-profiles.md)
+- Backend canónico: repo hermano `inversora-api` — ver `inversora-api/docs/purpose-and-scope.md`
 - Alcance detallado: [mvp-scope.md](./mvp-scope.md)
 - Score y rankings: [scoring.md](./scoring.md)
 - IA: [assistant.md](./assistant.md)

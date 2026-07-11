@@ -7,7 +7,7 @@ import { AppError } from '@/core/errors/app-error';
 import type { FundHistoricalReturns, RankedFund } from '@/core/scoring/types';
 type ApiFundReturnSnapshot = FundHistoricalReturns;
 
-type ApiRankedFundEntry = {
+export type ApiRankedFundEntry = {
   rank: number;
   id: string;
   symbol: string;
@@ -26,6 +26,13 @@ type ApiBenchmarkRankingGroup = {
   benchmarkKey: string;
   total: number;
   funds: ApiRankedFundEntry[];
+};
+
+export type BenchmarkRankingGroup = {
+  benchmark: string;
+  benchmarkKey: string;
+  total: number;
+  funds: RankedFund[];
 };
 
 export type ApiRankingsResponse = {
@@ -146,7 +153,43 @@ export function parseRankingsResponse(payload: unknown): ApiRankingsResponse {
 }
 
 /**
- * Maps API ranking groups to a globally ordered `RankedFund` list for the home teaser.
+ * Maps a single API ranked fund entry to the app `RankedFund` shape.
+ *
+ * @param entry - Parsed API ranking row.
+ */
+export function mapRankingEntryToRankedFund(entry: ApiRankedFundEntry): RankedFund {
+  return {
+    isin: entry.isin,
+    name: entry.name,
+    categoryLabel: `Índice ${entry.benchmark}`,
+    score: Math.round(entry.score),
+    riskLevel: mapApiRiskLevelToApp(entry.riskLevel),
+    terPercent: entry.ter,
+    status: 'ok',
+    breakdown: [],
+    rank: entry.rank,
+    returns: entry.returns ?? EMPTY_FUND_HISTORICAL_RETURNS,
+  };
+}
+
+/**
+ * Maps parsed API ranking groups to domain groups preserving benchmark-local ranks.
+ *
+ * @param response - Parsed rankings response.
+ */
+export function mapRankingsResponseToGroups(
+  response: ApiRankingsResponse,
+): BenchmarkRankingGroup[] {
+  return response.data.map((group) => ({
+    benchmark: group.benchmark,
+    benchmarkKey: group.benchmarkKey,
+    total: group.total,
+    funds: group.funds.map((entry) => mapRankingEntryToRankedFund(entry)),
+  }));
+}
+
+/**
+ * Maps API ranking groups to a globally ordered `RankedFund` list for cross-benchmark search.
  *
  * Funds from every benchmark group are merged and re-ranked by score (RN-02 groups are
  * preserved in the API; the dashboard shows a cross-benchmark educational preview).
@@ -168,16 +211,5 @@ export function flattenRankingsToRankedFunds(
     return left.symbol.localeCompare(right.symbol);
   });
 
-  return sorted.map((entry, index) => ({
-    isin: entry.isin,
-    name: entry.name,
-    categoryLabel: `Índice ${entry.benchmark}`,
-    score: Math.round(entry.score),
-    riskLevel: mapApiRiskLevelToApp(entry.riskLevel),
-    terPercent: entry.ter,
-    status: 'ok',
-    breakdown: [],
-    rank: index + 1,
-    returns: entry.returns ?? EMPTY_FUND_HISTORICAL_RETURNS,
-  }));
+  return sorted.map((entry, index) => mapRankingEntryToRankedFund({ ...entry, rank: index + 1 }));
 }

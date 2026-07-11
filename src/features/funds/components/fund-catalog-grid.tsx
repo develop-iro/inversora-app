@@ -1,18 +1,20 @@
 import { useMemo } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { CardFund } from '@/features/funds/components/card-fund';
-import { Layout, Spacing } from '@/shared/theme/theme';
+import { Layout } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 const TWO_COLUMN_BREAKPOINT = 640;
 
 export type FundCatalogGridProps = {
   funds: CatalogFund[];
   onFundPress: (fund: CatalogFund) => void;
+  className?: string;
 };
 
-export function FundCatalogGrid({ funds, onFundPress }: FundCatalogGridProps) {
+export function FundCatalogGrid({ funds, onFundPress, className }: FundCatalogGridProps) {
   const { width: windowWidth } = useWindowDimensions();
 
   const cardBasis = useMemo(() => {
@@ -27,29 +29,17 @@ export function FundCatalogGrid({ funds, onFundPress }: FundCatalogGridProps) {
   }, [windowWidth]);
 
   return (
-    <View style={styles.grid} accessibilityRole="list">
+    <View className={cn('flex-row flex-wrap items-stretch gap-md', className)} accessibilityRole="list">
       {funds.map((fund) => (
         <CardFund
           key={fund.isin}
           fund={fund}
-          style={[styles.card, { flexBasis: cardBasis }]}
+          className="min-w-[280px] grow self-stretch"
+          // tailwind-exception: responsive column width depends on viewport
+          style={{ flexBasis: cardBasis }}
           onPress={() => onFundPress(fund)}
         />
       ))}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'stretch',
-    gap: Spacing.md,
-  },
-  card: {
-    flexGrow: 1,
-    minWidth: 280,
-    alignSelf: 'stretch',
-  },
-});

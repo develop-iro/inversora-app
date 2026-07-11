@@ -1,8 +1,6 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type LearnProgressHeaderProps = {
   currentStep: number;
@@ -13,11 +11,10 @@ export type LearnProgressHeaderProps = {
  * Shows questionnaire progress as a calm step counter and bar.
  */
 export function LearnProgressHeader({ currentStep, totalSteps }: LearnProgressHeaderProps) {
-  const theme = useTheme();
   const progress = Math.min(currentStep / totalSteps, 1);
 
   return (
-    <View style={styles.container}>
+    <View className="gap-sm">
       <TextParagraph variant="secondary" themeColor="textSecondary">
         Paso {currentStep} de {totalSteps}
       </TextParagraph>
@@ -29,33 +26,14 @@ export function LearnProgressHeader({ currentStep, totalSteps }: LearnProgressHe
           max: totalSteps,
           now: currentStep,
         }}
-        style={[styles.track, { backgroundColor: theme.backgroundSoft }]}
+        className="h-[6px] overflow-hidden rounded-full bg-background-soft"
       >
         <View
-          style={[
-            styles.fill,
-            {
-              backgroundColor: theme.primary,
-              width: `${progress * 100}%`,
-            },
-          ]}
+          className="h-full rounded-full bg-primary"
+          // tailwind-exception: progress fill width is computed at runtime
+          style={{ width: `${progress * 100}%` }}
         />
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    gap: Spacing.sm,
-  },
-  track: {
-    height: 6,
-    borderRadius: Radius.full,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: Radius.full,
-  },
-});

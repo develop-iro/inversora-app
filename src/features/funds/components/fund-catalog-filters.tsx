@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { FundCatalogFiltersState } from '@/features/funds/types/fund-catalog-filters';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { TabChip } from '@/shared/components/tabs/tab-chip';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type { FundCatalogFiltersState } from '@/features/funds/types/fund-catalog-filters';
 export { DEFAULT_CATALOG_FILTERS, toServiceFilters } from '@/features/funds/types/fund-catalog-filters';
@@ -13,6 +12,7 @@ export { DEFAULT_CATALOG_FILTERS, toServiceFilters } from '@/features/funds/type
 type FundCatalogFiltersBarProps = {
   value: FundCatalogFiltersState;
   onChange: (next: FundCatalogFiltersState) => void;
+  className?: string;
 };
 
 const RISK_TABS = [
@@ -34,11 +34,25 @@ const SCORE_TABS = [
   { value: 75, label: '≥ 75' },
 ];
 
-export function FundCatalogFiltersForm({ value, onChange }: FundCatalogFiltersBarProps) {
-  const theme = useTheme();
+const RETURN_PERIOD_TABS = [
+  { value: '1y' as const, label: '1 año' },
+  { value: '3y' as const, label: '3 años' },
+];
 
+const RETURN_TABS = [
+  { value: null, label: 'Todas' },
+  { value: 0, label: '≥ 0%' },
+  { value: 5, label: '≥ 5%' },
+  { value: 10, label: '≥ 10%' },
+];
+
+export function FundCatalogFiltersForm({
+  value,
+  onChange,
+  className,
+}: FundCatalogFiltersBarProps) {
   return (
-    <View style={styles.wrapper}>
+    <View className={cn('gap-lg py-xs', className)}>
       <FilterSection
         title="Perfil de riesgo"
         hint="Filtra por nivel educativo de riesgo"
@@ -71,8 +85,8 @@ export function FundCatalogFiltersForm({ value, onChange }: FundCatalogFiltersBa
       </FilterSection>
 
       <FilterSection title="Inversora Score" hint="Puntuación objetiva del fondo">
-        <View style={styles.scoreRow}>
-          <View style={styles.scoreTabs}>
+        <View className="gap-sm">
+          <View className="self-stretch">
             <TabChip
               tabs={SCORE_TABS.map((option) => ({
                 value: String(option.value ?? 'all'),
@@ -97,23 +111,50 @@ export function FundCatalogFiltersForm({ value, onChange }: FundCatalogFiltersBa
             onPress={() =>
               onChange({ ...value, idealForBeginnersOnly: !value.idealForBeginnersOnly })
             }
-            style={[
-              styles.beginnerChip,
-              {
-                backgroundColor: value.idealForBeginnersOnly ? theme.primary : theme.surface,
-                borderColor: value.idealForBeginnersOnly ? theme.primary : theme.border,
-              },
-            ]}
+            className={cn(
+              'min-h-10 justify-center self-start rounded-pill border px-md py-sm',
+              value.idealForBeginnersOnly
+                ? 'border-primary bg-primary'
+                : 'border-border bg-surface',
+            )}
           >
             <TextParagraph
               variant="secondary"
-              style={{
-                color: value.idealForBeginnersOnly ? theme.textOnDark : theme.text,
-              }}
+              themeColor={value.idealForBeginnersOnly ? 'textOnDark' : 'text'}
             >
               Para empezar
             </TextParagraph>
           </Pressable>
+        </View>
+      </FilterSection>
+
+      <FilterSection
+        title="Rentabilidad histórica mínima"
+        hint="Filtra por rentabilidad pasada (orientativa, no garantiza resultados futuros)"
+      >
+        <View className="gap-sm">
+          <TabChip
+            tabs={RETURN_PERIOD_TABS}
+            value={value.returnPeriod}
+            onChange={(returnPeriod) => onChange({ ...value, returnPeriod })}
+            accessibilityLabel="Periodo de rentabilidad histórica"
+            tabAccessibilityPrefix="Periodo"
+          />
+          <TabChip
+            tabs={RETURN_TABS.map((option) => ({
+              value: String(option.value ?? 'all'),
+              label: option.label,
+            }))}
+            value={String(value.minReturnPercent ?? 'all')}
+            onChange={(nextValue) =>
+              onChange({
+                ...value,
+                minReturnPercent: nextValue === 'all' ? null : Number(nextValue),
+              })
+            }
+            accessibilityLabel="Filtrar por rentabilidad histórica mínima"
+            tabAccessibilityPrefix="Rentabilidad"
+          />
         </View>
       </FilterSection>
     </View>
@@ -131,8 +172,8 @@ type FilterSectionProps = {
 
 function FilterSection({ title, hint, children }: FilterSectionProps) {
   return (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
+    <View className="gap-sm">
+      <View className="gap-xs">
         <TextParagraph variant="emphasis">{title}</TextParagraph>
         <TextLabel variant="meta" themeColor="textSecondary">
           {hint}
@@ -142,31 +183,3 @@ function FilterSection({ title, hint, children }: FilterSectionProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: Spacing.lg,
-    paddingVertical: Spacing.xs,
-  },
-  section: {
-    gap: Spacing.sm,
-  },
-  sectionHeader: {
-    gap: Spacing.xs,
-  },
-  scoreRow: {
-    gap: Spacing.sm,
-  },
-  scoreTabs: {
-    alignSelf: 'stretch',
-  },
-  beginnerChip: {
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    minHeight: 40,
-    justifyContent: 'center',
-  },
-});

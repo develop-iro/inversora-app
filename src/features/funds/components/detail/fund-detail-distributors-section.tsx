@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { FundDetailProfile, FundDistributorKind } from '@/core/domain/fund-detail-profile';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
@@ -8,7 +8,6 @@ import { CollapsibleSection } from '@/shared/components/layout';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { Card } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 const KIND_LABELS: Record<FundDistributorKind, string> = {
   bank: 'Banco',
@@ -38,19 +37,11 @@ export function FundDetailDistributorsSection({ profile }: FundDetailDistributor
       hintTerm={FUND_GLOSSARY.fundAvailability.term}
       hintExplanation={FUND_GLOSSARY.fundAvailability.explanation}
     >
-      <View style={styles.list}>
+      <View className="gap-sm">
         {profile.distributors.map((distributor) => (
-          <Card key={distributor.id} variant="outlined" style={styles.row}>
-            <View style={styles.rowContent}>
-              <View
-                style={[
-                  styles.iconWrap,
-                  {
-                    backgroundColor: theme.surfaceMuted,
-                    borderColor: theme.border,
-                  },
-                ]}
-              >
+          <Card key={distributor.id} variant="outlined" className="self-stretch">
+            <View className="flex-row items-start gap-md">
+              <View className="h-10 w-10 items-center justify-center rounded-chip border border-border bg-surface-muted">
                 <MaterialCommunityIcons
                   name={KIND_ICONS[distributor.kind]}
                   size={20}
@@ -59,8 +50,8 @@ export function FundDetailDistributorsSection({ profile }: FundDetailDistributor
                   importantForAccessibility="no"
                 />
               </View>
-              <View style={styles.textBlock}>
-                <View style={styles.nameRow}>
+              <View className="min-w-0 flex-1 gap-xs">
+                <View className="flex-row flex-wrap items-baseline gap-sm">
                   <TextParagraph variant="emphasis">{distributor.name}</TextParagraph>
                   <TextLabel variant="meta" themeColor="textSecondary">
                     {KIND_LABELS[distributor.kind]}
@@ -90,36 +81,3 @@ export function FundDetailDistributorsSection({ profile }: FundDetailDistributor
     </FundDetailSectionShell>
   );
 }
-
-const styles = StyleSheet.create({
-  list: {
-    gap: Spacing.sm,
-  },
-  row: {
-    alignSelf: 'stretch',
-  },
-  rowContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.md,
-  },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.chip,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  textBlock: {
-    flex: 1,
-    minWidth: 0,
-    gap: Spacing.xs,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'baseline',
-    gap: Spacing.sm,
-  },
-});

@@ -2,6 +2,10 @@
 
 Referencia condensada del documento oficial (*Documentación de Proyecto: Inversora*, v1.0). Para criterios de aceptación completos, consultar ese documento.
 
+Objetivos de producto (§2.1 y §2.2): [objectives.md](./objectives.md).
+
+Público objetivo y perfiles (§4): [target-audience-and-profiles.md](./target-audience-and-profiles.md).
+
 **Leyenda de estado (implementación en repo):**
 
 | Estado | Significado |
@@ -41,7 +45,7 @@ Estado detallado por módulo: [mvp-feature-map.md](../architecture/mvp-feature-m
 | ID | Historia (resumen) | Prioridad | Estado |
 |----|-------------------|-----------|--------|
 | HU-13 | Calcular score técnico 0–100 | Alta | 🟡 |
-| HU-14 | Agrupar por benchmark | Alta | ⬜ |
+| HU-14 | Agrupar por benchmark | Alta | ✅ |
 | HU-15 | Etiquetas UI por rango de score | Alta | ✅ |
 | HU-16 | Excluir score &lt; 30 de destacados / compatibles | Alta | ✅ |
 
@@ -59,17 +63,17 @@ Estado detallado por módulo: [mvp-feature-map.md](../architecture/mvp-feature-m
 
 | ID | Historia (resumen) | Prioridad | Estado |
 |----|-------------------|-----------|--------|
-| HU-22 | Explicar conceptos financieros | Alta | ⬜ |
-| HU-23 | Explicar por qué un fondo destaca | Alta | ⬜ |
-| HU-24 | Explicaciones cacheadas | Media | ⬜ |
-| HU-40 | Bloquear lenguaje de recomendación | Alta | ⬜ |
+| HU-22 | Explicar conceptos financieros | Alta | ✅ |
+| HU-23 | Explicar por qué un fondo destaca | Alta | ✅ |
+| HU-24 | Explicaciones cacheadas | Media | ✅ |
+| HU-40 | Bloquear lenguaje de recomendación | Alta | ✅ |
 
 ## EP-06 — Comparación y calculadora
 
 | ID | Historia (resumen) | Prioridad | Estado |
 |----|-------------------|-----------|--------|
-| HU-25 | Añadir fondo al comparador | Media | ⬜ |
-| HU-26 | Comparar **máximo dos** fondos | Media | 🟡 |
+| HU-25 | Añadir fondo al comparador | Media | ✅ |
+| HU-26 | Comparar **máximo dos** fondos | Media | ✅ |
 | HU-27 | Advertir comparación no homogénea | Media | ✅ |
 | HU-28 | Abrir calculadora | Alta | ✅ |
 | HU-29 | Inputs capital / aportación / horizonte | Alta | ✅ |

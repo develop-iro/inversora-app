@@ -1,9 +1,7 @@
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import type { TabOption } from '@/shared/components/tabs/tab-option';
 import { TextParagraph } from '@/shared/components/text/text-paragraph';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type { TabOption };
 
@@ -12,6 +10,7 @@ export type TabHeaderProps<T extends string> = {
   value: T;
   onChange: (value: T) => void;
   accessibilityLabel?: string;
+  className?: string;
 };
 
 /**
@@ -22,17 +21,16 @@ export function TabHeader<T extends string>({
   value,
   onChange,
   accessibilityLabel = 'Pestañas de sección',
+  className,
 }: TabHeaderProps<T>) {
-  const theme = useTheme();
-
   return (
-    <View>
+    <View className={className}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         accessibilityRole="tablist"
         accessibilityLabel={accessibilityLabel}
-        contentContainerStyle={styles.tabRow}
+        contentContainerClassName="flex-row gap-lg pb-xs"
       >
         {tabs.map((tab) => {
           const selected = tab.value === value;
@@ -44,51 +42,24 @@ export function TabHeader<T extends string>({
               accessibilityState={{ selected }}
               accessibilityLabel={tab.label}
               onPress={() => onChange(tab.value)}
-              style={styles.tabButton}
+              className="gap-xs pb-xs"
             >
               <TextParagraph
                 variant="emphasis"
-                style={{
-                  color: selected ? theme.text : theme.textSecondary,
-                }}
+                themeColor={selected ? 'text' : 'textSecondary'}
               >
                 {tab.label}
               </TextParagraph>
               {selected ? (
-                <View style={[styles.underline, { backgroundColor: theme.text }]} />
+                <View className="h-[2px] self-stretch rounded-hairline bg-text" />
               ) : (
-                <View style={styles.underlinePlaceholder} />
+                <View className="h-[2px]" />
               )}
             </Pressable>
           );
         })}
       </ScrollView>
-      <View style={[styles.border, { backgroundColor: theme.border }]} />
+      <View className="-mt-px h-px min-h-[1px] bg-border" />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  tabRow: {
-    flexDirection: 'row',
-    gap: Spacing.lg,
-    paddingBottom: Spacing.xs,
-  },
-  tabButton: {
-    gap: Spacing.xs,
-    paddingBottom: Spacing.xs,
-  },
-  underline: {
-    height: 2,
-    borderRadius: Radius.hairline,
-    alignSelf: 'stretch',
-  },
-  underlinePlaceholder: {
-    height: 2,
-  },
-  border: {
-    height: StyleSheet.hairlineWidth,
-    minHeight: 1,
-    marginTop: -1,
-  },
-});

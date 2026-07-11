@@ -21,6 +21,9 @@ export type ToastInput = {
   readonly durationMs?: number;
 };
 
+/** Visual treatment for alert dialog backdrops. */
+export type ModalAlertBackdrop = 'scrim' | 'blur-scrim';
+
 /** Action button for alert-style modals. */
 export type ModalButton = {
   readonly label: string;
@@ -46,6 +49,7 @@ export type ModalAlertEntry = {
   readonly title: string;
   readonly message: string;
   readonly buttons?: readonly ModalButton[];
+  readonly backdrop?: ModalAlertBackdrop;
   readonly onClose?: () => void;
 };
 
@@ -68,5 +72,14 @@ export type ModalAlertInput = {
   readonly title: string;
   readonly message: string;
   readonly buttons?: readonly ModalButton[];
+  readonly backdrop?: ModalAlertBackdrop;
   readonly onClose?: () => void;
+};
+
+/** Options for {@link modal.confirm}. */
+export type ModalConfirmOptions = {
+  readonly confirmLabel?: string;
+  readonly cancelLabel?: string;
+  readonly destructive?: boolean;
+  readonly backdrop?: ModalAlertBackdrop;
 };

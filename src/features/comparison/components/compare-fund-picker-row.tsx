@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { getFundScore } from '@/features/funds/utils/fund-summary';
@@ -7,7 +7,7 @@ import { FundCardIcon } from '@/features/funds/components/fund-card-icon';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { ScorePill } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type CompareFundPickerRowProps = {
   fund: CatalogFund;
@@ -37,26 +37,21 @@ export function CompareFundPickerRow({
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.row,
-        {
-          borderColor: theme.border,
-          backgroundColor: theme.surface,
-        },
-        pressed && !disabled && styles.rowPressed,
-        disabled && styles.rowDisabled,
-      ]}
+      className={cn(
+        'flex-row items-center gap-sm rounded-card border border-border bg-surface p-md active:opacity-90',
+        disabled && 'opacity-[0.72]',
+      )}
     >
-      <FundCardIcon symbol={fund.symbol} logoUrl={fund.logoUrl} style={styles.icon} />
+      <FundCardIcon symbol={fund.symbol} logoUrl={fund.logoUrl} style={{ width: 40, height: 40 }} />
 
-      <View style={styles.copy}>
+      <View className="min-w-0 flex-1 gap-xs">
         <TextParagraph variant="emphasis" numberOfLines={2}>
           {fund.name}
         </TextParagraph>
         <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={1}>
           {fund.categoryLabel}
         </TextParagraph>
-        <View style={styles.metaRow}>
+        <View className="flex-row flex-wrap gap-sm">
           <TextLabel variant="meta" themeColor="textSecondary">
             TER {formatTer(fund.terPercent)}
           </TextLabel>
@@ -66,7 +61,7 @@ export function CompareFundPickerRow({
         </View>
       </View>
 
-      <View style={styles.trailing}>
+      <View className="items-end gap-sm">
         <ScorePill score={score} variant="compact" />
         <MaterialCommunityIcons
           name={disabled ? 'check-circle' : 'plus-circle-outline'}
@@ -77,38 +72,3 @@ export function CompareFundPickerRow({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    padding: Spacing.md,
-  },
-  rowPressed: {
-    opacity: 0.9,
-  },
-  rowDisabled: {
-    opacity: 0.72,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-  },
-  copy: {
-    flex: 1,
-    gap: Spacing.xs,
-    minWidth: 0,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  trailing: {
-    alignItems: 'flex-end',
-    gap: Spacing.sm,
-  },
-});

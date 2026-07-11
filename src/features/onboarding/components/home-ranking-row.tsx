@@ -3,9 +3,10 @@ import { Pressable, View } from 'react-native';
 
 import type { HomeRankingEntry } from '@/features/onboarding/services/resolve-home-search';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
-import { Badge, FundReturnChip, SkeletonBone, SkeletonShimmerProvider } from '@/shared/components/ui';
+import { Badge, FundReturnChip, SkeletonBone } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
 import type { WithLoading } from '@/shared/types/component-loading';
+import { cn } from '@/shared/utils/cn';
 import { getRiskBadgeVariant, getRiskLabel } from '@/shared/utils/fund-risk';
 
 type HomeRankingRowContentProps = {
@@ -17,26 +18,18 @@ type HomeRankingRowContentProps = {
 export type HomeRankingRowProps = WithLoading<HomeRankingRowContentProps>;
 
 function HomeRankingRowLoading() {
-  const theme = useTheme();
-
   return (
-    <SkeletonShimmerProvider>
-      <View
-        className="min-h-[96px] flex-row items-center gap-md rounded-field border px-md py-md"
-        style={{
-          borderColor: theme.borderSubtle,
-          backgroundColor: theme.surfaceMuted,
-        }}
-        accessibilityLabel="Cargando fila del ranking"
-      >
-        <SkeletonBone width={37} height={37} borderRadius={16} />
-        <View className="flex-1 gap-sm">
-          <SkeletonBone width="68%" height={16} />
-          <SkeletonBone width="46%" height={12} />
-        </View>
-        <SkeletonBone width={44} height={28} borderRadius={9999} />
+    <View
+      className="min-h-[96px] flex-row items-center gap-md rounded-field border border-border-subtle bg-surface-muted px-md py-md"
+      accessibilityLabel="Cargando fila del ranking"
+    >
+      <SkeletonBone width={37} height={37} borderRadius={16} />
+      <View className="flex-1 gap-sm">
+        <SkeletonBone width="68%" height={16} />
+        <SkeletonBone width="46%" height={12} />
       </View>
-    </SkeletonShimmerProvider>
+      <SkeletonBone width={44} height={28} borderRadius={9999} />
+    </View>
   );
 }
 
@@ -74,38 +67,26 @@ function HomeRankingRowContent({
       accessibilityLabel={`Posición ${fund.displayRank}, ${fund.name}, Score Inversora ${fund.score} sobre 100, riesgo ${riskLabel.toLowerCase()}, comisión anual ${fund.terPercent.toFixed(2)} por ciento${returnA11y}.`}
       accessibilityHint="Abre la ficha resumida del fondo"
       onPress={onPress}
-      className={[
-        'min-h-[96px] rounded-field border px-md py-md active:opacity-[0.92]',
-        isHighlighted ? 'border-[1.5px]' : 'border',
-      ].join(' ')}
-      style={{
-        backgroundColor: theme.surface,
-        borderColor: isHighlighted ? theme.primary : theme.border,
-      }}
+      className={cn(
+        'min-h-[96px] rounded-field bg-surface px-md py-md active:opacity-[0.92]',
+        isHighlighted ? 'border-[1.5px] border-primary' : 'border border-border',
+      )}
     >
       <View className="gap-xs">
         <View className="flex-row items-center justify-between gap-sm">
           <View className="flex-1 flex-row items-start gap-sm">
             <View
-              className="mt-half min-h-[37px] min-w-[37px] items-center justify-center rounded-full border px-sm"
-              style={
+              className={cn(
+                'mt-half min-h-[37px] min-w-[37px] items-center justify-center rounded-full border px-sm',
                 isHighlighted
-                  ? {
-                      backgroundColor: theme.primary,
-                      borderColor: theme.primary,
-                    }
-                  : {
-                      backgroundColor: theme.backgroundSoft,
-                      borderColor: theme.accentMint,
-                    }
-              }
+                  ? 'border-primary bg-primary'
+                  : 'border-accent-mint bg-background-soft',
+              )}
             >
               <TextLabel
                 variant={isHighlighted ? 'chip' : 'meta'}
-                style={{
-                  color: isHighlighted ? theme.textOnDark : theme.textSecondary,
-                  letterSpacing: isHighlighted ? -0.3 : 0.88,
-                }}
+                themeColor={isHighlighted ? 'textOnDark' : 'textSecondary'}
+                className={isHighlighted ? 'tracking-[-0.3px]' : 'tracking-[0.88px]'}
               >
                 #{fund.displayRank}
               </TextLabel>
@@ -113,10 +94,7 @@ function HomeRankingRowContent({
 
             <View className="flex-1 gap-threeQuarter">
               {isHighlighted ? (
-                <View
-                  className="mb-2xs self-start rounded-chip px-sm py-half"
-                  style={{ backgroundColor: theme.backgroundSoft }}
-                >
+                <View className="mb-2xs self-start rounded-chip bg-background-soft px-sm py-half">
                   <TextLabel variant="meta" themeColor="primary">
                     {highlightLabel}
                   </TextLabel>
@@ -146,8 +124,8 @@ function HomeRankingRowContent({
             </TextLabel>
             <TextLabel
               variant="chip"
+              themeColor={isHighlighted ? 'primary' : 'text'}
               className="text-[18px] leading-6 tracking-[-0.3px]"
-              style={isHighlighted ? { color: theme.primary } : undefined}
             >
               {fund.score}/100
             </TextLabel>

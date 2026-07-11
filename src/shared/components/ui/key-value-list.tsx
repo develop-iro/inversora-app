@@ -1,9 +1,8 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
 import { Divider } from '@/shared/components/ui/divider';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type KeyValueRow = {
   id: string;
@@ -14,61 +13,30 @@ export type KeyValueRow = {
 
 export type KeyValueListProps = {
   rows: KeyValueRow[];
+  className?: string;
 };
 
-export function KeyValueList({ rows }: KeyValueListProps) {
-  const theme = useTheme();
-
+export function KeyValueList({ rows, className }: KeyValueListProps) {
   return (
-    <View style={styles.list}>
+    <View className={cn('self-stretch', className)}>
       {rows.map((row, index) => (
         <View key={row.id}>
-          <View style={styles.row}>
-            <TextParagraph variant="default" style={styles.label} numberOfLines={2}>
+          <View className="min-h-[48px] flex-row items-start justify-between gap-md py-md">
+            <TextParagraph variant="default" className="min-w-0 flex-1" numberOfLines={2}>
               {row.label}
             </TextParagraph>
             <TextParagraph
               variant="emphasis"
-              style={[
-                styles.value,
-                row.emphasis === 'link' && { color: theme.primary },
-              ]}
+              themeColor={row.emphasis === 'link' ? 'primary' : undefined}
+              className="max-w-[52%] shrink-0 text-right"
               numberOfLines={3}
             >
               {row.value}
             </TextParagraph>
           </View>
-          {index < rows.length - 1 ? (
-            <Divider spacing={0} style={styles.divider} />
-          ) : null}
+          {index < rows.length - 1 ? <Divider spacing={0} className="my-0" /> : null}
         </View>
       ))}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  list: {
-    alignSelf: 'stretch',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-    paddingVertical: Spacing.md,
-    minHeight: 48,
-  },
-  label: {
-    flex: 1,
-    minWidth: 0,
-  },
-  value: {
-    flexShrink: 0,
-    maxWidth: '52%',
-    textAlign: 'right',
-  },
-  divider: {
-    marginVertical: 0,
-  },
-});

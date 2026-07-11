@@ -1,23 +1,17 @@
 import type { ReactNode } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  View,
-  type PressableProps,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import { Pressable, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cardVariantClassNames } from '@/shared/nativewind/theme-classes';
+import { cn } from '@/shared/utils/cn';
 
 export type CardVariant = 'elevated' | 'outlined' | 'flat';
 
 export type CardProps = Omit<PressableProps, 'children' | 'style'> & {
   children: ReactNode;
   variant?: CardVariant;
+  className?: string;
+  contentClassName?: string;
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
 };
@@ -25,22 +19,19 @@ export type CardProps = Omit<PressableProps, 'children' | 'style'> & {
 export function Card({
   children,
   variant = 'elevated',
+  className,
+  contentClassName,
   style,
   contentStyle,
   onPress,
   disabled,
   ...pressableProps
 }: CardProps) {
-  const theme = useTheme();
-  const shadows = useThemeShadows();
-
-  const baseStyles = [
-    styles.base,
-    { backgroundColor: theme.surface },
-    variant === 'elevated' && shadows.card,
-    variant === 'outlined' && { borderWidth: 1, borderColor: theme.border },
-    style,
-  ];
+  const containerClassName = cn(
+    'overflow-hidden rounded-card',
+    cardVariantClassNames[variant],
+    className,
+  );
 
   if (onPress) {
     return (
@@ -48,20 +39,26 @@ export function Card({
         accessibilityRole="button"
         disabled={disabled}
         onPress={onPress}
-        style={({ pressed }) => [
-          ...baseStyles,
-          pressed && !disabled && styles.pressed,
-          disabled && styles.disabled,
-        ]}
-        {...pressableProps}>
-        <View style={[styles.content, contentStyle]}>{children}</View>
+        className={cn(
+          containerClassName,
+          'active:opacity-[0.92]',
+          disabled && 'opacity-50',
+        )}
+        style={style}
+        {...pressableProps}
+      >
+        <View className={cn('p-lg', contentClassName)} style={contentStyle}>
+          {children}
+        </View>
       </Pressable>
     );
   }
 
   return (
-    <View style={baseStyles}>
-      <View style={[styles.content, contentStyle]}>{children}</View>
+    <View className={containerClassName} style={style}>
+      <View className={cn('p-lg', contentClassName)} style={contentStyle}>
+        {children}
+      </View>
     </View>
   );
 }
@@ -70,6 +67,7 @@ export type InvestmentCardProps = Omit<PressableProps, 'children' | 'style'> & {
   icon: ReactNode;
   title: string;
   subtitle?: string;
+  className?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -78,6 +76,7 @@ export function InvestmentCard({
   icon,
   title,
   subtitle,
+  className,
   style,
   onPress,
   ...pressableProps
@@ -86,11 +85,13 @@ export function InvestmentCard({
     <Card
       variant="elevated"
       onPress={onPress}
-      style={[styles.investmentCard, style]}
-      contentStyle={styles.investmentContent}
-      {...pressableProps}>
-      <View style={styles.iconSlot}>{icon}</View>
-      <View style={styles.metadata}>
+      className={cn('min-h-[155px]', className)}
+      contentClassName="flex-1 justify-between p-lg"
+      style={style}
+      {...pressableProps}
+    >
+      <View className="h-8 w-8 items-center justify-center">{icon}</View>
+      <View className="gap-xs self-stretch">
         <TextParagraph variant="emphasis" numberOfLines={2}>
           {title}
         </TextParagraph>
@@ -103,37 +104,3 @@ export function InvestmentCard({
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: Radius.card,
-    overflow: 'hidden',
-  },
-  content: {
-    padding: Spacing.lg,
-  },
-  pressed: {
-    opacity: 0.92,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  investmentCard: {
-    minHeight: 155,
-  },
-  investmentContent: {
-    flex: 1,
-    justifyContent: 'space-between',
-    padding: Spacing.lg,
-  },
-  iconSlot: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  metadata: {
-    gap: Spacing.xs,
-    alignSelf: 'stretch',
-  },
-});

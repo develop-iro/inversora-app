@@ -3,11 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
-  ScrollView,
-  StyleSheet,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FundCatalogSoraChip } from '@/features/assistant/components/fund-catalog-sora-chip';
 import { SoraChatSheet } from '@/features/assistant/components/sora-chat-sheet';
@@ -46,12 +43,13 @@ import {
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
+import { TabScreenScroll } from '@/shared/components/layout';
 import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
 import { Spinner } from '@/shared/components/ui';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
-import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
-import { BottomTabInset, Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
+import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 const SCROLL_LOAD_MORE_THRESHOLD_PX = 320;
 
@@ -60,6 +58,7 @@ function hasActiveSecondaryFilters(filters: FundCatalogFiltersState): boolean {
     filters.riskLevel !== 'all' ||
     filters.maxTerPercent != null ||
     filters.minScore != null ||
+    filters.minReturnPercent != null ||
     filters.idealForBeginnersOnly
   );
 }
@@ -90,8 +89,6 @@ function isNearScrollEnd(event: NativeSyntheticEvent<NativeScrollEvent>): boolea
 export default function FundsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ applyProfileHints?: string | string[] }>();
-  const insets = useSafeAreaInsets();
-  const theme = useTheme();
   const { profile: educationalProfile } = useEducationalProfile();
   const [filters, setFilters] = useState<FundCatalogFiltersState>(DEFAULT_CATALOG_FILTERS);
   const [reloadToken, setReloadToken] = useState(0);
@@ -104,7 +101,6 @@ export default function FundsScreen() {
 
   useEffect(() => {
     catalogLoadStartedAtRef.current = performance.now();
-    void trackEvent('screen_view', 'funds_catalog');
   }, []);
 
   const profileHints = useMemo(
@@ -236,6 +232,8 @@ export default function FundsScreen() {
           return { ...current, minScore: null };
         case 'beginners':
           return { ...current, idealForBeginnersOnly: false };
+        case 'return':
+          return { ...current, minReturnPercent: null };
         default:
           return current;
       }
@@ -283,21 +281,16 @@ export default function FundsScreen() {
     profileHints !== null && areProfileHintsApplied(filters, profileHints.filters);
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: theme.background }]}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingBottom: insets.bottom + BottomTabInset + Spacing.xl,
-        },
-      ]}
+    <TabScreenScroll
+      extraBottomPadding={Spacing.xl}
+      contentContainerClassName="items-center pt-lg"
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       scrollEventThrottle={16}
       onScroll={handleScroll}
     >
-      <View style={styles.inner}>
-        <View style={styles.header}>
+      <View className="w-full max-w-[760px] gap-lg px-lg">
+        <View className="gap-sm">
           <TextHeading variant="section">Catálogo de fondos</TextHeading>
           <TextParagraph variant="secondary" themeColor="textSecondary">
             Explora fondos indexados con filtros claros. Resultados educativos, no
@@ -350,12 +343,14 @@ export default function FundsScreen() {
         />
 
         {isInitialLoading ? (
-          <Spinner size="lg" accessibilityLabel="Cargando catálogo" style={styles.loader} />
+          <Spinner size="lg" accessibilityLabel="Cargando catálogo" style={{ marginVertical: Spacing.xl }} />
         ) : blockingError ? (
           <FundApiErrorState
             title="No se pudo cargar el catálogo"
             message={blockingError}
             onRetry={handleRetryLoad}
+            layout="section"
+            className="w-full"
           />
         ) : funds.length === 0 ? (
           <FundCatalogEmptyState
@@ -365,9 +360,9 @@ export default function FundsScreen() {
             onResetFilters={hasActiveFilters ? handleResetSecondaryFilters : undefined}
           />
         ) : (
-          <View style={[styles.results, isRefreshing && styles.resultsRefreshing]}>
+          <View className={cn('gap-md', isRefreshing && 'opacity-[0.72]')}>
             {isRefreshing ? (
-              <View style={styles.refreshRow}>
+              <View className="flex-row items-center gap-sm">
                 <Spinner.BarChart size="sm" />
                 <TextLabel variant="meta" themeColor="textSecondary">
                   Actualizando resultados…
@@ -430,39 +425,6 @@ export default function FundsScreen() {
         surface="catalog"
         initialMessage={debouncedQuery}
       />
-    </ScrollView>
+    </TabScreenScroll>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  content: {
-    alignItems: 'center',
-    paddingTop: Spacing.lg,
-  },
-  inner: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    gap: Spacing.lg,
-  },
-  header: {
-    gap: Spacing.sm,
-  },
-  loader: {
-    marginVertical: Spacing.xl,
-  },
-  results: {
-    gap: Spacing.md,
-  },
-  resultsRefreshing: {
-    opacity: 0.72,
-  },
-  refreshRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-});

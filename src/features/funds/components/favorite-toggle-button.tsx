@@ -1,14 +1,15 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native';
 
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FavoriteToggleButtonProps = {
   isin: string;
   isFavorite: boolean;
   isLoading?: boolean;
   onToggle: () => void;
+  className?: string;
 };
 
 export function FavoriteToggleButton({
@@ -16,6 +17,7 @@ export function FavoriteToggleButton({
   isFavorite,
   isLoading = false,
   onToggle,
+  className,
 }: FavoriteToggleButtonProps) {
   const theme = useTheme();
   const label = isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos';
@@ -28,14 +30,11 @@ export function FavoriteToggleButton({
       disabled={isLoading}
       hitSlop={8}
       onPress={onToggle}
-      style={({ pressed }) => [
-        styles.button,
-        {
-          backgroundColor: isFavorite ? theme.primarySurface : theme.surfaceMuted,
-          borderColor: isFavorite ? theme.primary : theme.border,
-        },
-        pressed && styles.pressed,
-      ]}
+      className={cn(
+        'min-h-[40px] min-w-[40px] items-center justify-center rounded-full border p-xs active:opacity-[0.85]',
+        isFavorite ? 'border-primary bg-primary-surface' : 'border-border bg-surface-muted',
+        className,
+      )}
     >
       <MaterialCommunityIcons
         name={isFavorite ? 'heart' : 'heart-outline'}
@@ -45,18 +44,3 @@ export function FavoriteToggleButton({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    minWidth: 40,
-    minHeight: 40,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Spacing.xs,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-});

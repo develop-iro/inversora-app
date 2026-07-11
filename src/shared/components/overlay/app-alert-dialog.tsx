@@ -1,11 +1,10 @@
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, View } from 'react-native';
 
 import type { ModalAlertEntry } from '@/core/overlay/overlay.types';
+import { AppAlertDialogBackdrop } from '@/shared/components/overlay/app-alert-dialog-backdrop';
 import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { Button } from '@/shared/components/ui/button';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type AppAlertDialogProps = {
   entry: ModalAlertEntry;
@@ -16,9 +15,8 @@ export type AppAlertDialogProps = {
  * Centered alert dialog with shared visual language.
  */
 export function AppAlertDialog({ entry, onClose }: AppAlertDialogProps) {
-  const theme = useTheme();
-  const shadows = useThemeShadows();
   const buttons = entry.buttons ?? [{ label: 'Entendido', variant: 'primary' as const }];
+  const backdrop = entry.backdrop ?? 'blur-scrim';
 
   const handleButtonPress = (index: number) => {
     const button = buttons[index];
@@ -34,24 +32,12 @@ export function AppAlertDialog({ entry, onClose }: AppAlertDialogProps) {
       onRequestClose={onClose}
       accessibilityViewIsModal
     >
-      <View style={styles.root}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Cerrar diálogo"
-          onPress={onClose}
-          style={[styles.scrim, { backgroundColor: theme.overlayScrim }]}
-        />
+      <View className="flex-1 items-center justify-center p-lg">
+        <AppAlertDialogBackdrop backdrop={backdrop} onPress={onClose} />
 
         <View
           accessibilityRole="alert"
-          style={[
-            styles.card,
-            shadows.card,
-            {
-              backgroundColor: theme.surface,
-              borderColor: theme.borderSubtle,
-            },
-          ]}
+          className="w-full max-w-[420px] gap-md rounded-card border border-border-subtle bg-surface p-lg shadow-card"
         >
           <TextHeading variant="section" themeColor="deepOcean">
             {entry.title}
@@ -60,7 +46,7 @@ export function AppAlertDialog({ entry, onClose }: AppAlertDialogProps) {
             {entry.message}
           </TextParagraph>
 
-          <View style={styles.actions}>
+          <View className="mt-xs flex-row flex-wrap justify-end gap-sm">
             {buttons.map((button, index) => {
               const isPrimary = button.variant === 'primary' || button.variant === undefined;
               const isDanger = button.variant === 'danger';
@@ -74,7 +60,7 @@ export function AppAlertDialog({ entry, onClose }: AppAlertDialogProps) {
                   onPress={() => {
                     handleButtonPress(index);
                   }}
-                  style={buttons.length > 1 ? styles.actionButton : undefined}
+                  className={cn(buttons.length > 1 && 'min-w-[120px]')}
                 />
               );
             })}
@@ -84,33 +70,3 @@ export function AppAlertDialog({ entry, onClose }: AppAlertDialogProps) {
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.lg,
-  },
-  scrim: {
-    ...StyleSheet.absoluteFill,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 420,
-    borderRadius: Radius.card,
-    borderWidth: 1,
-    padding: Spacing.lg,
-    gap: Spacing.md,
-  },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-    gap: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  actionButton: {
-    minWidth: 120,
-  },
-});

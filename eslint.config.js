@@ -29,7 +29,7 @@ module.exports = defineConfig([
     },
     rules: {
       // Gradual quality guardrails for RN while keeping MVP velocity.
-      "react-native/no-unused-styles": "off",
+      "react-native/no-unused-styles": "error",
       "react-native/no-color-literals": "off",
       "react-native/no-inline-styles": "off",
       "no-console": ["warn", { allow: ["warn", "error"] }],

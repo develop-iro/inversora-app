@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, type ViewStyle } from 'react-native';
 
 type NativeStackAnimation = 'default' | 'fade' | 'slide_from_bottom' | 'slide_from_right' | 'none';
 type NativeStackPresentation = 'card' | 'modal' | 'transparentModal' | 'containedModal' | 'fullScreenModal';
@@ -15,6 +15,15 @@ export const STACK_PUSH_ANIMATION: NativeStackAnimation = Platform.select({
 
 /** Duration for tab cross-fade when switching bottom tabs. */
 export const TAB_CROSSFADE_MS = 220;
+
+/**
+ * Constrains each tab scene to the viewport so nested `ScrollView` can scroll.
+ * Without this, the scene wrapper grows with content (`flex: 0 0 auto`) and scroll breaks on web.
+ */
+export const TAB_SCENE_STYLE: ViewStyle = {
+  flex: 1,
+  minHeight: 0,
+};
 
 /** Shared stack options for full-screen routes pushed above the tab shell. */
 export const ROOT_STACK_SCREEN_OPTIONS = {

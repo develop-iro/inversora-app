@@ -1,44 +1,46 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Animated,
-    Pressable,
-    StyleSheet,
-    Text,
-    type PressableProps,
-    type StyleProp,
-    type TextStyle,
-    type ViewStyle,
-} from "react-native";
+  ActivityIndicator,
+  Animated,
+  Pressable,
+  Text,
+  type PressableProps,
+  type StyleProp,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 
-import { useTheme } from "@/shared/hooks/use-theme";
-import { Radius, Size, Spacing, Typography } from "@/shared/theme/theme";
+import {
+  buttonLabelClassNames,
+  buttonVariantClassNames,
+} from '@/shared/nativewind/theme-classes';
+import { useTheme } from '@/shared/hooks/use-theme';
+import { cn } from '@/shared/utils/cn';
 
-export type ButtonVariant =
-  | "primary"
-  | "secondary"
-  | "ghost"
-  | "outline"
-  | "onDark";
-export type ButtonSize = "sm" | "md";
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'outline' | 'onDark';
+export type ButtonSize = 'sm' | 'md';
 
-export type ButtonProps = Omit<PressableProps, "children" | "style"> & {
+export type ButtonProps = Omit<PressableProps, 'children' | 'style'> & {
   label: string;
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
   fullWidth?: boolean;
+  className?: string;
+  labelClassName?: string;
   style?: StyleProp<ViewStyle>;
   labelStyle?: StyleProp<TextStyle>;
 };
 
 export function Button({
   label,
-  variant = "primary",
-  size = "md",
+  variant = 'primary',
+  size = 'md',
   loading = false,
   fullWidth = false,
   disabled,
+  className,
+  labelClassName,
   style,
   labelStyle,
   onPressIn: externalPressIn,
@@ -50,19 +52,7 @@ export function Button({
   const theme = useTheme();
   const isDisabled = disabled || loading;
 
-  /*
-   * Un único Animated.Value controla la escala del botón.
-   *
-   * Hover (solo web):  1 → 1.04  spring suave (stiffness baja)
-   * Press (todas las plataformas): valor actual → 0.96  spring rápida
-   * Release:  0.96 → target (1.04 si hover activo, 1 si no)
-   *
-   * Buenas prácticas:
-   * - useNativeDriver: true → la animación corre en el hilo nativo.
-   * - spring en lugar de timing → feedback táctil natural.
-   * - isHovered ref sincrónica para no crear dependencias de closure.
-   */
-  // useState con lazy initializer: compatible con React Compiler (no accede a .current durante render).
+  // tailwind-exception: Animated scale feedback requires transform on Animated.View
   const [scaleAnim] = useState(() => new Animated.Value(1));
   const isHovered = useRef(false);
 
@@ -79,7 +69,7 @@ export function Button({
   );
 
   const handlePressIn = useCallback(
-    (e: Parameters<NonNullable<PressableProps["onPressIn"]>>[0]) => {
+    (e: Parameters<NonNullable<PressableProps['onPressIn']>>[0]) => {
       if (!isDisabled) springTo(0.96, 420);
       externalPressIn?.(e);
     },
@@ -87,7 +77,7 @@ export function Button({
   );
 
   const handlePressOut = useCallback(
-    (e: Parameters<NonNullable<PressableProps["onPressOut"]>>[0]) => {
+    (e: Parameters<NonNullable<PressableProps['onPressOut']>>[0]) => {
       springTo(isHovered.current ? 1.04 : 1, 300);
       externalPressOut?.(e);
     },
@@ -95,7 +85,7 @@ export function Button({
   );
 
   const handleHoverIn = useCallback(
-    (e: Parameters<NonNullable<PressableProps["onHoverIn"]>>[0]) => {
+    (e: Parameters<NonNullable<PressableProps['onHoverIn']>>[0]) => {
       isHovered.current = true;
       if (!isDisabled) springTo(1.04, 220);
       externalHoverIn?.(e);
@@ -104,7 +94,7 @@ export function Button({
   );
 
   const handleHoverOut = useCallback(
-    (e: Parameters<NonNullable<PressableProps["onHoverOut"]>>[0]) => {
+    (e: Parameters<NonNullable<PressableProps['onHoverOut']>>[0]) => {
       isHovered.current = false;
       springTo(1, 220);
       externalHoverOut?.(e);
@@ -112,14 +102,10 @@ export function Button({
     [springTo, externalHoverOut],
   );
 
-  const variantStyles = getVariantStyles(variant, theme, isDisabled);
-  const sizeStyles = size === "sm" ? styles.sizeSm : styles.sizeMd;
+  const spinnerColor =
+    variant === 'primary' ? theme.textOnPrimary : variant === 'ghost' ? theme.primary : theme.text;
 
   return (
-    /*
-     * Animated.View aplica la escala al botón completo (visual + área táctil)
-     * mientras el Pressable interior gestiona el estado de accesibilidad y eventos.
-     */
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <Pressable
         accessibilityRole="button"
@@ -128,21 +114,32 @@ export function Button({
         onPressOut={handlePressOut}
         onHoverIn={handleHoverIn}
         onHoverOut={handleHoverOut}
-        style={[
-          styles.base,
-          sizeStyles,
-          variantStyles.container,
-          fullWidth && styles.fullWidth,
-          isDisabled && styles.disabled,
-          style,
-        ]}
+        className={cn(
+          'items-center justify-center rounded-pill',
+          size === 'sm' ? 'min-h-[40px] px-xl py-[11px]' : 'min-h-[48px] px-xl py-md',
+          !(isDisabled && variant === 'primary') && buttonVariantClassNames[variant],
+          isDisabled && variant === 'primary' && 'bg-primary-surface-subtle opacity-60',
+          isDisabled && variant === 'ghost' && 'opacity-50',
+          isDisabled && variant !== 'ghost' && variant !== 'primary' && 'opacity-50',
+          fullWidth && 'self-stretch',
+          className,
+        )}
+        style={style}
         {...pressableProps}
       >
         {loading ? (
-          <ActivityIndicator color={variantStyles.label.color} size="small" />
+          <ActivityIndicator color={spinnerColor} size="small" />
         ) : (
           <Text
-            style={[styles.label, variantStyles.label, labelStyle]}
+            className={cn(
+              'text-center font-display-bold text-button',
+              buttonLabelClassNames[variant],
+              isDisabled && variant === 'primary' && 'text-text-secondary opacity-80',
+              isDisabled && variant === 'ghost' && 'text-text-secondary',
+              isDisabled && variant !== 'ghost' && variant !== 'primary' && 'text-text-secondary',
+              labelClassName,
+            )}
+            style={labelStyle}
             numberOfLines={1}
           >
             {label}
@@ -152,76 +149,3 @@ export function Button({
     </Animated.View>
   );
 }
-
-function getVariantStyles(
-  variant: ButtonVariant,
-  theme: ReturnType<typeof useTheme>,
-  disabled?: boolean,
-) {
-  const mutedText = disabled ? theme.textSecondary : theme.text;
-
-  switch (variant) {
-    case "onDark":
-      return {
-        container: { backgroundColor: theme.surface },
-        label: { color: theme.text, ...Typography.button },
-      };
-    case "secondary":
-      return {
-        container: { backgroundColor: theme.backgroundSoft },
-        label: { color: mutedText, ...Typography.button },
-      };
-    case "ghost":
-      return {
-        container: { backgroundColor: "transparent" },
-        label: {
-          color: disabled ? theme.textSecondary : theme.primary,
-          ...Typography.button,
-        },
-      };
-    case "outline":
-      return {
-        container: {
-          backgroundColor: "transparent",
-          borderWidth: 1,
-          borderColor: theme.border,
-        },
-        label: { color: mutedText, ...Typography.button },
-      };
-    case "primary":
-    default:
-      return {
-        container: {
-          backgroundColor: disabled ? theme.backgroundElement : theme.primary,
-        },
-        label: { color: theme.textOnPrimary, ...Typography.button },
-      };
-  }
-}
-
-const styles = StyleSheet.create({
-  base: {
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: Radius.pill,
-  },
-  sizeSm: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.sm + Spacing.threeQuarter,
-    minHeight: Size.buttonSmMin,
-  },
-  sizeMd: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    minHeight: Size.buttonMdMin,
-  },
-  fullWidth: {
-    alignSelf: "stretch",
-  },
-  label: {
-    textAlign: "center",
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-});

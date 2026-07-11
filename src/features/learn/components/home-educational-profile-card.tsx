@@ -1,11 +1,10 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { EducationalProfile } from '@/core/domain/educational-profile';
 import { getEducationalProfileSummary } from '@/features/learn/services/build-educational-profile';
 import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type HomeEducationalProfileCardProps = {
   profile: EducationalProfile;
@@ -25,16 +24,8 @@ export function HomeEducationalProfileCard({
   const summary = getEducationalProfileSummary(profile);
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.softTealSurfaceFaint,
-          borderColor: theme.borderSubtle,
-        },
-      ]}
-    >
-      <View style={styles.header}>
+    <View className="gap-sm rounded-card border border-border-subtle bg-soft-teal-surface-faint p-md">
+      <View className="flex-row items-center gap-sm">
         <MaterialCommunityIcons name="account-school-outline" size={20} color={theme.deepOcean} />
         <TextHeading variant="card" themeColor="deepOcean">
           Tu perfil orientativo
@@ -45,12 +36,12 @@ export function HomeEducationalProfileCard({
         {summary}
       </TextParagraph>
 
-      <View style={styles.actions}>
+      <View className="mt-xs gap-sm">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Ver catálogo sugerido según tu perfil educativo"
           onPress={onOpenSuggestedCatalog}
-          style={[styles.primaryAction, { backgroundColor: theme.primary }]}
+          className="items-center rounded-chip bg-primary px-md py-sm active:opacity-90"
         >
           <TextParagraph variant="emphasis" themeColor="textOnPrimary">
             Ver catálogo sugerido
@@ -61,7 +52,7 @@ export function HomeEducationalProfileCard({
           accessibilityRole="button"
           accessibilityLabel="Repetir cuestionario educativo"
           onPress={onRetakeQuestionnaire}
-          style={[styles.secondaryAction, { borderColor: theme.border }]}
+          className="items-center rounded-chip border border-border px-md py-sm active:opacity-90"
         >
           <TextParagraph variant="secondary" themeColor="deepOcean">
             Actualizar perfil
@@ -71,34 +62,3 @@ export function HomeEducationalProfileCard({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    padding: Spacing.md,
-    gap: Spacing.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  actions: {
-    gap: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  primaryAction: {
-    borderRadius: Radius.chip,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    alignItems: 'center',
-  },
-  secondaryAction: {
-    borderWidth: 1,
-    borderRadius: Radius.chip,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    alignItems: 'center',
-  },
-});

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { FundDetailProfile } from '@/core/domain/fund-detail-profile';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
@@ -8,7 +8,6 @@ import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { CollapsibleSection } from '@/shared/components/layout';
 import { TextParagraph } from '@/shared/components/text';
 import { HorizontalBarChart, TabHeader } from '@/shared/components/ui';
-import { Spacing } from '@/shared/theme/theme';
 
 type ReturnsTab = 'periods' | 'years';
 
@@ -78,7 +77,7 @@ export function FundDetailReturnsSection({ profile, fundName }: FundDetailReturn
         accessibilityLabel="Rentabilidad del fondo"
       />
 
-      <View style={styles.chartWrap}>
+      <View className="pt-xs">
         <HorizontalBarChart data={chartData} accessibilityLabel={chartA11y} />
       </View>
 
@@ -88,7 +87,7 @@ export function FundDetailReturnsSection({ profile, fundName }: FundDetailReturn
           subtitle="Notas sobre cómo se calculan estas rentabilidades."
           defaultExpanded={false}
         >
-          <View style={styles.notes}>
+          <View className="gap-sm">
             {methodologyNotes.map((note) => (
               <TextParagraph key={note} variant="secondary" themeColor="textSecondary">
                 {note}
@@ -100,12 +99,3 @@ export function FundDetailReturnsSection({ profile, fundName }: FundDetailReturn
     </FundDetailSectionShell>
   );
 }
-
-const styles = StyleSheet.create({
-  chartWrap: {
-    paddingTop: Spacing.xs,
-  },
-  notes: {
-    gap: Spacing.sm,
-  },
-});

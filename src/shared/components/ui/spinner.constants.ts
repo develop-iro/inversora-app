@@ -1,5 +1,5 @@
-/** Normalized bar heights for the upward bar chart (0 = bottom, 1 = top). */
-export const SPINNER_BAR_VALUES = [0.3, 0.42, 0.38, 0.52, 0.48, 0.64, 0.6, 0.76, 0.86] as const;
+/** Normalized bar heights for the upward bar chart (monotonic left-to-right ramp). */
+export const SPINNER_BAR_VALUES = [0.22, 0.3, 0.38, 0.46, 0.54, 0.62, 0.7, 0.78, 0.88] as const;
 
 /** Delay between each bar grow-in during a loop cycle. */
 export const SPINNER_BAR_STAGGER_MS = 85;

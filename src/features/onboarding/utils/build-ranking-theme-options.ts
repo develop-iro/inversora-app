@@ -3,6 +3,8 @@ import type { ComponentProps } from 'react';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import type { HomeRankingEntry } from '@/features/onboarding/services/resolve-home-search';
+import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
+import type { RankedFund } from '@/core/scoring/types';
 
 type ThemeIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -56,6 +58,55 @@ export function resolveRankingThemeIcon(categoryLabel: string): ThemeIconName {
  */
 export function formatRankingThemeLabel(categoryLabel: string): string {
   return categoryLabel.replace(/^Índice\s+/i, '').trim();
+}
+
+/**
+ * Builds thematic filter options from benchmark ranking groups (RN-02).
+ */
+export function buildRankingThemeOptionsFromGroups(
+  groups: readonly BenchmarkRankingGroup[],
+): RankingThemeOption[] {
+  return groups
+    .map((group) => ({
+      id: group.benchmarkKey,
+      label: group.benchmark,
+      icon: resolveRankingThemeIcon(group.benchmark),
+      fundCount: group.total,
+      topScore: Math.max(...group.funds.map((entry) => entry.score), 0),
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label, 'es'));
+}
+
+/**
+ * Returns ranked funds for a benchmark group key, preserving benchmark-local ranks.
+ */
+export function getRankingFundsForBenchmark(
+  groups: readonly BenchmarkRankingGroup[],
+  benchmarkKey: string | 'all',
+  limit?: number,
+): RankedFund[] {
+  if (benchmarkKey === 'all') {
+    const flattened = groups.flatMap((group) => group.funds);
+    return limit === undefined ? flattened : flattened.slice(0, limit);
+  }
+
+  const group = groups.find((entry) => entry.benchmarkKey === benchmarkKey);
+  const funds = group?.funds ?? [];
+  return limit === undefined ? funds : funds.slice(0, limit);
+}
+
+/**
+ * Maps ranked funds to home ranking rows preserving benchmark-local rank.
+ */
+export function toHomeRankingEntries(
+  funds: readonly RankedFund[],
+  highlightedIsin?: string,
+): HomeRankingEntry[] {
+  return funds.map((fund, index) => ({
+    ...fund,
+    displayRank: fund.rank,
+    isHighlighted: highlightedIsin ? fund.isin === highlightedIsin : index === 0,
+  }));
 }
 
 /**

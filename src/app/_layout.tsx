@@ -6,6 +6,9 @@ import { useFonts } from 'expo-font';
 import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { initSentry } from '@/core/observability/sentry';
 
 import { AppLaunchSplash } from '@/shared/components/brand/app-launch-splash';
 import { AppProviders } from '@/shared/components/overlay';
@@ -14,6 +17,8 @@ import { useNavigationTheme } from '@/shared/hooks/use-navigation-theme';
 import { ROOT_FLOW_SCREEN_OPTIONS, ROOT_STACK_SCREEN_OPTIONS } from '@/shared/navigation/stack-screen-options';
 
 const IS_SERVER_RENDER = typeof window === 'undefined';
+
+initSentry();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,18 +40,21 @@ export default function RootLayout() {
   const showLaunchSplash = isLaunchSplashVisible && !IS_SERVER_RENDER;
 
   return (
-    <ThemeProvider value={navigationTheme}>
-      <AppProviders>
-        <StatusBar barStyle={showLaunchSplash ? 'light-content' : 'dark-content'} />
-        <Stack screenOptions={ROOT_STACK_SCREEN_OPTIONS}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'none' }} />
-          <Stack.Screen name="learn" options={ROOT_FLOW_SCREEN_OPTIONS} />
-          <Stack.Screen name="legal" options={ROOT_FLOW_SCREEN_OPTIONS} />
-        </Stack>
-        {showLaunchSplash ? (
-          <AppLaunchSplash opacity={launchSplashOpacity} />
-        ) : null}
-      </AppProviders>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider value={navigationTheme}>
+        <AppProviders initialProfileGateEnabled={!showLaunchSplash}>
+          <StatusBar barStyle={showLaunchSplash ? 'light-content' : 'dark-content'} />
+          <Stack screenOptions={ROOT_STACK_SCREEN_OPTIONS}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'none' }} />
+            <Stack.Screen name="learn" options={ROOT_FLOW_SCREEN_OPTIONS} />
+            <Stack.Screen name="legal" options={ROOT_FLOW_SCREEN_OPTIONS} />
+            <Stack.Screen name="rankings" options={ROOT_FLOW_SCREEN_OPTIONS} />
+          </Stack>
+          {showLaunchSplash ? (
+            <AppLaunchSplash opacity={launchSplashOpacity} />
+          ) : null}
+        </AppProviders>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

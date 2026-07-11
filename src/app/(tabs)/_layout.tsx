@@ -1,14 +1,14 @@
 import { Tabs, useSegments } from 'expo-router';
 import { useMemo } from 'react';
-import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppHeaderWithSora } from '@/features/assistant/components/app-header-with-sora';
-import { NavTabBar } from '@/shared/components/navigation/nav-tab-bar';
+import { NavTabBar, resolveNavTabSafeBottomInset } from '@/shared/components/navigation/nav-tab-bar';
 import {
   FUNDS_CATALOG_SCREEN,
   isFundDetailPath,
 } from '@/shared/navigation/tab-route-state';
+import { TAB_SCENE_STYLE } from '@/shared/navigation/stack-screen-options';
 
 /**
  * Primary tab shell: home, funds stack, favorites, compare, calculator.
@@ -18,8 +18,7 @@ export default function TabsLayout() {
   const isFundDetailScreen = useMemo(() => isFundDetailPath(segments), [segments]);
   const insets = useSafeAreaInsets();
 
-  const safeBottomInset =
-    Platform.OS === 'ios' ? Math.min(Math.max(insets.bottom, 8), 28) : 0;
+  const safeBottomInset = resolveNavTabSafeBottomInset(insets.bottom);
 
   return (
     <Tabs
@@ -34,6 +33,7 @@ export default function TabsLayout() {
         headerStyle: {
           height: undefined,
         },
+        sceneStyle: TAB_SCENE_STYLE,
       }}
       tabBar={(props) => <NavTabBar {...props} bottomInset={safeBottomInset} />}
     >

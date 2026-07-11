@@ -1,11 +1,9 @@
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 
 import type { FundDetail } from '@/core/domain/catalog';
 import type { CompareMetricRow } from '@/features/comparison/models/compare-fund-entry';
 import { TextParagraph } from '@/shared/components/text';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { palette } from '@/shared/theme/palette';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export const COMPARE_TABLE_LABEL_WIDTH = 112;
 export const COMPARE_TABLE_FUND_COLUMN_WIDTH = 76;
@@ -39,11 +37,13 @@ function resolveEmphasizedIsin(row: CompareMetricRow): string | null {
 }
 
 function CompareTableHeader({ details }: { details: readonly FundDetail[] }) {
-  const theme = useTheme();
-
   return (
-    <View style={[styles.headerRow, { borderBottomColor: theme.border }]}>
-      <View style={[styles.labelCell, { width: COMPARE_TABLE_LABEL_WIDTH }]} />
+    <View className="flex-row border-b border-border py-sm">
+      <View
+        className="justify-center px-md"
+        // tailwind-exception: fixed column width for table layout
+        style={{ width: COMPARE_TABLE_LABEL_WIDTH }}
+      />
       {details.map((detail) => {
         const shortLabel =
           detail.fund.symbol.length > 0 ? detail.fund.symbol : detail.fund.isin.slice(-4);
@@ -51,7 +51,8 @@ function CompareTableHeader({ details }: { details: readonly FundDetail[] }) {
         return (
           <View
             key={detail.fund.isin}
-            style={[styles.fundCell, { width: COMPARE_TABLE_FUND_COLUMN_WIDTH }]}
+            className="items-center justify-center px-xs"
+            style={{ width: COMPARE_TABLE_FUND_COLUMN_WIDTH }}
           >
             <TextParagraph variant="emphasis" numberOfLines={1}>
               {shortLabel}
@@ -64,12 +65,14 @@ function CompareTableHeader({ details }: { details: readonly FundDetail[] }) {
 }
 
 function CompareTableRow({ row }: { row: CompareMetricRow }) {
-  const theme = useTheme();
   const emphasizedIsin = resolveEmphasizedIsin(row);
 
   return (
-    <View style={[styles.dataRow, { borderTopColor: theme.border }]}>
-      <View style={[styles.labelCell, { width: COMPARE_TABLE_LABEL_WIDTH }]}>
+    <View className="flex-row items-center border-t border-border py-sm">
+      <View
+        className="justify-center px-md"
+        style={{ width: COMPARE_TABLE_LABEL_WIDTH }}
+      >
         <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={2}>
           {row.label}
         </TextParagraph>
@@ -81,11 +84,11 @@ function CompareTableRow({ row }: { row: CompareMetricRow }) {
         return (
           <View
             key={`${value.isin}-${row.id}`}
-            style={[
-              styles.fundCell,
-              { width: COMPARE_TABLE_FUND_COLUMN_WIDTH },
-              isEmphasized && styles.emphasizedCell,
-            ]}
+            className={cn(
+              'items-center justify-center px-xs',
+              isEmphasized && '-my-xs rounded-chip bg-soft-teal-background py-xs',
+            )}
+            style={{ width: COMPARE_TABLE_FUND_COLUMN_WIDTH }}
           >
             {row.id === 'score' ? (
               <TextParagraph
@@ -115,9 +118,8 @@ function CompareTableRow({ row }: { row: CompareMetricRow }) {
  * Compact side-by-side metrics table inside a single card.
  */
 export function CompareMetricsTable({ details, rows }: CompareMetricsTableProps) {
-  const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
-  const contentPadding = Spacing.lg * 2;
+  const contentPadding = 32;
   const tableMinWidth =
     COMPARE_TABLE_LABEL_WIDTH + details.length * COMPARE_TABLE_FUND_COLUMN_WIDTH;
   const needsHorizontalScroll = tableMinWidth + contentPadding > windowWidth;
@@ -139,7 +141,7 @@ export function CompareMetricsTable({ details, rows }: CompareMetricsTableProps)
     <View
       accessibilityRole="summary"
       accessibilityLabel="Tabla comparativa educativa de fondos"
-      style={[styles.card, { borderColor: theme.border, backgroundColor: theme.surface }]}
+      className="overflow-hidden rounded-card border border-border bg-surface"
     >
       {needsHorizontalScroll ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -151,37 +153,3 @@ export function CompareMetricsTable({ details, rows }: CompareMetricsTableProps)
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    overflow: 'hidden',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingVertical: Spacing.sm,
-  },
-  dataRow: {
-    flexDirection: 'row',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingVertical: Spacing.sm,
-    alignItems: 'center',
-  },
-  labelCell: {
-    paddingHorizontal: Spacing.md,
-    justifyContent: 'center',
-  },
-  fundCell: {
-    paddingHorizontal: Spacing.xs,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emphasizedCell: {
-    backgroundColor: palette.softTealBackground,
-    borderRadius: Radius.chip,
-    marginVertical: -Spacing.xs,
-    paddingVertical: Spacing.xs,
-  },
-});

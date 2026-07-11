@@ -1,25 +1,29 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
 import { apiPost } from '@/core/api/client';
-import { isDevDiagnosticsEnabled, isProductionRelease } from '@/core/config/app-environment';
+import type {
+  AnalyticsEventName,
+  AnalyticsEventProperties,
+} from '@/core/analytics/analytics-event-names';
+import {
+  getAppEnvironment,
+  isDevDiagnosticsEnabled,
+  isProductionRelease,
+} from '@/core/config/app-environment';
+import { deviceIdentityStore } from '@/core/storage/device-identity-store';
 
 const ANALYTICS_SESSION_KEY = '@inversora/analytics/session-id';
-
-export type AnalyticsEventName =
-  | 'screen_view'
-  | 'fund_opened'
-  | 'compare_completed'
-  | 'learn_completed'
-  | 'favorite_toggled'
-  | 'calculator_run'
-  | 'perf_mark';
 
 export type AnalyticsEventPayload = {
   readonly event: AnalyticsEventName;
   readonly surface: string;
   readonly timestamp: string;
   readonly sessionId: string;
-  readonly properties?: Readonly<Record<string, string | number | boolean>>;
+  readonly deviceId?: string;
+  readonly appEnv?: string;
+  readonly appVersion?: string;
+  readonly properties?: AnalyticsEventProperties;
 };
 
 async function resolveSessionId(): Promise<string> {
@@ -34,6 +38,11 @@ async function resolveSessionId(): Promise<string> {
   return sessionId;
 }
 
+function resolveAppVersion(): string | undefined {
+  const version = Constants.expoConfig?.version?.trim();
+  return version && version.length > 0 ? version : undefined;
+}
+
 /**
  * Tracks an anonymous analytics event (HU-41).
  *
@@ -44,14 +53,18 @@ async function resolveSessionId(): Promise<string> {
 export async function trackEvent(
   event: AnalyticsEventName,
   surface: string,
-  properties?: Readonly<Record<string, string | number | boolean>>,
+  properties?: AnalyticsEventProperties,
 ): Promise<void> {
   const sessionId = await resolveSessionId();
+  const deviceId = await deviceIdentityStore.getDeviceId();
   const payload: AnalyticsEventPayload = {
     event,
     surface,
     timestamp: new Date().toISOString(),
     sessionId,
+    deviceId: deviceId ?? undefined,
+    appEnv: getAppEnvironment(),
+    appVersion: resolveAppVersion(),
     properties,
   };
 

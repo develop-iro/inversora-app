@@ -1,6 +1,5 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, type ReactNode } from 'react';
-import { StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -39,12 +38,8 @@ export function TabScreenTransition({ children }: TabScreenTransitionProps) {
   }));
 
   return (
-    <Animated.View style={[styles.container, animatedStyle]}>{children}</Animated.View>
+    <Animated.View className="min-h-0 flex-1 overflow-hidden" style={animatedStyle}>
+      {children}
+    </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

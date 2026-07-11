@@ -1,14 +1,14 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { TextLabel, TextParagraph } from '@/shared/components/text';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FundCatalogEmptyStateProps = {
   query: string;
   hasActiveFilters: boolean;
   onClearSearch?: () => void;
   onResetFilters?: () => void;
+  className?: string;
 };
 
 export function FundCatalogEmptyState({
@@ -16,8 +16,8 @@ export function FundCatalogEmptyState({
   hasActiveFilters,
   onClearSearch,
   onResetFilters,
+  className,
 }: FundCatalogEmptyStateProps) {
-  const theme = useTheme();
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
 
@@ -30,7 +30,7 @@ export function FundCatalogEmptyState({
     : 'Ningún fondo coincide con los filtros seleccionados. Prueba a ampliarlos o reinícialos.';
 
   return (
-    <View style={styles.wrapper} accessibilityRole="text">
+    <View className={cn('gap-sm py-xl', className)} accessibilityRole="text">
       <TextParagraph variant="emphasis">{title}</TextParagraph>
       <TextParagraph variant="secondary" themeColor="textSecondary">
         {body}
@@ -41,13 +41,9 @@ export function FundCatalogEmptyState({
           accessibilityRole="button"
           accessibilityLabel="Limpiar búsqueda"
           onPress={onClearSearch}
-          style={({ pressed }) => [
-            styles.action,
-            { borderColor: theme.border, backgroundColor: theme.surface },
-            pressed && styles.actionPressed,
-          ]}
+          className="mt-xs self-start rounded-pill border border-border bg-surface px-md py-sm active:opacity-[0.88]"
         >
-          <TextLabel variant="meta" style={{ color: theme.primary }}>
+          <TextLabel variant="meta" themeColor="primary">
             Limpiar búsqueda
           </TextLabel>
         </Pressable>
@@ -58,13 +54,9 @@ export function FundCatalogEmptyState({
           accessibilityRole="button"
           accessibilityLabel="Reiniciar filtros"
           onPress={onResetFilters}
-          style={({ pressed }) => [
-            styles.action,
-            { borderColor: theme.border, backgroundColor: theme.surface },
-            pressed && styles.actionPressed,
-          ]}
+          className="mt-xs self-start rounded-pill border border-border bg-surface px-md py-sm active:opacity-[0.88]"
         >
-          <TextLabel variant="meta" style={{ color: theme.primary }}>
+          <TextLabel variant="meta" themeColor="primary">
             Reiniciar filtros
           </TextLabel>
         </Pressable>
@@ -72,21 +64,3 @@ export function FundCatalogEmptyState({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xl,
-  },
-  action: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.xs,
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  actionPressed: {
-    opacity: 0.88,
-  },
-});

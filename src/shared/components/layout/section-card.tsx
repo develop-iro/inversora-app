@@ -2,9 +2,8 @@ import type { ReactNode } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { HeaderSection, type HeaderSectionVariant } from '@/shared/components/headers';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
 import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 /** Horizontal padding applied inside elevated section cards. */
 export const SECTION_CARD_CONTENT_INSET = Spacing.lg;
@@ -49,37 +48,29 @@ export function SectionCard({
   headerVariant = 'compact',
   surface = 'default',
 }: SectionCardProps) {
-  const theme = useTheme();
-  const shadows = useThemeShadows();
   const hasHeader = Boolean(title);
-  const cardColors =
-    surface === 'muted'
-      ? {
-          backgroundColor: theme.backgroundSoft,
-          borderColor: theme.primaryBorderFaint,
-        }
-      : {
-          backgroundColor: theme.surface,
-          borderColor: theme.border,
-        };
 
-  const resolvedContentClassName = [
-    'px-lg pt-lg pb-lg gap-md',
-    hasHeader && headerPlacement === 'inside' ? 'pt-0' : null,
-    bleedContent ? 'px-0' : null,
-    contentClassName,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const shellClassName =
+    surface === 'muted'
+      ? 'overflow-hidden rounded-card border border-primary-border-faint bg-background-soft'
+      : 'overflow-hidden rounded-card border border-border bg-surface shadow-card';
 
   const body = (
-    <View className={resolvedContentClassName} style={contentStyle}>
+    <View
+      className={cn(
+        'gap-md px-lg pb-lg pt-lg',
+        hasHeader && headerPlacement === 'inside' && 'pt-0',
+        bleedContent && 'px-0',
+        contentClassName,
+      )}
+      style={contentStyle}
+    >
       {children}
     </View>
   );
 
   return (
-    <View className={['gap-sm', className].filter(Boolean).join(' ')} style={style}>
+    <View className={cn('gap-sm', className)} style={style}>
       {hasHeader && headerPlacement === 'above' ? (
         <HeaderSection
           loading={loading}
@@ -93,7 +84,7 @@ export function SectionCard({
       {borderless ? (
         body
       ) : (
-        <View className="overflow-hidden rounded-card border" style={[cardColors, shadows.card]}>
+        <View className={shellClassName}>
           {hasHeader && headerPlacement === 'inside' ? (
             <View className="px-lg pt-lg">
               <HeaderSection

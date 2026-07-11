@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { HeaderSection } from '@/shared/components/headers/header-section';
 import { InfoHintTrigger } from '@/shared/components/ui';
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FundDetailSectionShellProps = {
   title: string;
@@ -11,6 +11,7 @@ export type FundDetailSectionShellProps = {
   hintTerm?: string;
   hintExplanation?: string;
   children: ReactNode;
+  className?: string;
 };
 
 /**
@@ -22,14 +23,16 @@ export function FundDetailSectionShell({
   hintTerm,
   hintExplanation,
   children,
+  className,
 }: FundDetailSectionShellProps) {
   return (
-    <View style={styles.section}>
+    <View className={cn('gap-sm self-stretch', className)}>
       <HeaderSection
         title={title}
         summary={subtitle}
         variant="compact"
-        style={styles.header}
+        // tailwind-exception: HeaderSection has no className prop yet
+        style={{ paddingBottom: 0 }}
         action={
           hintTerm && hintExplanation ? (
             <InfoHintTrigger
@@ -40,20 +43,7 @@ export function FundDetailSectionShell({
           ) : undefined
         }
       />
-      <View style={styles.body}>{children}</View>
+      <View className="gap-md">{children}</View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: {
-    alignSelf: 'stretch',
-    gap: Spacing.sm,
-  },
-  header: {
-    paddingBottom: 0,
-  },
-  body: {
-    gap: Spacing.md,
-  },
-});

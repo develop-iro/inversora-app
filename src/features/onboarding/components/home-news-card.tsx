@@ -34,16 +34,10 @@ function formatPublishedDate(isoDate: string): string {
 }
 
 function HomeNewsCardLoading() {
-  const theme = useTheme();
-
   return (
     <SkeletonShimmerProvider>
       <View
-        className="gap-sm rounded-card border px-md py-md"
-        style={{
-          backgroundColor: theme.surfaceMuted,
-          borderColor: theme.border,
-        }}
+        className="gap-sm rounded-card border border-border bg-surface-muted px-md py-md"
         accessibilityLabel="Cargando noticia"
       >
         <View className="flex-row items-center justify-between gap-sm">
@@ -85,17 +79,10 @@ function HomeNewsCardContent({ item, onPress }: HomeNewsCardContentProps) {
       onPress={() => {
         onPress?.(item);
       }}
-      className="gap-sm rounded-card border px-md py-md active:opacity-90"
-      style={{
-        backgroundColor: theme.surfaceMuted,
-        borderColor: theme.border,
-      }}
+      className="gap-sm rounded-card border border-border bg-surface-muted px-md py-md active:opacity-90"
     >
       <View className="flex-row items-center justify-between gap-sm">
-        <View
-          className="rounded-full px-sm py-xs"
-          style={{ backgroundColor: theme.backgroundSoft }}
-        >
+        <View className="rounded-full bg-background-soft px-sm py-xs">
           <TextLabel variant="meta" themeColor="primary" className="text-micro tracking-[0.6px]">
             {categoryLabel}
           </TextLabel>

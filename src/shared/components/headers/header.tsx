@@ -1,4 +1,4 @@
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { HeaderActionsRow } from '@/shared/components/headers/header-actions-row';
 import { HeaderBar } from '@/shared/components/headers/header-bar';
@@ -13,9 +13,9 @@ import { TextHeading } from '@/shared/components/text/text-heading';
 import { TextParagraph } from '@/shared/components/text/text-paragraph';
 import { SkeletonBone } from '@/shared/components/ui/skeleton-bone';
 import { SkeletonShimmerProvider } from '@/shared/components/ui/skeleton-shimmer-provider';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { Radius } from '@/shared/theme/theme';
 import type { WithLoading } from '@/shared/types/component-loading';
+import { cn } from '@/shared/utils/cn';
 
 export type HeaderTitleVariant = 'nav' | 'section';
 
@@ -34,6 +34,7 @@ type HeaderContentProps = {
   actionPresentation?: HeaderActionPresentation;
   onAction?: HeaderActionHandlers;
   safeAreaTop?: boolean;
+  className?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -44,6 +45,7 @@ export type HeaderProps = WithLoading<
     | 'showBrand'
     | 'titleVariant'
     | 'safeAreaTop'
+    | 'className'
     | 'style'
     | 'leadingActions'
     | 'trailingActions'
@@ -82,6 +84,7 @@ function HeaderLoading({
   showBrand = false,
   titleVariant = 'nav',
   safeAreaTop = true,
+  className,
   style,
   leadingActions,
   trailingActions,
@@ -92,13 +95,13 @@ function HeaderLoading({
   | 'showBrand'
   | 'titleVariant'
   | 'safeAreaTop'
+  | 'className'
   | 'style'
   | 'leadingActions'
   | 'trailingActions'
   | 'actionPresentation'
   | 'onAction'
 >) {
-  const theme = useTheme();
   const handlers = useHeaderActionHandlers(onAction);
   const resolvedActions = resolveHeaderActions(showBrand, leadingActions, trailingActions);
   const titleHeight = titleVariant === 'nav' ? 22 : 20;
@@ -108,10 +111,11 @@ function HeaderLoading({
       <HeaderBar
         layout="app"
         safeAreaTop={safeAreaTop}
+        className={className}
         style={style}
         leading={
           <SkeletonShimmerProvider>
-            <View style={styles.brandSkeleton} accessibilityLabel="Cargando encabezado">
+            <View className="flex-1 justify-center" accessibilityLabel="Cargando encabezado">
               <SkeletonBone width={120} height={24} borderRadius={Radius.xs} />
             </View>
           </SkeletonShimmerProvider>
@@ -131,7 +135,8 @@ function HeaderLoading({
     <HeaderBar
       layout="screen"
       safeAreaTop={safeAreaTop}
-      style={[{ backgroundColor: theme.surface }, style]}
+      className={cn('bg-surface', className)}
+      style={style}
       leading={
         <HeaderActionsRow
           actions={resolvedActions.leadingActions}
@@ -141,7 +146,7 @@ function HeaderLoading({
       }
       center={
         <SkeletonShimmerProvider>
-          <View style={styles.centerCopy} accessibilityLabel="Cargando encabezado">
+          <View className="w-full items-center gap-[2px]" accessibilityLabel="Cargando encabezado">
             <SkeletonBone width="58%" height={titleHeight} borderRadius={Radius.xs} />
             <SkeletonBone width="42%" height={14} />
           </View>
@@ -168,6 +173,7 @@ export function Header(props: HeaderProps) {
         showBrand={props.showBrand}
         titleVariant={props.titleVariant}
         safeAreaTop={props.safeAreaTop}
+        className={props.className}
         style={props.style}
         leadingActions={props.leadingActions}
         trailingActions={props.trailingActions}
@@ -190,9 +196,9 @@ function HeaderContent({
   actionPresentation = 'caption',
   onAction,
   safeAreaTop = true,
+  className,
   style,
 }: HeaderContentProps) {
-  const theme = useTheme();
   const handlers = useHeaderActionHandlers(onAction);
   const resolvedActions = resolveHeaderActions(showBrand, leadingActions, trailingActions);
 
@@ -201,6 +207,7 @@ function HeaderContent({
       <HeaderBar
         layout="app"
         safeAreaTop={safeAreaTop}
+        className={className}
         style={style}
         leading={<HeaderBrand />}
         trailing={
@@ -218,7 +225,8 @@ function HeaderContent({
     <HeaderBar
       layout="screen"
       safeAreaTop={safeAreaTop}
-      style={[{ backgroundColor: theme.surface }, style]}
+      className={cn('bg-surface', className)}
+      style={style}
       leading={
         <HeaderActionsRow
           actions={resolvedActions.leadingActions}
@@ -228,12 +236,12 @@ function HeaderContent({
       }
       center={
         title ? (
-          <View style={styles.centerCopy}>
+          <View className="w-full items-center gap-[2px]">
             <TextHeading
               variant={titleVariant === 'nav' ? 'nav' : 'section'}
               themeColor="deepOcean"
               numberOfLines={1}
-              style={styles.title}
+              className="text-center"
             >
               {title}
             </TextHeading>
@@ -255,18 +263,3 @@ function HeaderContent({
     />
   );
 }
-
-const styles = StyleSheet.create({
-  brandSkeleton: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  centerCopy: {
-    alignItems: 'center',
-    gap: Spacing.half,
-    width: '100%',
-  },
-  title: {
-    textAlign: 'center',
-  },
-});

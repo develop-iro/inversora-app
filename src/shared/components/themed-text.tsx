@@ -1,11 +1,12 @@
-import { StyleSheet, Text, type TextProps, type TextStyle } from "react-native";
+import { Text, type TextProps } from 'react-native';
 
-import { useTheme } from "@/shared/hooks/use-theme";
 import {
-  Typography,
-  type ThemeColor,
-  type TypographyToken,
-} from "@/shared/theme/theme";
+  legacyTypographyClassNames,
+  themeColorClassNames,
+  typographyClassNames,
+} from '@/shared/nativewind/theme-classes';
+import { Typography, type ThemeColor, type TypographyToken } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type { TypographyToken };
 
@@ -14,13 +15,13 @@ export type { TypographyToken };
  * Prefer {@link TypographyToken} keys aligned with `Typography`.
  */
 const LEGACY_TYPE_ALIASES = {
-  default: "body",
-  title: "hero",
-  subtitle: "sectionTitle",
-  small: "caption",
-  smallBold: "bodyBold",
-  link: "caption",
-  linkPrimary: "caption",
+  default: 'body',
+  title: 'hero',
+  subtitle: 'sectionTitle',
+  small: 'caption',
+  smallBold: 'bodyBold',
+  link: 'caption',
+  linkPrimary: 'caption',
 } as const satisfies Record<string, TypographyToken>;
 
 export type ThemedTextLegacyType = keyof typeof LEGACY_TYPE_ALIASES;
@@ -41,47 +42,32 @@ export function resolveTypographyToken(type: ThemedTextType): TypographyToken {
   return LEGACY_TYPE_ALIASES[type as ThemedTextLegacyType];
 }
 
-const typographyStyles = Object.fromEntries(
-  (Object.keys(Typography) as TypographyToken[]).map((token) => [
-    token,
-    Typography[token],
-  ]),
-) as Record<TypographyToken, TextStyle>;
-
-const legacyStyles = Object.fromEntries(
-  Object.entries(LEGACY_TYPE_ALIASES).map(([alias, token]) => [
-    alias,
-    Typography[token],
-  ]),
-) as Record<ThemedTextLegacyType, TextStyle>;
-
-const typeStyles = StyleSheet.create({
-  ...typographyStyles,
-  ...legacyStyles,
-});
-
 export type ThemedTextProps = TextProps & {
   type?: ThemedTextType;
   themeColor?: ThemeColor;
+  className?: string;
 };
 
 export function ThemedText({
-  style,
-  type = "default",
+  className,
+  type = 'default',
   themeColor,
   ...rest
 }: ThemedTextProps) {
-  const theme = useTheme();
   const resolvedType = resolveTypographyToken(type);
+  const typographyClass =
+    resolvedType in typographyClassNames
+      ? typographyClassNames[resolvedType]
+      : legacyTypographyClassNames[type as ThemedTextLegacyType];
 
   return (
     <Text
-      style={[
-        { color: theme[themeColor ?? "text"] },
-        typeStyles[resolvedType],
-        type === "linkPrimary" && { color: theme.primary },
-        style,
-      ]}
+      className={cn(
+        typographyClass,
+        themeColor ? themeColorClassNames[themeColor] : themeColorClassNames.text,
+        type === 'linkPrimary' && 'text-primary',
+        className,
+      )}
       {...rest}
     />
   );

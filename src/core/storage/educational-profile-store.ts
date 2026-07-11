@@ -1,6 +1,9 @@
 import type {
   EducationalProfile,
+  EducationalProfileVersion,
+  FinancialReadiness,
   InvestmentHorizon,
+  InvestorStyle,
   KnowledgeLevel,
   LearningGoal,
   RiskOrientation,
@@ -21,7 +24,10 @@ const listeners = new Set<EducationalProfileListener>();
 const KNOWLEDGE_LEVELS: KnowledgeLevel[] = ['beginner', 'intermediate', 'advanced'];
 const RISK_ORIENTATIONS: RiskOrientation[] = ['conservative', 'moderate', 'dynamic'];
 const INVESTMENT_HORIZONS: InvestmentHorizon[] = ['short', 'medium', 'long'];
+const INVESTOR_STYLES: InvestorStyle[] = ['defensive', 'balanced', 'enterprising'];
+const FINANCIAL_READINESS_LEVELS: FinancialReadiness[] = ['ready', 'caution', 'not-ready'];
 const LEARNING_GOALS: LearningGoal[] = ['learn-basics', 'learn-compare', 'learn-fees-risk'];
+const PROFILE_VERSIONS: EducationalProfileVersion[] = [1, 2];
 
 function notifyListeners() {
   listeners.forEach((listener) => listener());
@@ -43,8 +49,23 @@ function isInvestmentHorizon(value: unknown): value is InvestmentHorizon {
   return typeof value === 'string' && INVESTMENT_HORIZONS.includes(value as InvestmentHorizon);
 }
 
+function isInvestorStyle(value: unknown): value is InvestorStyle {
+  return typeof value === 'string' && INVESTOR_STYLES.includes(value as InvestorStyle);
+}
+
+function isFinancialReadiness(value: unknown): value is FinancialReadiness {
+  return (
+    typeof value === 'string' &&
+    FINANCIAL_READINESS_LEVELS.includes(value as FinancialReadiness)
+  );
+}
+
 function isLearningGoal(value: unknown): value is LearningGoal {
   return typeof value === 'string' && LEARNING_GOALS.includes(value as LearningGoal);
+}
+
+function isProfileVersion(value: unknown): value is EducationalProfileVersion {
+  return typeof value === 'number' && PROFILE_VERSIONS.includes(value as EducationalProfileVersion);
 }
 
 function parseAnswers(value: unknown): Record<string, string> | null {
@@ -78,7 +99,10 @@ function parseEducationalProfile(value: unknown): EducationalProfile | null {
     knowledgeLevel,
     riskOrientation,
     investmentHorizon,
+    investorStyle,
+    financialReadiness,
     learningGoal,
+    profileVersion,
     answers,
     completedAt,
   } = value;
@@ -96,11 +120,20 @@ function parseEducationalProfile(value: unknown): EducationalProfile | null {
     return null;
   }
 
+  const resolvedProfileVersion = isProfileVersion(profileVersion) ? profileVersion : 1;
+  const resolvedInvestorStyle = isInvestorStyle(investorStyle) ? investorStyle : 'balanced';
+  const resolvedFinancialReadiness = isFinancialReadiness(financialReadiness)
+    ? financialReadiness
+    : 'caution';
+
   return {
     knowledgeLevel,
     riskOrientation,
     investmentHorizon,
+    investorStyle: resolvedInvestorStyle,
+    financialReadiness: resolvedFinancialReadiness,
     learningGoal,
+    profileVersion: resolvedProfileVersion,
     answers: parsedAnswers,
     completedAt,
   };

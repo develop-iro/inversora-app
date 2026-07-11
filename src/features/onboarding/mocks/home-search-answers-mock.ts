@@ -1,4 +1,5 @@
 import type { AssistantResponseSource } from '@/features/assistant/types/assistant-context';
+import { sanitizeAssistantOutput } from '@/features/assistant/utils/assistant-output-guardrails';
 
 export type HomeSearchAnswer = {
   title: string;
@@ -96,9 +97,15 @@ export function matchHomeSearchAnswer(query: string): HomeSearchAnswer {
 
   for (const rule of HOME_SEARCH_ANSWER_RULES) {
     if (rule.keywords.some((keyword) => normalized.includes(keyword))) {
-      return rule.answer;
+      return {
+        ...rule.answer,
+        body: sanitizeAssistantOutput(rule.answer.body),
+      };
     }
   }
 
-  return HOME_SEARCH_DEFAULT_ANSWER;
+  return {
+    ...HOME_SEARCH_DEFAULT_ANSWER,
+    body: sanitizeAssistantOutput(HOME_SEARCH_DEFAULT_ANSWER.body),
+  };
 }

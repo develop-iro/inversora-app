@@ -1,5 +1,5 @@
 import { useCallback, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import type { CatalogCategoryOption } from '@/features/funds/utils/build-catalog-category-options';
 import { FundCatalogCategoryFilterChips } from '@/features/funds/components/fund-catalog-category-filters';
@@ -13,8 +13,6 @@ import { ScreenFooter } from '@/shared/components/layout';
 import { AppModalShell } from '@/shared/components/overlay';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { Button } from '@/shared/components/ui';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Spacing } from '@/shared/theme/theme';
 
 export type FundCatalogFiltersSheetProps = {
   visible: boolean;
@@ -70,7 +68,6 @@ function FundCatalogFiltersSheetInner({
   onClose,
   onApply,
 }: FundCatalogFiltersSheetInnerProps) {
-  const theme = useTheme();
   const [draft, setDraft] = useState<FundCatalogFiltersState>(initialValue);
 
   const handleApply = useCallback(() => {
@@ -99,10 +96,10 @@ function FundCatalogFiltersSheetInner({
       title="Filtros"
       body={
         <ScrollView
-          style={styles.scroll}
+          className="flex-1"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scrollContent}
+          contentContainerClassName="gap-lg px-lg pb-xl pt-md"
         >
           <FilterSheetSection
             title="Índice o categoría"
@@ -133,9 +130,9 @@ function FundCatalogFiltersSheetInner({
               accessibilityRole="button"
               accessibilityLabel="Borrar filtros del catálogo"
               onPress={handleClearFilters}
-              style={({ pressed }) => [styles.clearAction, pressed && styles.clearPressed]}
+              className="min-h-9 justify-center self-center px-sm active:opacity-[0.85]"
             >
-              <TextLabel variant="meta" style={{ color: theme.primary, textAlign: 'center' }}>
+              <TextLabel variant="meta" themeColor="primary" className="text-center">
                 Borrar filtros
               </TextLabel>
             </Pressable>
@@ -154,8 +151,8 @@ type FilterSheetSectionProps = {
 
 function FilterSheetSection({ title, hint, children }: FilterSheetSectionProps) {
   return (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
+    <View className="gap-sm">
+      <View className="gap-xs">
         <TextParagraph variant="emphasis">{title}</TextParagraph>
         <TextLabel variant="meta" themeColor="textSecondary">
           {hint}
@@ -165,30 +162,3 @@ function FilterSheetSection({ title, hint, children }: FilterSheetSectionProps) 
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    gap: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xl,
-  },
-  section: {
-    gap: Spacing.sm,
-  },
-  sectionHeader: {
-    gap: Spacing.xs,
-  },
-  clearAction: {
-    alignSelf: 'center',
-    minHeight: 36,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.sm,
-  },
-  clearPressed: {
-    opacity: 0.85,
-  },
-});

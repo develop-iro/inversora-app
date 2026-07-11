@@ -31,6 +31,10 @@ export function countActiveCatalogFilters(filters: FundCatalogFiltersState): num
     count += 1;
   }
 
+  if (filters.minReturnPercent != null) {
+    count += 1;
+  }
+
   return count;
 }
 
@@ -76,6 +80,14 @@ export function buildCatalogActiveFilterChips(
     chips.push({
       id: 'beginners',
       label: 'Para empezar',
+    });
+  }
+
+  if (filters.minReturnPercent != null) {
+    const periodLabel = filters.returnPeriod === '3y' ? '3 años' : '1 año';
+    chips.push({
+      id: 'return',
+      label: `Rentab. ${periodLabel} ≥ ${filters.minReturnPercent.toString().replace('.', ',')}%`,
     });
   }
 

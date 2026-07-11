@@ -1,10 +1,11 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FundDetailSectionEmptyStateProps = {
   message: string;
+  className?: string;
 };
 
 /**
@@ -12,18 +13,13 @@ export type FundDetailSectionEmptyStateProps = {
  */
 export function FundDetailSectionEmptyState({
   message,
+  className,
 }: FundDetailSectionEmptyStateProps) {
   return (
-    <View style={styles.wrapper} accessibilityRole="text">
+    <View className={cn('py-md', className)} accessibilityRole="text">
       <TextParagraph variant="secondary" themeColor="textSecondary">
         {message}
       </TextParagraph>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    paddingVertical: Spacing.md,
-  },
-});

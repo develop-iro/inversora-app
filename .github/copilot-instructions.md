@@ -7,4 +7,4 @@ Key points for AI coding agents:
 - This is an Expo SDK 56 / React Native app; consult the versioned Expo docs before changing native or routing behavior.
 - Keep the route layer in `src/app` thin and place feature work under `src/features/*`.
 - Follow the MVP guardrails: educational, informational, non-personalized, and non-broker.
-- Verify changes with `npm run lint` when possible.
+- Verify changes with `pnpm run lint` when possible.

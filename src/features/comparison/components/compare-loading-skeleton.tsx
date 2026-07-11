@@ -1,15 +1,14 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { SectionCard } from '@/shared/components/layout';
 import { CardFund } from '@/features/funds/components/card-fund';
 import { SkeletonBone, SkeletonPanel, SkeletonShimmerProvider } from '@/shared/components/ui';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 const METRIC_ROW_COUNT = 5;
 
 function SkeletonMetricRow() {
   return (
-    <View style={styles.metricRow}>
+    <View className="flex-row items-center justify-between gap-sm">
       <SkeletonBone width="36%" height={12} />
       <SkeletonBone width="22%" height={12} />
       <SkeletonBone width="22%" height={12} />
@@ -23,11 +22,11 @@ function SkeletonMetricRow() {
 export function CompareLoadingSkeleton() {
   return (
     <SkeletonShimmerProvider>
-      <View style={styles.wrapper} accessibilityLabel="Cargando comparación">
+      <View className="gap-lg" accessibilityLabel="Cargando comparación">
         <SectionCard title="Fondos seleccionados">
-          <View style={styles.versusRow}>
+          <View className="flex-row items-center gap-sm">
             <CardFund loading layout="compact" />
-            <SkeletonBone width={28} height={28} borderRadius={Radius.full} />
+            <SkeletonBone width={28} height={28} borderRadius={9999} />
             <CardFund loading layout="compact" />
           </View>
         </SectionCard>
@@ -44,20 +43,3 @@ export function CompareLoadingSkeleton() {
     </SkeletonShimmerProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: Spacing.lg,
-  },
-  versusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  metricRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-});

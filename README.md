@@ -49,9 +49,8 @@ Excluded from the MVP:
 - Expo Router.
 - Planned client state: Zustand.
 - Planned validation: Zod.
-- Planned backend: Supabase Edge Functions or a lightweight API.
-- Planned database: Supabase PostgreSQL.
-- Planned AI layer: OpenAI API or Vercel AI SDK on the backend.
+- **Backend oficial:** [inversora-api](https://github.com/) (NestJS + PostgreSQL + Prisma). Ver `inversora-api/docs/README.md`.
+- **IA explicativa:** servicio de asistente en backend; nunca API key en el cliente.
 
 Before changing Expo-related code, read the versioned documentation:
 
@@ -111,40 +110,43 @@ Financial data must show its update date and warnings when it is incomplete, sta
 
 ## Development
 
-Install dependencies:
+Package manager: **pnpm** (`pnpm-lock.yaml`). Do not commit `package-lock.json`.
+
+Install dependencies (also configures Git hooks via Husky):
 
 ```bash
-npm install
+corepack enable
+pnpm install
 ```
 
 Start Expo:
 
 ```bash
-npm start
+pnpm start
 ```
 
 Start web:
 
 ```bash
-npm run web
+pnpm run web
 ```
 
 Start Android:
 
 ```bash
-npm run android
+pnpm run android
 ```
 
 Start iOS:
 
 ```bash
-npm run ios
+pnpm run ios
 ```
 
 Run lint:
 
 ```bash
-npm run lint
+pnpm run lint
 ```
 
 ## Local API (development)
@@ -152,8 +154,8 @@ npm run lint
 To load real catalog and fund detail data from `inversora-api`, copy `.env.example` to `.env`, set `EXPO_PUBLIC_API_URL` for your emulator or device, start the backend on port 3000, then restart Expo.
 
 ```bash
-npm run api:url          # print suggested URLs (iOS, Android, LAN, web)
-npm run api:url -- --lan # physical device on Wi‑Fi
+pnpm run api:url          # print suggested URLs (iOS, Android, LAN, web)
+pnpm run api:url -- --lan # physical device on Wi‑Fi
 ```
 
 Expo web requires CORS on the API (`CORS_ORIGINS` in staging). Native simulators and devices only need a reachable URL.

@@ -58,6 +58,7 @@ export const useModalStore = create<ModalState>((set, get) => ({
       title: input.title,
       message: input.message,
       buttons: input.buttons,
+      backdrop: input.backdrop,
       onClose: input.onClose,
     };
 

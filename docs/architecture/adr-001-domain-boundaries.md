@@ -33,7 +33,9 @@ Sin decisiones explícitas, el scoring acabará en componentes React, el asisten
 
 ### 1. Scoring (Score Inversora)
 
-**Dueño del cálculo:** backend (Supabase Edge Function o API dedicada) en producción; durante desarrollo, un módulo puro en `core/scoring` que pueda ejecutarse en cliente **solo para mocks**.
+**Dueño del cálculo:** **inversora-api** (NestJS + PostgreSQL) en producción; durante desarrollo, un módulo puro en `core/scoring` que pueda ejecutarse en cliente **solo para mocks**.
+
+> **Nota (2026-07):** Referencias históricas a Supabase Edge Functions quedan **obsoletas**. El backend canónico es `inversora-api`. Ver `docs/architecture/stack-decisions.md`.
 
 **Reglas:**
 
@@ -171,7 +173,7 @@ core/*      ↛  features/*, shared/components/*
 - Scoring auditable y alineado con “la IA solo explica”.
 - Favoritos y perfil intercambiables (web/native) sin duplicar lógica.
 - Asistente acotado reduce riesgo regulatorio y de alucinaciones financieras.
-- `core` crece con responsabilidades claras antes de Supabase.
+- `core` crece con responsabilidades claras antes de integrar la API de producción (`inversora-api`).
 
 ### Negativas / coste
 

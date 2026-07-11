@@ -1,16 +1,17 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { ScoringStatus } from '@/core/scoring/types';
 import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FundDataQualityBannerProps = {
   status: ScoringStatus;
+  className?: string;
 };
 
-export function FundDataQualityBanner({ status }: FundDataQualityBannerProps) {
+export function FundDataQualityBanner({ status, className }: FundDataQualityBannerProps) {
   const theme = useTheme();
 
   if (status === 'ok') {
@@ -22,20 +23,20 @@ export function FundDataQualityBanner({ status }: FundDataQualityBannerProps) {
   return (
     <View
       accessibilityRole="alert"
-      style={[
-        styles.banner,
-        {
-          backgroundColor: isQuarantined ? theme.dangerBannerSurface : theme.warningBannerSurface,
-          borderColor: isQuarantined ? theme.dangerBannerBorder : theme.warningBannerBorder,
-        },
-      ]}
+      className={cn(
+        'flex-row items-start gap-sm rounded-card border p-md',
+        isQuarantined
+          ? 'border-danger-banner-border bg-danger-banner-surface'
+          : 'border-warning-banner-border bg-warning-banner-surface',
+        className,
+      )}
     >
       <MaterialCommunityIcons
         name={isQuarantined ? 'alert-circle-outline' : 'alert-outline'}
         size={18}
         color={isQuarantined ? theme.dangerBadgeLabel : theme.deepOcean}
       />
-      <View style={styles.textBlock}>
+      <View className="flex-1 gap-xs">
         <TextParagraph variant="emphasis">
           {isQuarantined ? 'Datos en revisión' : 'Datos con advertencias'}
         </TextParagraph>
@@ -48,18 +49,3 @@ export function FundDataQualityBanner({ status }: FundDataQualityBannerProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    padding: Spacing.md,
-  },
-  textBlock: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-});

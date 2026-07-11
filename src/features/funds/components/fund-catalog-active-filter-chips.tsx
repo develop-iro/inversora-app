@@ -1,15 +1,16 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import type { CatalogActiveFilterChip } from '@/features/funds/utils/catalog-filter-presentation';
 import { TextLabel } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FundCatalogActiveFilterChipsProps = {
   chips: readonly CatalogActiveFilterChip[];
   onRemoveChip: (chipId: string) => void;
   onClearAll: () => void;
+  className?: string;
 };
 
 /**
@@ -19,6 +20,7 @@ export function FundCatalogActiveFilterChips({
   chips,
   onRemoveChip,
   onClearAll,
+  className,
 }: FundCatalogActiveFilterChipsProps) {
   const theme = useTheme();
 
@@ -27,11 +29,11 @@ export function FundCatalogActiveFilterChips({
   }
 
   return (
-    <View style={styles.wrapper}>
+    <View className={cn('gap-xs', className)}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
+        contentContainerClassName="gap-sm pr-md"
         accessibilityRole="list"
         accessibilityLabel="Filtros activos"
       >
@@ -41,14 +43,7 @@ export function FundCatalogActiveFilterChips({
             accessibilityRole="button"
             accessibilityLabel={`Quitar filtro ${chip.label}`}
             onPress={() => onRemoveChip(chip.id)}
-            style={({ pressed }) => [
-              styles.chip,
-              {
-                backgroundColor: theme.primarySurface,
-                borderColor: theme.primaryBorder,
-              },
-              pressed && styles.chipPressed,
-            ]}
+            className="max-w-[220px] flex-row items-center gap-xs rounded-pill border border-primary-border bg-primary-surface px-md py-xs active:opacity-[0.88]"
           >
             <TextLabel variant="meta" themeColor="deepOcean" numberOfLines={1}>
               {chip.label}
@@ -62,43 +57,12 @@ export function FundCatalogActiveFilterChips({
         accessibilityRole="button"
         accessibilityLabel="Borrar todos los filtros"
         onPress={onClearAll}
-        style={({ pressed }) => [styles.clearAll, pressed && styles.clearAllPressed]}
+        className="min-h-8 justify-center self-start active:opacity-[0.85]"
       >
-        <TextLabel variant="meta" style={{ color: theme.primary }}>
+        <TextLabel variant="meta" themeColor="primary">
           Borrar filtros
         </TextLabel>
       </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: Spacing.xs,
-  },
-  row: {
-    gap: Spacing.sm,
-    paddingRight: Spacing.md,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    maxWidth: 220,
-  },
-  chipPressed: {
-    opacity: 0.88,
-  },
-  clearAll: {
-    alignSelf: 'flex-start',
-    minHeight: 32,
-    justifyContent: 'center',
-  },
-  clearAllPressed: {
-    opacity: 0.85,
-  },
-});
