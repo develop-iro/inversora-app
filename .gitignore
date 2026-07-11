@@ -33,6 +33,9 @@ yarn-error.*
 .DS_Store
 *.pem
 
+# Cursor IDE (local MCP config)
+.cursor/mcp.json
+
 # local env files
 .env
 .env*.local
