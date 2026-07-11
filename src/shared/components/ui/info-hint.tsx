@@ -63,12 +63,14 @@ function InfoHintWebPopup({
       accessibilityLabel={`${term}. ${explanation}`}
       className="z-[9999] min-w-[200px] max-w-[280px] gap-xs rounded-card border border-border bg-surface px-md py-sm shadow-card"
       // tailwind-exception: fixed portal position and web box shadow
-      style={{
-        position: 'fixed',
-        top: position.top,
-        left: position.left,
-        boxShadow: webElevationShadow(theme),
-      } as ViewStyle}
+      style={
+        {
+          position: 'fixed',
+          top: position.top,
+          left: position.left,
+          boxShadow: webElevationShadow(theme),
+        } as unknown as ViewStyle
+      }
     >
       <TextLabel variant="meta" themeColor="deepOcean" className="tracking-[0.4px]">
         {term}

@@ -47,6 +47,8 @@
     "eslint-config-expo": "~56.0.4",
     "eslint-plugin-react-native": "^5.0.0",
     "eslint-plugin-react-native-a11y": "^3.5.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tsx": "^4.20.3",
     "typescript": "~6.0.3"
@@ -81,7 +83,13 @@
     "build:preview": "npx eas-cli build --profile preview",
     "eas:login": "npx eas-cli login",
     "eas:init": "npx eas-cli init",
-    "eas-build-post-install": "pnpm run generate:theme"
+    "eas-build-post-install": "pnpm run generate:theme",
+    "prepare": "node scripts/prepare-husky.cjs"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs}": [
+      "eslint --fix"
+    ]
   },
   "private": true,
   "packageManager": "pnpm@10.8.1"

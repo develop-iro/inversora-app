@@ -112,7 +112,7 @@ Financial data must show its update date and warnings when it is incomplete, sta
 
 Package manager: **pnpm** (`pnpm-lock.yaml`). Do not commit `package-lock.json`.
 
-Install dependencies:
+Install dependencies (also configures Git hooks via Husky):
 
 ```bash
 corepack enable
