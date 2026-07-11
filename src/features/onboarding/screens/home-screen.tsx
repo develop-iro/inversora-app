@@ -1,9 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
-
-import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
-import { getRankingsGrouped } from '@/features/funds/services/get-rankings';
 
 import { HomeEducationalProfileCard } from '@/features/learn/components/home-educational-profile-card';
 import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
@@ -22,6 +19,7 @@ import { HomeHeroCarousel } from '@/features/onboarding/components/home-hero-car
 import { HomeNewsSection } from '@/features/onboarding/components/home-news-section';
 import { HomeSectionCard } from '@/features/onboarding/components/home-section-card';
 import { HomeStarterCard } from '@/features/onboarding/components/home-starter-card';
+import { HOME_STARTER_CARD_ILLUSTRATION_LABELS } from '@/features/onboarding/constants/home-starter-cards';
 import {
   HOME_CONTENT_TABS,
   type HomeContentTab,
@@ -48,7 +46,6 @@ export default function HomeScreen() {
   const { contentWidth } = useMobileLayout();
   const [activeTab, setActiveTab] = useState<HomeContentTab>('explore');
   const [selectedRankingTheme, setSelectedRankingTheme] = useState<string | 'all'>('all');
-  const [rankingGroups, setRankingGroups] = useState<BenchmarkRankingGroup[]>([]);
   const {
     searchQuery,
     hasQuery,
@@ -57,6 +54,7 @@ export default function HomeScreen() {
     featuredState,
     newsItems,
     newsState,
+    rankingGroups,
     activeRanking,
     rankingState,
     isRefreshing,
@@ -119,26 +117,6 @@ export default function HomeScreen() {
 
   const handleOpenRankingTab = useCallback(() => {
     setActiveTab('ranking');
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void getRankingsGrouped()
-      .then((groups) => {
-        if (!cancelled) {
-          setRankingGroups(groups);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setRankingGroups([]);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   const effectiveRankingTheme =
@@ -278,14 +256,16 @@ export default function HomeScreen() {
                   <View className="w-full flex-row items-stretch gap-md">
                     <HomeStarterCard
                       title="Conceptos básicos"
-                      iconName="book-open-page-variant-outline"
+                      variant="learn"
+                      illustrationLabel={HOME_STARTER_CARD_ILLUSTRATION_LABELS.learn}
                       accessibilityLabel="Conceptos básicos, abrir guía educativa"
                       accessibilityHint="Inicia el cuestionario para aprender sobre fondos indexados"
                       onPress={handleLearnPress}
                     />
                     <HomeStarterCard
                       title="Ver ranking educativo"
-                      iconName="chart-line"
+                      variant="ranking"
+                      illustrationLabel={HOME_STARTER_CARD_ILLUSTRATION_LABELS.ranking}
                       accessibilityLabel="Ver ranking educativo, abrir pestaña Ranking"
                       accessibilityHint="Muestra el ranking observacional del Score Inversora"
                       onPress={handleOpenRankingTab}

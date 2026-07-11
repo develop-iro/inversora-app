@@ -37,6 +37,15 @@ export type BenchmarkRankingGroup = {
 
 export type ApiRankingsResponse = {
   data: ApiBenchmarkRankingGroup[];
+  meta?: ApiRankingsMeta;
+};
+
+export type ApiRankingsMeta = {
+  totalGroups: number;
+  returnedGroups: number;
+  groupsLimit: number;
+  limit: number;
+  hasMoreGroups: boolean;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -132,6 +141,38 @@ function parseBenchmarkRankingGroup(value: unknown): ApiBenchmarkRankingGroup | 
   };
 }
 
+function parseRankingsMeta(value: unknown): ApiRankingsMeta | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const {
+    totalGroups,
+    returnedGroups,
+    groupsLimit,
+    limit,
+    hasMoreGroups,
+  } = value;
+
+  if (
+    typeof totalGroups !== 'number' ||
+    typeof returnedGroups !== 'number' ||
+    typeof groupsLimit !== 'number' ||
+    typeof limit !== 'number' ||
+    typeof hasMoreGroups !== 'boolean'
+  ) {
+    return undefined;
+  }
+
+  return {
+    totalGroups,
+    returnedGroups,
+    groupsLimit,
+    limit,
+    hasMoreGroups,
+  };
+}
+
 /**
  * Parses and validates the `GET /rankings` response envelope.
  *
@@ -149,7 +190,9 @@ export function parseRankingsResponse(payload: unknown): ApiRankingsResponse {
     .map((group) => parseBenchmarkRankingGroup(group))
     .filter((group): group is ApiBenchmarkRankingGroup => group !== null);
 
-  return { data };
+  const meta = parseRankingsMeta(payload.meta);
+
+  return meta === undefined ? { data } : { data, meta };
 }
 
 /**

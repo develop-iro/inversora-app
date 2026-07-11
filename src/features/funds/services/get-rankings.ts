@@ -10,13 +10,13 @@ import { AppError } from '@/core/errors/app-error';
 import type { RankedFund } from '@/core/scoring/types';
 import { getRankingsGroupedMock, getRankingsMock } from '@/features/funds/mocks/get-rankings-mock';
 import {
-  RANKINGS_BENCHMARK_DETAIL_LIMIT,
-  RANKINGS_GROUP_INDEX_LIMIT,
+  RANKINGS_DEFAULT_GROUPS_LIMIT,
   RANKINGS_HOME_GROUP_LIMIT,
 } from '@/features/funds/constants/rankings-limits';
 
 export {
   RANKINGS_BENCHMARK_DETAIL_LIMIT,
+  RANKINGS_DEFAULT_GROUPS_LIMIT,
   RANKINGS_GROUP_INDEX_LIMIT,
   RANKINGS_HOME_GROUP_LIMIT,
 } from '@/features/funds/constants/rankings-limits';
@@ -26,13 +26,15 @@ export type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
 export type GetRankingsOptions = {
   benchmark?: string;
   limit?: number;
+  groupsLimit?: number;
   signal?: AbortSignal;
 };
 
 let rankingsCache: RankedFund[] | null = null;
 let rankingsGroupedCache: BenchmarkRankingGroup[] | null = null;
-let rankingsPromise: Promise<RankedFund[]> | null = null;
-let rankingsGroupedPromise: Promise<BenchmarkRankingGroup[]> | null = null;
+let sharedRankingsPayloadPromise: Promise<
+  ReturnType<typeof parseRankingsResponse>
+> | null = null;
 
 function applyRankingsLimit(
   funds: RankedFund[],
@@ -45,6 +47,17 @@ function applyRankingsLimit(
   return funds.slice(0, limit);
 }
 
+function normalizeUnfilteredRankingsOptions(
+  options?: GetRankingsOptions,
+): Required<Pick<GetRankingsOptions, 'limit' | 'groupsLimit'>> &
+  Pick<GetRankingsOptions, 'signal'> {
+  return {
+    limit: options?.limit ?? RANKINGS_HOME_GROUP_LIMIT,
+    groupsLimit: options?.groupsLimit ?? RANKINGS_DEFAULT_GROUPS_LIMIT,
+    signal: options?.signal,
+  };
+}
+
 async function fetchRankingsPayload(
   options?: GetRankingsOptions,
 ): Promise<ReturnType<typeof parseRankingsResponse>> {
@@ -53,6 +66,7 @@ async function fetchRankingsPayload(
     searchParams: {
       benchmark: options?.benchmark,
       limit: options?.limit,
+      groupsLimit: options?.groupsLimit,
     },
     signal: options?.signal,
   });
@@ -60,17 +74,43 @@ async function fetchRankingsPayload(
   return parseRankingsResponse(payload);
 }
 
+/**
+ * Fetches the unfiltered home rankings payload once and shares it across callers.
+ *
+ * @param options - Optional per-group limit, groups limit, and abort signal.
+ */
+async function fetchSharedUnfilteredRankingsPayload(
+  options?: GetRankingsOptions,
+): Promise<ReturnType<typeof parseRankingsResponse>> {
+  if (options?.benchmark !== undefined) {
+    return fetchRankingsPayload(options);
+  }
+
+  if (sharedRankingsPayloadPromise !== null) {
+    return sharedRankingsPayloadPromise;
+  }
+
+  const normalized = normalizeUnfilteredRankingsOptions(options);
+
+  sharedRankingsPayloadPromise = fetchRankingsPayload(normalized).catch((error) => {
+    sharedRankingsPayloadPromise = null;
+    throw error;
+  });
+
+  return sharedRankingsPayloadPromise;
+}
+
 async function fetchRankingsGroupedFromApi(
   options?: GetRankingsOptions,
 ): Promise<BenchmarkRankingGroup[]> {
-  const response = await fetchRankingsPayload(options);
+  const response = await fetchSharedUnfilteredRankingsPayload(options);
   return mapRankingsResponseToGroups(response);
 }
 
 async function fetchRankingsFromApi(
   options?: GetRankingsOptions,
 ): Promise<RankedFund[]> {
-  const response = await fetchRankingsPayload(options);
+  const response = await fetchSharedUnfilteredRankingsPayload(options);
 
   if (options?.benchmark !== undefined) {
     const groups = mapRankingsResponseToGroups(response);
@@ -83,13 +123,35 @@ async function fetchRankingsFromApi(
 }
 
 /**
+ * Flattens benchmark groups into a cross-benchmark ranked list for home search.
+ *
+ * @param groups - Benchmark-scoped ranking groups.
+ */
+export function flattenRankingGroupsToRankedFunds(
+  groups: readonly BenchmarkRankingGroup[],
+): RankedFund[] {
+  const entries = groups.flatMap((group) => group.funds);
+
+  const sorted = [...entries].sort((left, right) => {
+    const scoreDifference = right.score - left.score;
+
+    if (scoreDifference !== 0) {
+      return scoreDifference;
+    }
+
+    return left.isin.localeCompare(right.isin);
+  });
+
+  return sorted.map((entry, index) => ({ ...entry, rank: index + 1 }));
+}
+
+/**
  * Clears the in-memory rankings cache (retry flows).
  */
 export function resetRankingsCache(): void {
   rankingsCache = null;
   rankingsGroupedCache = null;
-  rankingsPromise = null;
-  rankingsGroupedPromise = null;
+  sharedRankingsPayloadPromise = null;
 }
 
 /**
@@ -100,7 +162,7 @@ export function resetRankingsCache(): void {
 export async function getRankingsGrouped(
   options?: GetRankingsOptions,
 ): Promise<BenchmarkRankingGroup[]> {
-  const { benchmark, limit, signal } = options ?? {};
+  const { benchmark, limit, groupsLimit, signal } = options ?? {};
 
   if (shouldUseMockData()) {
     return getRankingsGroupedMock(benchmark, limit);
@@ -124,27 +186,24 @@ export async function getRankingsGrouped(
     return rankingsGroupedCache;
   }
 
-  rankingsGroupedPromise ??= (async () => {
-    try {
-      const loaded = await fetchRankingsGroupedFromApi({
-        signal,
-        limit: limit ?? RANKINGS_HOME_GROUP_LIMIT,
-      });
-      rankingsGroupedCache = loaded;
-      return loaded;
-    } catch (error) {
-      rankingsGroupedPromise = null;
-      throw error instanceof AppError
-        ? error
-        : new AppError(
-            'RANKINGS_FETCH_FAILED',
-            'No se pudo cargar el ranking de fondos.',
-            error,
-          );
-    }
-  })();
-
-  return rankingsGroupedPromise;
+  try {
+    const loaded = await fetchRankingsGroupedFromApi({
+      signal,
+      limit: limit ?? RANKINGS_HOME_GROUP_LIMIT,
+      groupsLimit: groupsLimit ?? RANKINGS_DEFAULT_GROUPS_LIMIT,
+    });
+    rankingsGroupedCache = loaded;
+    rankingsCache = flattenRankingGroupsToRankedFunds(loaded);
+    return loaded;
+  } catch (error) {
+    throw error instanceof AppError
+      ? error
+      : new AppError(
+          'RANKINGS_FETCH_FAILED',
+          'No se pudo cargar el ranking de fondos.',
+          error,
+        );
+  }
 }
 
 /**
@@ -155,7 +214,7 @@ export async function getRankingsGrouped(
 export async function getRankings(
   options?: GetRankingsOptions,
 ): Promise<RankedFund[]> {
-  const { benchmark, limit, signal } = options ?? {};
+  const { benchmark, limit, groupsLimit, signal } = options ?? {};
 
   if (shouldUseMockData()) {
     return getRankingsMock(benchmark, limit);
@@ -179,26 +238,22 @@ export async function getRankings(
     return applyRankingsLimit(rankingsCache, limit);
   }
 
-  rankingsPromise ??= (async () => {
-    try {
-      const loaded = await fetchRankingsFromApi({
-        signal,
-        limit: limit ?? RANKINGS_HOME_GROUP_LIMIT,
-      });
-      rankingsCache = loaded;
-      return loaded;
-    } catch (error) {
-      rankingsPromise = null;
-      throw error instanceof AppError
-        ? error
-        : new AppError(
-            'RANKINGS_FETCH_FAILED',
-            'No se pudo cargar el ranking de fondos.',
-            error,
-          );
-    }
-  })();
+  try {
+    await getRankingsGrouped({
+      signal,
+      limit: limit ?? RANKINGS_HOME_GROUP_LIMIT,
+      groupsLimit: groupsLimit ?? RANKINGS_DEFAULT_GROUPS_LIMIT,
+    });
+  } catch (error) {
+    throw error instanceof AppError
+      ? error
+      : new AppError(
+          'RANKINGS_FETCH_FAILED',
+          'No se pudo cargar el ranking de fondos.',
+          error,
+        );
+  }
 
-  const ranked = await rankingsPromise;
+  const ranked = rankingsCache ?? [];
   return applyRankingsLimit(ranked, limit);
 }

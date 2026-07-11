@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
 import type { FeaturedFund } from '@/core/domain/fund';
 import type { InvestmentNewsItem } from '@/core/domain/investment-news';
 import {
   getFeaturedFundsForCarousel,
   getFeaturedFundsMockFallback,
 } from '@/features/funds/services/get-featured-funds';
+import {
+  getRankingsGrouped,
+  resetRankingsCache,
+} from '@/features/funds/services/get-rankings';
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { allowsMockFallback } from '@/core/config/app-environment';
 import { HOME_INVESTMENT_NEWS_MOCK } from '@/features/onboarding/mocks/home-investment-news-mock';
@@ -30,6 +35,7 @@ export type UseHomeScreenDataResult = {
   featuredState: HomeSectionLoadState;
   newsItems: InvestmentNewsItem[];
   newsState: HomeSectionLoadState;
+  rankingGroups: BenchmarkRankingGroup[];
   activeRanking: HomeSearchResult | null;
   rankingState: HomeSectionLoadState;
   isRefreshing: boolean;
@@ -93,6 +99,23 @@ async function loadNewsItems(
   }
 }
 
+async function loadRankingGroups(): Promise<{
+  groups: BenchmarkRankingGroup[];
+  state: HomeSectionLoadState;
+}> {
+  try {
+    const groups = await getRankingsGrouped();
+
+    if (groups.length === 0) {
+      return { groups: [], state: 'empty' };
+    }
+
+    return { groups, state: 'ready' };
+  } catch {
+    return { groups: [], state: 'error' };
+  }
+}
+
 async function loadDefaultRanking(): Promise<{
   result: HomeSearchResult | null;
   state: HomeSectionLoadState;
@@ -118,6 +141,7 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
   const [searchResult, setSearchResult] = useState<HomeSearchResult | null>(null);
   const [searchState, setSearchState] = useState<HomeSectionLoadState>('ready');
   const [defaultRanking, setDefaultRanking] = useState<HomeSearchResult | null>(null);
+  const [rankingGroups, setRankingGroups] = useState<BenchmarkRankingGroup[]>([]);
   const [rankingState, setRankingState] = useState<HomeSectionLoadState>('loading');
   const [featuredFunds, setFeaturedFunds] = useState<FeaturedFund[]>([]);
   const [featuredState, setFeaturedState] = useState<HomeSectionLoadState>('loading');
@@ -144,9 +168,20 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
 
   const reloadRanking = useCallback(async () => {
     setRankingState('loading');
-    const { result, state } = await loadDefaultRanking();
-    setDefaultRanking(result);
-    setRankingState(state);
+    resetRankingsCache();
+    const [{ groups, state: groupsState }, ranking] = await Promise.all([
+      loadRankingGroups(),
+      loadDefaultRanking(),
+    ]);
+    setRankingGroups(groups);
+    setDefaultRanking(ranking.result);
+    setRankingState(
+      groupsState === 'error' || ranking.state === 'error'
+        ? 'error'
+        : groupsState === 'empty' || ranking.state === 'empty'
+          ? 'empty'
+          : 'ready',
+    );
   }, []);
 
   useEffect(() => {
@@ -169,10 +204,21 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
     })();
 
     void (async () => {
-      const ranking = await loadDefaultRanking();
+      const [{ groups, state: groupsState }, ranking] = await Promise.all([
+        loadRankingGroups(),
+        loadDefaultRanking(),
+      ]);
+
       if (!cancelled) {
+        setRankingGroups(groups);
         setDefaultRanking(ranking.result);
-        setRankingState(ranking.state);
+        setRankingState(
+          groupsState === 'error' || ranking.state === 'error'
+            ? 'error'
+            : groupsState === 'empty' || ranking.state === 'empty'
+              ? 'empty'
+              : 'ready',
+        );
       }
     })();
 
@@ -224,6 +270,7 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
 
   const refreshHome = useCallback(async () => {
     setIsRefreshing(true);
+    resetRankingsCache();
 
     await Promise.all([reloadFeatured(), reloadNews(), reloadRanking()]);
 
@@ -271,6 +318,7 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
     featuredState,
     newsItems,
     newsState,
+    rankingGroups,
     activeRanking,
     rankingState: activeRankingState,
     isRefreshing,
