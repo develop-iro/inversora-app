@@ -140,16 +140,26 @@ export function loadEnv(options = {}) {
   const envPath = resolve(root, '.env');
   const profilePath = resolve(root, 'env', `${profile}.env`);
   const profileOverridePath = resolve(root, `.env.${profile}`);
+  const isRemoteBuild =
+    process.env.EAS_BUILD === 'true' || process.env.CI === 'true';
 
   if (!existsSync(envPath)) {
-    throw new Error(
-      `Missing ${envPath}. Copy .env.example and add optional overrides.`,
-    );
+    if (!isRemoteBuild) {
+      throw new Error(
+        `Missing ${envPath}. Copy .env.example and add optional overrides.`,
+      );
+    }
+  } else {
+    applyEnvFile(envPath, 'fill');
   }
 
-  applyEnvFile(envPath, 'fill');
-  applyEnvFile(profilePath, 'override');
-  applyEnvFile(profileOverridePath, 'override');
+  if (existsSync(profilePath)) {
+    applyEnvFile(profilePath, 'override');
+  }
+
+  if (existsSync(profileOverridePath)) {
+    applyEnvFile(profileOverridePath, 'override');
+  }
 
   process.env.INVERSORA_ENV = profile;
   process.env.EXPO_PUBLIC_APP_ENV = profile;

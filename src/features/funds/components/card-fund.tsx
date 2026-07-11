@@ -56,22 +56,24 @@ function CardFundLoading({
 }: Pick<CardFundContentProps, 'className' | 'style' | 'layout'>) {
   if (layout === 'compact') {
     return (
-      <View accessibilityLabel="Cargando ficha de fondo" className={className} style={style}>
-        <SkeletonPanel style={{ flex: 1, minHeight: 118 }}>
-          <View className="flex-row items-start justify-between">
-            <SkeletonBone width={36} height={36} borderRadius={6} />
-            <SkeletonBone width={18} height={18} borderRadius={9999} />
-          </View>
-          <SkeletonTextBlock
-            gap={4}
-            lines={[
-              { width: '56%', height: 14 },
-              { width: '88%', height: 10 },
-            ]}
-          />
-          <SkeletonBone width={52} height={24} borderRadius={9999} />
-        </SkeletonPanel>
-      </View>
+      <SkeletonShimmerProvider>
+        <View accessibilityLabel="Cargando ficha de fondo" className={className} style={style}>
+          <SkeletonPanel style={{ flex: 1, minHeight: 118 }}>
+            <View className="flex-row items-start justify-between">
+              <SkeletonBone width={36} height={36} borderRadius={6} />
+              <SkeletonBone width={18} height={18} borderRadius={9999} />
+            </View>
+            <SkeletonTextBlock
+              gap={4}
+              lines={[
+                { width: '56%', height: 14 },
+                { width: '88%', height: 10 },
+              ]}
+            />
+            <SkeletonBone width={52} height={24} borderRadius={9999} />
+          </SkeletonPanel>
+        </View>
+      </SkeletonShimmerProvider>
     );
   }
 

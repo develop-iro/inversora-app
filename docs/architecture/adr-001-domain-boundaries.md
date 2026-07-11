@@ -4,7 +4,7 @@
 |-------|--------|
 | **Estado** | Aceptado |
 | **Fecha** | 2026-06-01 |
-| **Contexto** | MVP Inversora en Expo SDK 56; arquitectura feature-first documentada en `AGENTS.md` |
+| **Contexto** | MVP Inversora en Expo SDK 57; arquitectura feature-first documentada en `AGENTS.md` |
 
 ---
 

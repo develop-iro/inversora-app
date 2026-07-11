@@ -2,9 +2,11 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { CarouselNavButton } from '@/shared/components/carousels/carousel-nav-button';
 import { TextLabel } from '@/shared/components/text/text-label';
+import { SkeletonBone, SkeletonShimmerProvider } from '@/shared/components/ui';
+import type { WithLoading } from '@/shared/types/component-loading';
 import { cn } from '@/shared/utils/cn';
 
-export type CarouselControlsProps = {
+type CarouselControlsContentProps = {
   activeIndex: number;
   count: number;
   onPrevious: () => void;
@@ -23,16 +25,50 @@ export type CarouselControlsProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+export type CarouselControlsProps = WithLoading<
+  CarouselControlsContentProps,
+  Pick<CarouselControlsContentProps, 'className' | 'style'>
+>;
+
 const defaultCounterLabel = (activeIndex: number, count: number): string =>
   `${activeIndex + 1} de ${count}`;
 
 const defaultCounterAccessibilityLabel = (activeIndex: number, count: number): string =>
   `Posición ${activeIndex + 1} de ${count}`;
 
+function CarouselControlsLoading({
+  className,
+  style,
+}: Pick<CarouselControlsContentProps, 'className' | 'style'>) {
+  return (
+    <SkeletonShimmerProvider>
+      <View
+        accessibilityLabel="Cargando controles del carrusel"
+        className={cn('flex-row items-center justify-between gap-md', className)}
+        style={style}
+      >
+        <SkeletonBone width={88} height={32} borderRadius={9999} />
+        <View className="flex-row items-center gap-sm">
+          <SkeletonBone width={40} height={40} borderRadius={9999} />
+          <SkeletonBone width={40} height={40} borderRadius={9999} />
+        </View>
+      </View>
+    </SkeletonShimmerProvider>
+  );
+}
+
 /**
  * Accessible carousel footer with a position counter and previous/next controls.
  */
-export function CarouselControls({
+export function CarouselControls(props: CarouselControlsProps) {
+  if (props.loading) {
+    return <CarouselControlsLoading className={props.className} style={props.style} />;
+  }
+
+  return <CarouselControlsContent {...props} />;
+}
+
+function CarouselControlsContent({
   activeIndex,
   count,
   onPrevious,
@@ -49,7 +85,7 @@ export function CarouselControls({
   onNextInteractionEnd,
   className,
   style,
-}: CarouselControlsProps) {
+}: CarouselControlsContentProps) {
   if (count <= 1) {
     return null;
   }

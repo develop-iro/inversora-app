@@ -71,4 +71,28 @@ describe('loadEnv', () => {
     assert.equal(process.env.INVERSORA_ENV, 'local');
     assert.equal(process.env.EXPO_PUBLIC_API_URL, 'http://localhost:3000');
   });
+
+  it('loads committed profile env on EAS when .env is absent', () => {
+    delete process.env.EAS_BUILD;
+    process.env.EAS_BUILD = 'true';
+
+    const rootWithoutDotEnv = mkdtempSync(
+      join(tmpdir(), 'inversora-app-load-env-eas-'),
+    );
+    mkdirSync(join(rootWithoutDotEnv, 'env'), { recursive: true });
+    writeFileSync(
+      join(rootWithoutDotEnv, 'env', 'local.env'),
+      'EXPO_PUBLIC_APP_ENV=local\nEXPO_PUBLIC_API_URL=http://localhost:3000\n',
+    );
+
+    try {
+      loadEnv({ projectRoot: rootWithoutDotEnv, profile: 'local' });
+
+      assert.equal(process.env.EXPO_PUBLIC_APP_ENV, 'local');
+      assert.equal(process.env.EXPO_PUBLIC_API_URL, 'http://localhost:3000');
+    } finally {
+      delete process.env.EAS_BUILD;
+      rmSync(rootWithoutDotEnv, { recursive: true, force: true });
+    }
+  });
 });

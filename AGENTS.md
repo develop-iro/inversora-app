@@ -2,9 +2,9 @@
 
 ## Expo HAS CHANGED
 
-Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before writing any code.
+Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code.
 
-This project uses Expo SDK 56. Do not rely on older Expo or React Native assumptions when changing app code, routing, config, native modules, build behavior, or package versions.
+This project uses Expo SDK 57. Do not rely on older Expo or React Native assumptions when changing app code, routing, config, native modules, build behavior, or package versions.
 
 ## Product
 
@@ -45,8 +45,8 @@ Do not implement in the MVP unless explicitly requested:
 
 ## Planned Architecture
 
-- Expo SDK 56.
-- React Native 0.85.
+- Expo SDK 57.
+- React Native 0.86.
 - React 19.
 - TypeScript.
 - Expo Router.
@@ -121,7 +121,7 @@ Target routes:
 - CI also runs `build:web:ci`, `verify:prebuild`, and EAS preview Android when `EXPO_TOKEN` is set in GitHub Actions secrets.
 - Keep `src/app` thin. Add screens and feature logic under `src/features/*`, and place reusable UI/theme/helpers under `src/shared/*` or `src/core/*`.
 - Do not introduce broker flows, account management, real portfolio actions, or personalized financial advice into the MVP.
-- If a change touches Expo, React Native, routing, or native config, consult the exact Expo SDK 56 docs first instead of relying on older assumptions.
+- If a change touches Expo, React Native, routing, or native config, consult the exact Expo SDK 57 docs first instead of relying on older assumptions.
 
 ## Styling (NativeWind / Tailwind híbrido)
 

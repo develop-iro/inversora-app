@@ -81,5 +81,5 @@ Definiciones que **no deberían cambiar** sin revisar el doc oficial o un ADR:
 
 ## Referencias externas
 
-- [Expo SDK 56](https://docs.expo.dev/versions/v56.0.0/)
+- [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)
 - Documento oficial: *Documentación de Proyecto: Inversora* (v1.0) — mantener copia local acordada por el equipo.

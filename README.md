@@ -42,8 +42,8 @@ Excluded from the MVP:
 
 ## Current Stack
 
-- Expo SDK 56.
-- React Native 0.85.
+- Expo SDK 57.
+- React Native 0.86.
 - React 19.
 - TypeScript.
 - Expo Router.
@@ -54,7 +54,7 @@ Excluded from the MVP:
 
 Before changing Expo-related code, read the versioned documentation:
 
-https://docs.expo.dev/versions/v56.0.0/
+https://docs.expo.dev/versions/v57.0.0/
 
 ## Planned Routes
 
