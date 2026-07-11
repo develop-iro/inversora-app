@@ -1,7 +1,7 @@
 name: Development build (iOS Simulator)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   build_ios_simulator:
