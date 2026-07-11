@@ -1,10 +1,8 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { ProfileCatalogHints } from '@/features/learn/services/map-profile-to-catalog-hints';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { TextHeading, TextParagraph } from '@/shared/components/text';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type FundCatalogProfileHintsBannerProps = {
   hints: ProfileCatalogHints;
@@ -22,22 +20,12 @@ export function FundCatalogProfileHintsBanner({
   onApply,
   onDismiss,
 }: FundCatalogProfileHintsBannerProps) {
-  const theme = useTheme();
-
   if (isApplied) {
     return null;
   }
 
   return (
-    <View
-      style={[
-        styles.banner,
-        {
-          backgroundColor: theme.backgroundSoft,
-          borderColor: theme.borderSubtle,
-        },
-      ]}
-    >
+    <View className="gap-sm rounded-card border border-border-subtle bg-background-soft p-md">
       <TextHeading variant="card" themeColor="deepOcean">
         Filtros sugeridos según tu perfil
       </TextHeading>
@@ -45,12 +33,12 @@ export function FundCatalogProfileHintsBanner({
         {hints.summary}
       </TextParagraph>
 
-      <View style={styles.actions}>
+      <View className="flex-row flex-wrap gap-sm">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Aplicar filtros sugeridos del perfil educativo"
           onPress={onApply}
-          style={[styles.primaryAction, { backgroundColor: theme.primary }]}
+          className="rounded-chip bg-primary px-md py-sm active:opacity-90"
         >
           <TextParagraph variant="emphasis" themeColor="textOnPrimary">
             Aplicar filtros sugeridos
@@ -61,7 +49,7 @@ export function FundCatalogProfileHintsBanner({
           accessibilityRole="button"
           accessibilityLabel="Ocultar sugerencia de filtros"
           onPress={onDismiss}
-          style={[styles.secondaryAction, { borderColor: theme.border }]}
+          className="rounded-chip border border-border px-md py-sm active:opacity-90"
         >
           <TextParagraph variant="secondary" themeColor="textSecondary">
             Ahora no
@@ -76,28 +64,3 @@ export function FundCatalogProfileHintsBanner({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    padding: Spacing.md,
-    gap: Spacing.sm,
-  },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  primaryAction: {
-    borderRadius: Radius.chip,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-  },
-  secondaryAction: {
-    borderWidth: 1,
-    borderRadius: Radius.chip,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-  },
-});

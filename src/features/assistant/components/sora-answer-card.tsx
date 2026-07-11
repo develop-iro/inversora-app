@@ -1,10 +1,10 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { AssistantResponseSource } from '@/features/assistant/types/assistant-context';
 import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type SoraAnswerCardProps = {
   query: string;
@@ -54,20 +54,18 @@ export function SoraAnswerCard({
     <View
       accessibilityRole="summary"
       accessibilityLabel={`Respuesta de SORA para ${query}`}
-      style={[
-        styles.card,
-        isMessage && styles.messageCard,
-        {
-          backgroundColor: isMessage ? theme.surface : theme.softTealSurface,
-          borderColor: isMessage ? theme.border : theme.primaryBorderSubtle,
-        },
-      ]}
+      className={cn(
+        'gap-sm rounded-card border px-md py-md',
+        isMessage
+          ? 'max-w-[92%] self-start rounded-bl-xs border-border bg-surface'
+          : 'border-primary-border-subtle bg-soft-teal-surface',
+      )}
     >
-      <View style={styles.header}>
-        <View style={[styles.iconWrap, { backgroundColor: theme.primaryIconSurface }]}>
+      <View className="flex-row items-start gap-sm">
+        <View className="h-7 w-7 items-center justify-center rounded-full bg-primary-icon-surface">
           <MaterialCommunityIcons name="robot-outline" size={16} color={theme.deepOcean} />
         </View>
-        <View style={styles.headerCopy}>
+        <View className="flex-1 gap-half">
           <TextLabel variant="meta" themeColor="deepOcean">
             SORA · respuesta orientativa
           </TextLabel>
@@ -78,7 +76,7 @@ export function SoraAnswerCard({
       </View>
 
       <TextHeading variant="section">{title}</TextHeading>
-      <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.body}>
+      <TextParagraph variant="secondary" themeColor="textSecondary" className="leading-5">
         {body}
       </TextParagraph>
 
@@ -87,7 +85,7 @@ export function SoraAnswerCard({
           accessibilityRole="button"
           accessibilityLabel={`Ver ficha del fondo ${relatedFundIsin}`}
           onPress={() => onRelatedFundPress(relatedFundIsin)}
-          style={({ pressed }) => [styles.relatedLink, pressed && styles.relatedLinkPressed]}
+          className="self-start active:opacity-80"
         >
           <TextParagraph variant="secondary" themeColor="deepOcean">
             Ver fondo relacionado ({relatedFundIsin})
@@ -95,53 +93,9 @@ export function SoraAnswerCard({
         </Pressable>
       ) : null}
 
-      <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.disclaimer}>
+      <TextParagraph variant="secondary" themeColor="textSecondary" className="leading-[17px] opacity-[0.82]">
         {resolvedDisclaimer}
       </TextParagraph>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
-  },
-  messageCard: {
-    alignSelf: 'flex-start',
-    maxWidth: '92%',
-    borderBottomLeftRadius: 6,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-  },
-  iconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerCopy: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  body: {
-    lineHeight: 20,
-  },
-  relatedLink: {
-    alignSelf: 'flex-start',
-  },
-  relatedLinkPressed: {
-    opacity: 0.8,
-  },
-  disclaimer: {
-    lineHeight: 17,
-    opacity: 0.82,
-  },
-});

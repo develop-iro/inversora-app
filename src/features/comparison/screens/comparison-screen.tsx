@@ -1,7 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 
 import { trackEvent } from '@/core/analytics/track-event';
 import { parseFundIsinList } from '@/core/domain/fund-isin';
@@ -22,11 +21,10 @@ import { buildCompareQuickPrompts } from '@/features/comparison/utils/build-comp
 import { buildCompareTableRows } from '@/features/comparison/utils/build-compare-table-rows';
 import { evaluateCompareFairness } from '@/features/comparison/utils/evaluate-compare-fairness';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
-import { SectionCard } from '@/shared/components/layout';
+import { SectionCard, TabScreenScroll } from '@/shared/components/layout';
 import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { BottomTabInset, Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
+import { Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
 
 function parseIsinsParam(value: string | string[] | undefined): string[] {
   if (value === undefined) {
@@ -44,8 +42,6 @@ function parseIsinsParam(value: string | string[] | undefined): string[] {
 }
 
 export default function ComparisonScreen() {
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const { contentWidth } = useMobileLayout();
   const params = useLocalSearchParams<{ isins?: string | string[] }>();
   const {
@@ -125,25 +121,20 @@ export default function ComparisonScreen() {
   };
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: theme.background }]}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingBottom: insets.bottom + BottomTabInset + Spacing.lg,
-        },
-      ]}
+    <TabScreenScroll
+      extraBottomPadding={Spacing.lg}
+      contentContainerClassName="items-center pt-lg"
       showsVerticalScrollIndicator={false}
     >
       <View
-        style={[
-          styles.inner,
-          {
-            width: contentWidth,
-          },
-        ]}
+        className="w-full gap-lg self-center px-lg"
+        style={{
+          width: contentWidth,
+          maxWidth: MaxContentWidth,
+          paddingHorizontal: Layout.screenPaddingHorizontal,
+        }}
       >
-        <View style={styles.header}>
+        <View className="gap-sm">
           <TextHeading variant="section" themeColor="deepOcean">
             Comparar
           </TextHeading>
@@ -208,7 +199,7 @@ export default function ComparisonScreen() {
         ) : null}
 
         <LegalNotice
-          style={styles.legalNotice}
+          className="mt-md py-md"
           title="Aviso educativo"
           body="Esta comparación es orientativa. SORA no recomienda comprar ni vender productos y no modifica rankings ni scores."
         />
@@ -223,30 +214,6 @@ export default function ComparisonScreen() {
           }}
         />
       </View>
-    </ScrollView>
+    </TabScreenScroll>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  content: {
-    alignItems: 'center',
-    paddingTop: Spacing.lg,
-  },
-  inner: {
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    gap: Spacing.lg,
-  },
-  header: {
-    gap: Spacing.sm,
-  },
-  legalNotice: {
-    marginTop: Spacing.md,
-    paddingVertical: Spacing.md,
-  },
-});

@@ -1,9 +1,8 @@
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { CarouselNavButton } from '@/shared/components/carousels/carousel-nav-button';
 import { TextLabel } from '@/shared/components/text/text-label';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type CarouselControlsProps = {
   activeIndex: number;
@@ -20,6 +19,7 @@ export type CarouselControlsProps = {
   onPreviousInteractionEnd?: () => void;
   onNextInteractionStart?: () => void;
   onNextInteractionEnd?: () => void;
+  className?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -47,10 +47,9 @@ export function CarouselControls({
   onPreviousInteractionEnd,
   onNextInteractionStart,
   onNextInteractionEnd,
+  className,
   style,
 }: CarouselControlsProps) {
-  const theme = useTheme();
-
   if (count <= 1) {
     return null;
   }
@@ -59,21 +58,22 @@ export function CarouselControls({
     <View
       accessibilityRole="toolbar"
       accessibilityLabel="Controles del carrusel"
-      style={[styles.row, style]}
+      className={cn('flex-row items-center justify-between gap-md', className)}
+      style={style}
     >
       <View
         accessibilityRole="text"
         accessibilityLabel={counterAccessibilityLabel(activeIndex, count)}
         accessibilityLiveRegion="polite"
         importantForAccessibility="yes"
-        style={[styles.counter, { backgroundColor: theme.backgroundSoft, borderColor: theme.border }]}
+        className="min-h-[32px] justify-center rounded-pill border border-border bg-background-soft px-md py-xs"
       >
         <TextLabel variant="listMeta" themeColor="textSecondary">
           {counterLabel(activeIndex, count)}
         </TextLabel>
       </View>
 
-      <View style={styles.navGroup}>
+      <View className="flex-row items-center gap-sm">
         <CarouselNavButton
           direction="previous"
           accessibilityLabel={previousAccessibilityLabel}
@@ -98,25 +98,3 @@ export function CarouselControls({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-  },
-  counter: {
-    borderRadius: Radius.pill,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    minHeight: 32,
-    justifyContent: 'center',
-  },
-  navGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-});

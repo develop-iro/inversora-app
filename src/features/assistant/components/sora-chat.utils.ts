@@ -51,7 +51,7 @@ export function resolveSoraDefaultPrompts(surface: AssistantSurface): readonly s
       return [
         'Resume las diferencias principales',
         '¿Cuál tiene menor TER y qué implica?',
-        '¿Qué fondo encaja mejor para largo plazo?',
+        'Explica las diferencias educativas entre estos fondos',
       ];
     default: {
       const _exhaustive: never = surface;

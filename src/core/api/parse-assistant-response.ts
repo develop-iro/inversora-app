@@ -1,4 +1,5 @@
 import { AppError } from '@/core/errors/app-error';
+import { sanitizeAssistantOutput } from '@/features/assistant/utils/assistant-output-guardrails';
 import type {
   AssistantChatResponse,
   AssistantExplainResponse,
@@ -35,7 +36,7 @@ function parseAssistantResponseBase(
   }
 
   return {
-    text,
+    text: sanitizeAssistantOutput(text),
     title,
     source,
     cached,

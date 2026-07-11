@@ -1,15 +1,21 @@
 import { AppError } from '@/core/errors/app-error';
 import { getApiBaseUrl } from '@/core/api/config';
+import { deviceIdentityStore } from '@/core/storage/device-identity-store';
 
 type ApiRequestOptions = {
   path: string;
   searchParams?: Record<string, string | number | boolean | undefined>;
   signal?: AbortSignal;
+  /** When true, attaches `X-Device-Token` when the installation is registered. */
+  withDeviceToken?: boolean;
 };
 
 type ApiPostOptions<TBody> = ApiRequestOptions & {
   body: TBody;
 };
+
+type ApiPutOptions<TBody> = ApiPostOptions<TBody>;
+type ApiPatchOptions<TBody> = ApiPostOptions<TBody>;
 
 type ApiErrorPayload = {
   message?: string | string[];
@@ -39,6 +45,69 @@ function parseApiErrorMessage(payload: unknown): string | null {
   }
 
   return null;
+}
+
+function buildRequestUrl(options: ApiRequestOptions): URL {
+  const url = new URL(options.path, `${getApiBaseUrl()}/`);
+
+  if (options.searchParams !== undefined) {
+    for (const [key, value] of Object.entries(options.searchParams)) {
+      if (value !== undefined) {
+        url.searchParams.set(key, String(value));
+      }
+    }
+  }
+
+  return url;
+}
+
+async function buildJsonHeaders(
+  options: ApiRequestOptions,
+  includeBody: boolean,
+): Promise<HeadersInit> {
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  };
+
+  if (includeBody) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  if (options.withDeviceToken) {
+    const deviceToken = await deviceIdentityStore.getDeviceToken();
+
+    if (deviceToken) {
+      headers['X-Device-Token'] = deviceToken;
+    }
+  }
+
+  return headers;
+}
+
+async function requestJson<T>(
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH',
+  options: ApiRequestOptions,
+  body?: unknown,
+): Promise<T> {
+  const url = buildRequestUrl(options);
+  let response: Response;
+
+  try {
+    response = await fetch(url.toString(), {
+      method,
+      headers: await buildJsonHeaders(options, body !== undefined),
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: options.signal,
+    });
+  } catch (error) {
+    throw new AppError(
+      'API_REQUEST_FAILED',
+      'No se pudo conectar con la API de Inversora.',
+      error,
+    );
+  }
+
+  return parseApiResponse<T>(response);
 }
 
 async function parseApiResponse<T>(response: Response): Promise<T> {
@@ -81,35 +150,7 @@ async function parseApiResponse<T>(response: Response): Promise<T> {
  * @param options - Request path and optional query parameters.
  */
 export async function apiGet<T>(options: ApiRequestOptions): Promise<T> {
-  const url = new URL(options.path, `${getApiBaseUrl()}/`);
-
-  if (options.searchParams !== undefined) {
-    for (const [key, value] of Object.entries(options.searchParams)) {
-      if (value !== undefined) {
-        url.searchParams.set(key, String(value));
-      }
-    }
-  }
-
-  let response: Response;
-
-  try {
-    response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
-      signal: options.signal,
-    });
-  } catch (error) {
-    throw new AppError(
-      'API_REQUEST_FAILED',
-      'No se pudo conectar con la API de Inversora.',
-      error,
-    );
-  }
-
-  return parseApiResponse<T>(response);
+  return requestJson<T>('GET', options);
 }
 
 /**
@@ -120,35 +161,25 @@ export async function apiGet<T>(options: ApiRequestOptions): Promise<T> {
 export async function apiPost<TResponse, TBody>(
   options: ApiPostOptions<TBody>,
 ): Promise<TResponse> {
-  const url = new URL(options.path, `${getApiBaseUrl()}/`);
+  return requestJson<TResponse>('POST', options, options.body);
+}
 
-  if (options.searchParams !== undefined) {
-    for (const [key, value] of Object.entries(options.searchParams)) {
-      if (value !== undefined) {
-        url.searchParams.set(key, String(value));
-      }
-    }
-  }
+/**
+ * Performs a JSON PUT request against the Inversora API.
+ *
+ * @param options - Request path, body payload, and optional query parameters.
+ */
+export async function apiPut<TResponse, TBody>(options: ApiPutOptions<TBody>): Promise<TResponse> {
+  return requestJson<TResponse>('PUT', { ...options, withDeviceToken: true }, options.body);
+}
 
-  let response: Response;
-
-  try {
-    response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(options.body),
-      signal: options.signal,
-    });
-  } catch (error) {
-    throw new AppError(
-      'API_REQUEST_FAILED',
-      'No se pudo conectar con la API de Inversora.',
-      error,
-    );
-  }
-
-  return parseApiResponse<TResponse>(response);
+/**
+ * Performs a JSON PATCH request against the Inversora API.
+ *
+ * @param options - Request path, body payload, and optional query parameters.
+ */
+export async function apiPatch<TResponse, TBody>(
+  options: ApiPatchOptions<TBody>,
+): Promise<TResponse> {
+  return requestJson<TResponse>('PATCH', { ...options, withDeviceToken: true }, options.body);
 }

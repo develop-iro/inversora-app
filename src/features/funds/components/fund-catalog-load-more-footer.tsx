@@ -1,8 +1,8 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
 import { Button, Spinner } from '@/shared/components/ui';
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FundCatalogLoadMoreFooterProps = {
   loadedCount: number;
@@ -11,6 +11,7 @@ export type FundCatalogLoadMoreFooterProps = {
   hasMore: boolean;
   errorMessage?: string | null;
   onLoadMore: () => void;
+  className?: string;
 };
 
 /**
@@ -23,21 +24,23 @@ export function FundCatalogLoadMoreFooter({
   hasMore,
   errorMessage,
   onLoadMore,
+  className,
 }: FundCatalogLoadMoreFooterProps) {
   if (isLoadingMore) {
     return (
-      <Spinner
-        size="sm"
-        label="Cargando más fondos…"
-        accessibilityLabel="Cargando más fondos"
-        style={styles.wrapper}
-      />
+      <View className={cn('items-center gap-sm py-lg', className)}>
+        <Spinner
+          size="sm"
+          label="Cargando más fondos…"
+          accessibilityLabel="Cargando más fondos"
+        />
+      </View>
     );
   }
 
   if (errorMessage) {
     return (
-      <View style={styles.wrapper}>
+      <View className={cn('items-center gap-sm py-lg', className)}>
         <TextParagraph variant="secondary" themeColor="textSecondary">
           {errorMessage}
         </TextParagraph>
@@ -59,7 +62,7 @@ export function FundCatalogLoadMoreFooter({
     }
 
     return (
-      <View style={styles.wrapper}>
+      <View className={cn('items-center gap-sm py-lg', className)}>
         <TextParagraph variant="secondary" themeColor="textSecondary">
           {totalCount != null
             ? `${loadedCount} de ${totalCount} fondos mostrados`
@@ -70,7 +73,7 @@ export function FundCatalogLoadMoreFooter({
   }
 
   return (
-    <View style={styles.wrapper}>
+    <View className={cn('items-center gap-sm py-lg', className)}>
       <TextParagraph variant="secondary" themeColor="textSecondary">
         {totalCount != null
           ? `${loadedCount} de ${totalCount} fondos cargados`
@@ -80,11 +83,3 @@ export function FundCatalogLoadMoreFooter({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.lg,
-  },
-});

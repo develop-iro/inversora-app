@@ -1,4 +1,8 @@
-import type { EducationalProfile } from '@/core/domain/educational-profile';
+import type {
+  EducationalProfile,
+  FinancialReadiness,
+  InvestorStyle,
+} from '@/core/domain/educational-profile';
 import type { FundCatalogFiltersState } from '@/features/funds/types/fund-catalog-filters';
 import { DEFAULT_CATALOG_FILTERS } from '@/features/funds/types/fund-catalog-filters';
 import { getEducationalProfileSummary } from '@/features/learn/services/build-educational-profile';
@@ -8,6 +12,30 @@ export type ProfileCatalogHints = {
   readonly filters: FundCatalogFiltersState;
   readonly summary: string;
 };
+
+function shouldPreferBeginnerFunds(profile: EducationalProfile): boolean {
+  return (
+    profile.knowledgeLevel === 'beginner' ||
+    profile.investorStyle === 'defensive' ||
+    profile.financialReadiness === 'not-ready'
+  );
+}
+
+function appendEnterprisingNote(summary: string, investorStyle: InvestorStyle): string {
+  if (investorStyle !== 'enterprising') {
+    return summary;
+  }
+
+  return `${summary} Inversora se centra en fondos indexados para comparar con calma; no cubre selección activa de acciones individuales.`;
+}
+
+function appendReadinessNote(summary: string, financialReadiness: FinancialReadiness): string {
+  if (financialReadiness !== 'not-ready') {
+    return summary;
+  }
+
+  return `${summary} Conviene reforzar colchón o deuda antes de ampliar exposición.`;
+}
 
 /**
  * Maps a stored educational profile to suggested catalog filters (HU-17–21).
@@ -19,6 +47,11 @@ export function mapProfileToCatalogHints(profile: EducationalProfile): ProfileCa
     ...DEFAULT_CATALOG_FILTERS,
   };
 
+  const beginnerBoost = shouldPreferBeginnerFunds(profile);
+  let summary = getEducationalProfileSummary(profile);
+  summary = appendEnterprisingNote(summary, profile.investorStyle);
+  summary = appendReadinessNote(summary, profile.financialReadiness);
+
   switch (profile.riskOrientation) {
     case 'conservative':
       return {
@@ -27,15 +60,16 @@ export function mapProfileToCatalogHints(profile: EducationalProfile): ProfileCa
           riskLevel: 'low',
           idealForBeginnersOnly: true,
         },
-        summary: getEducationalProfileSummary(profile),
+        summary,
       };
     case 'dynamic':
       return {
         filters: {
           ...base,
           riskLevel: 'high',
+          idealForBeginnersOnly: beginnerBoost,
         },
-        summary: getEducationalProfileSummary(profile),
+        summary,
       };
     case 'moderate':
     default:
@@ -43,8 +77,9 @@ export function mapProfileToCatalogHints(profile: EducationalProfile): ProfileCa
         filters: {
           ...base,
           riskLevel: 'medium',
+          idealForBeginnersOnly: beginnerBoost,
         },
-        summary: getEducationalProfileSummary(profile),
+        summary,
       };
   }
 }

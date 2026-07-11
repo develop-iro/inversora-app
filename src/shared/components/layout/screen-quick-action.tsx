@@ -1,10 +1,10 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type ScreenQuickActionProps = {
   icon: ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -13,7 +13,15 @@ export type ScreenQuickActionProps = {
   onPress: () => void;
   variant?: 'surface' | 'accent' | 'deep';
   disabled?: boolean;
+  className?: string;
+  style?: StyleProp<ViewStyle>;
 };
+
+const circleVariantClassNames = {
+  surface: 'border-border bg-surface',
+  accent: 'border-primary-border bg-primary-surface',
+  deep: 'border-deep-ocean bg-deep-ocean',
+} as const;
 
 /**
  * Circular quick action with caption, inspired by mobile banking action grids.
@@ -25,25 +33,15 @@ export function ScreenQuickAction({
   onPress,
   variant = 'surface',
   disabled = false,
+  className,
+  style,
 }: ScreenQuickActionProps) {
-  const theme = useTheme();
+  const theme = useTheme(); // tailwind-exception: icon colors per variant
 
-  const circleColors = {
-    surface: {
-      backgroundColor: theme.surface,
-      borderColor: theme.border,
-      iconColor: theme.deepOcean,
-    },
-    accent: {
-      backgroundColor: theme.primarySurface,
-      borderColor: theme.primaryBorder,
-      iconColor: theme.deepOcean,
-    },
-    deep: {
-      backgroundColor: theme.deepOcean,
-      borderColor: theme.deepOcean,
-      iconColor: theme.textOnDark,
-    },
+  const iconColor = {
+    surface: theme.deepOcean,
+    accent: theme.deepOcean,
+    deep: theme.textOnDark,
   }[variant];
 
   return (
@@ -53,52 +51,29 @@ export function ScreenQuickAction({
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.wrap,
-        pressed && !disabled && styles.pressed,
-        disabled && styles.disabled,
-      ]}
+      className={cn(
+        'w-20 items-center gap-sm',
+        disabled && 'opacity-45',
+        className,
+      )}
+      style={({ pressed }) => [style, pressed && !disabled && { opacity: 0.88 }]}
     >
       <View
-        style={[
-          styles.circle,
-          {
-            backgroundColor: circleColors.backgroundColor,
-            borderColor: circleColors.borderColor,
-          },
-        ]}
+        className={cn(
+          'h-14 w-14 items-center justify-center rounded-full border',
+          circleVariantClassNames[variant],
+        )}
       >
-        <MaterialCommunityIcons name={icon} size={22} color={circleColors.iconColor} />
+        <MaterialCommunityIcons name={icon} size={22} color={iconColor} />
       </View>
-      <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={2} style={styles.label}>
+      <TextParagraph
+        variant="secondary"
+        themeColor="textSecondary"
+        numberOfLines={2}
+        className="text-center leading-4"
+      >
         {label}
       </TextParagraph>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    width: 80,
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  circle: {
-    width: 56,
-    height: 56,
-    borderRadius: Radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: {
-    textAlign: 'center',
-    lineHeight: 16,
-  },
-  pressed: {
-    opacity: 0.88,
-  },
-  disabled: {
-    opacity: 0.45,
-  },
-});

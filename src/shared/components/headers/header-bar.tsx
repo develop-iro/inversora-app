@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { HeaderLayout } from '@/shared/components/headers/header-types';
 import { useHeaderHorizontalInset } from '@/shared/components/headers/use-header-horizontal-inset';
-import { useTheme } from '@/shared/hooks/use-theme';
 import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 const HEADER_SAFE_TOP_GAP = Spacing.xs;
 const HEADER_ACTION_ICON_SIZE = 34;
@@ -20,7 +20,9 @@ export type HeaderBarProps = {
   center?: ReactNode;
   trailing?: ReactNode;
   safeAreaTop?: boolean;
+  className?: string;
   style?: StyleProp<ViewStyle>;
+  contentClassName?: string;
   contentStyle?: StyleProp<ViewStyle>;
 };
 
@@ -33,10 +35,11 @@ export function HeaderBar({
   center,
   trailing,
   safeAreaTop = true,
+  className,
   style,
+  contentClassName,
   contentStyle,
 }: HeaderBarProps) {
-  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const headerHorizontalInset = useHeaderHorizontalInset();
   const isAppLayout = layout === 'app';
@@ -44,19 +47,23 @@ export function HeaderBar({
   return (
     <View
       accessibilityRole="header"
+      className={cn('w-full border-b border-border-subtle bg-background', className)}
+      // tailwind-exception: safe-area top inset is runtime-only
       style={[
-        styles.headerBar,
         {
-          backgroundColor: theme.background,
-          borderBottomColor: theme.borderSubtle,
           paddingTop: safeAreaTop ? insets.top + HEADER_SAFE_TOP_GAP : Spacing.sm,
         },
         style,
       ]}
     >
       <View
+        className={cn(
+          isAppLayout
+            ? 'flex-row items-center justify-between gap-md py-sm'
+            : 'min-h-[44px] flex-row items-stretch justify-between gap-md py-sm',
+          contentClassName,
+        )}
         style={[
-          isAppLayout ? styles.appRow : styles.navRow,
           {
             paddingHorizontal: headerHorizontalInset,
             width: '100%',
@@ -67,67 +74,17 @@ export function HeaderBar({
       >
         {isAppLayout ? (
           <>
-            <View style={styles.appLeading}>{leading}</View>
-            <View style={styles.appTrailing}>{trailing}</View>
+            <View className="min-w-0 flex-1 shrink">{leading}</View>
+            <View className="shrink-0">{trailing}</View>
           </>
         ) : (
           <>
-            <View style={styles.navLeading}>{leading}</View>
-            <View style={styles.navCenter}>{center}</View>
-            <View style={styles.navTrailing}>{trailing}</View>
+            <View className="min-w-[88px] shrink-0 flex-row items-center justify-start">{leading}</View>
+            <View className="min-w-0 flex-1 items-center justify-center">{center}</View>
+            <View className="min-w-[88px] shrink-0 flex-row items-center justify-end">{trailing}</View>
           </>
         )}
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  headerBar: {
-    width: '100%',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  appRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.sm,
-    gap: Spacing.md,
-  },
-  appLeading: {
-    flex: 1,
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  appTrailing: {
-    flexShrink: 0,
-  },
-  navRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.sm,
-    gap: Spacing.md,
-    minHeight: APP_TOOLBAR_MIN_HEIGHT,
-  },
-  navLeading: {
-    minWidth: 88,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    flexShrink: 0,
-  },
-  navCenter: {
-    flex: 1,
-    minWidth: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navTrailing: {
-    minWidth: 88,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flexShrink: 0,
-  },
-});

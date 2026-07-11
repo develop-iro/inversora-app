@@ -23,7 +23,7 @@ import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { Button } from '@/shared/components/ui/button';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { useThemeGradients } from '@/shared/hooks/use-theme-gradients';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type CalculatorYearlyTableProps = {
   rows: readonly CompoundInterestYearRow[];
@@ -126,12 +126,12 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
   const showScrollHint = contentWidth > viewportWidth + SCROLL_EDGE_THRESHOLD;
 
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.headerRow}>
-        <View style={styles.titleBlock}>
+    <View className="gap-md">
+      <View className="flex-row items-start justify-between gap-md">
+        <View className="flex-1 gap-xs">
           <TextParagraph variant="emphasis">Detalle anual</TextParagraph>
           {showScrollHint ? (
-            <View style={styles.scrollHintRow}>
+            <View className="flex-row items-center gap-xs">
               <MaterialCommunityIcons
                 name="gesture-swipe-horizontal"
                 size={14}
@@ -158,7 +158,7 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
       </View>
 
       <View
-        style={styles.tableViewport}
+        className="relative"
         onLayout={(event) => {
           handleViewportLayout(event.nativeEvent.layout.width);
         }}
@@ -173,24 +173,17 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
           onContentSizeChange={(width) => {
             handleContentSizeChange(width);
           }}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerClassName="pb-xs"
         >
-          <View style={[styles.table, { borderColor: theme.border, backgroundColor: theme.surface }]}>
-            <View
-              style={[
-                styles.tableHeaderRow,
-                {
-                  backgroundColor: theme.backgroundSoft,
-                  borderBottomColor: theme.border,
-                },
-              ]}
-            >
+          <View className="min-w-[560px] overflow-hidden rounded-card border border-border bg-surface">
+            <View className="flex-row border-b border-border bg-background-soft px-sm py-sm">
               {COLUMNS.map((column) => (
                 <TextLabel
                   key={column.key}
                   variant="meta"
                   themeColor="textSecondary"
-                  style={[styles.cell, styles.headerCell, { flex: column.flex }]}
+                  className="px-xs font-semibold"
+                  style={{ flex: column.flex }}
                 >
                   {column.label}
                 </TextLabel>
@@ -203,27 +196,24 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
               return (
                 <View
                   key={row.year}
-                  style={[
-                    styles.dataRow,
-                    {
-                      backgroundColor: isEvenRow ? theme.surface : theme.backgroundSoft,
-                      borderTopColor: theme.border,
-                    },
-                  ]}
+                  className={cn(
+                    'flex-row border-t border-border px-sm py-sm',
+                    isEvenRow ? 'bg-surface' : 'bg-background-soft',
+                  )}
                 >
-                  <TextParagraph variant="secondary" style={[styles.cell, { flex: COLUMNS[0].flex }]}>
+                  <TextParagraph variant="secondary" className="px-xs" style={{ flex: COLUMNS[0].flex }}>
                     {row.year}
                   </TextParagraph>
-                  <TextParagraph variant="secondary" style={[styles.cell, { flex: COLUMNS[1].flex }]}>
+                  <TextParagraph variant="secondary" className="px-xs" style={{ flex: COLUMNS[1].flex }}>
                     {formatCalculatorCurrency(row.periodicDepositsThisYear)}
                   </TextParagraph>
-                  <TextParagraph variant="secondary" style={[styles.cell, { flex: COLUMNS[2].flex }]}>
+                  <TextParagraph variant="secondary" className="px-xs" style={{ flex: COLUMNS[2].flex }}>
                     {formatCalculatorCurrency(row.cumulativeDeposits)}
                   </TextParagraph>
-                  <TextParagraph variant="secondary" style={[styles.cell, { flex: COLUMNS[3].flex }]}>
+                  <TextParagraph variant="secondary" className="px-xs" style={{ flex: COLUMNS[3].flex }}>
                     {formatCalculatorCurrency(row.interestThisYear)}
                   </TextParagraph>
-                  <TextParagraph variant="emphasis" style={[styles.cell, { flex: COLUMNS[4].flex }]}>
+                  <TextParagraph variant="emphasis" className="px-xs" style={{ flex: COLUMNS[4].flex }}>
                     {formatCalculatorCurrency(row.balance)}
                   </TextParagraph>
                 </View>
@@ -233,14 +223,15 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
         </ScrollView>
 
         {canScrollRight ? (
-          <View pointerEvents="none" style={styles.fadeEdge} accessibilityElementsHidden>
+          <View pointerEvents="none" className="absolute bottom-0 right-0 top-0 w-14 items-end justify-center" accessibilityElementsHidden>
             <LinearGradient
               colors={[...scrollFade.colors]}
               start={scrollFade.start}
               end={scrollFade.end}
-              style={styles.fadeGradient}
+              // tailwind-exception: gradient overlay uses absolute fill for scroll fade
+              style={StyleSheet.absoluteFill}
             />
-            <View style={[styles.fadeChevron, { borderColor: theme.border, backgroundColor: theme.surface }]}>
+            <View className="mr-xs h-7 w-7 items-center justify-center rounded-full border border-border bg-surface">
               <MaterialCommunityIcons name="chevron-right" size={16} color={theme.deepOcean} />
             </View>
           </View>
@@ -249,75 +240,3 @@ export function CalculatorYearlyTable({ rows, input, result }: CalculatorYearlyT
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: Spacing.md,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-  },
-  titleBlock: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-  scrollHintRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  tableViewport: {
-    position: 'relative',
-  },
-  scrollContent: {
-    paddingBottom: Spacing.xs,
-  },
-  table: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    overflow: 'hidden',
-    minWidth: 560,
-  },
-  tableHeaderRow: {
-    flexDirection: 'row',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  dataRow: {
-    flexDirection: 'row',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.sm,
-  },
-  cell: {
-    paddingHorizontal: Spacing.xs,
-  },
-  headerCell: {
-    fontWeight: '600',
-  },
-  fadeEdge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: 56,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-  fadeGradient: {
-    ...StyleSheet.absoluteFill,
-  },
-  fadeChevron: {
-    width: 28,
-    height: 28,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.xs,
-  },
-});

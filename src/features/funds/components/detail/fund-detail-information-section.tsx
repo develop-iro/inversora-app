@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { FundDetailProfile } from '@/core/domain/fund-detail-profile';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
@@ -12,7 +12,6 @@ import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { CollapsibleSection } from '@/shared/components/layout';
 import { TextParagraph } from '@/shared/components/text';
 import { KeyValueList, TabHeader } from '@/shared/components/ui';
-import { Spacing } from '@/shared/theme/theme';
 
 type InfoTab = 'summary' | 'fees' | 'documents';
 
@@ -74,12 +73,16 @@ export function FundDetailInformationSection({ profile }: FundDetailInformationS
       {trimmedDescription.length > 0 ? (
         shouldCollapseDescription ? (
           <CollapsibleSection title="Descripción del fondo" defaultExpanded={false}>
-            <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.description}>
+            <TextParagraph
+              variant="secondary"
+              themeColor="textSecondary"
+              className="leading-6"
+            >
               {trimmedDescription}
             </TextParagraph>
           </CollapsibleSection>
         ) : (
-          <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.description}>
+          <TextParagraph variant="secondary" themeColor="textSecondary" className="leading-6">
             {trimmedDescription}
           </TextParagraph>
         )
@@ -93,7 +96,7 @@ export function FundDetailInformationSection({ profile }: FundDetailInformationS
             onChange={setTab}
             accessibilityLabel="Información del fondo"
           />
-          <View style={styles.tabPanel}>
+          <View className="pt-xs">
             {activeTab === 'summary' ? <KeyValueList rows={profile.summaryRows} /> : null}
             {activeTab === 'fees' ? <KeyValueList rows={profile.feeRows} /> : null}
             {activeTab === 'documents' ? <KeyValueList rows={documentRows} /> : null}
@@ -103,12 +106,3 @@ export function FundDetailInformationSection({ profile }: FundDetailInformationS
     </FundDetailSectionShell>
   );
 }
-
-const styles = StyleSheet.create({
-  description: {
-    lineHeight: 24,
-  },
-  tabPanel: {
-    paddingTop: Spacing.xs,
-  },
-});

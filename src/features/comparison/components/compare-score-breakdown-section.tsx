@@ -2,9 +2,7 @@ import type { FundDetail } from '@/core/domain/catalog';
 import type { ScoreCriterionResult } from '@/core/scoring/types';
 import { CompareCollapsibleSection } from '@/features/comparison/components/compare-collapsible-section';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 export type CompareScoreBreakdownSectionProps = {
   details: readonly FundDetail[];
@@ -17,10 +15,8 @@ function CompareCriterionBars({
   criterion: ScoreCriterionResult;
   details: readonly FundDetail[];
 }) {
-  const theme = useTheme();
-
   return (
-    <View style={styles.criterionBlock}>
+    <View className="gap-sm">
       <TextParagraph variant="secondary" themeColor="textSecondary">
         {criterion.label}
       </TextParagraph>
@@ -42,8 +38,8 @@ function CompareCriterionBars({
         );
 
         return (
-          <View key={`${detail.fund.isin}-${criterion.id}`} style={styles.fundBarRow}>
-            <View style={styles.fundBarHeader}>
+          <View key={`${detail.fund.isin}-${criterion.id}`} className="gap-xs">
+            <View className="flex-row items-center justify-between gap-sm">
               <TextLabel variant="meta" themeColor="textSecondary" numberOfLines={1}>
                 {shortLabel}
               </TextLabel>
@@ -52,7 +48,7 @@ function CompareCriterionBars({
               </TextLabel>
             </View>
             <View
-              style={[styles.track, { backgroundColor: theme.surfaceMuted }]}
+              className="h-[6px] overflow-hidden rounded-full bg-surface-muted"
               accessibilityRole="progressbar"
               accessibilityValue={{
                 min: 0,
@@ -61,13 +57,9 @@ function CompareCriterionBars({
               }}
             >
               <View
-                style={[
-                  styles.fill,
-                  {
-                    backgroundColor: theme.primary,
-                    width: `${fillPercent}%`,
-                  },
-                ]}
+                className="h-full rounded-full bg-primary"
+                // tailwind-exception: progress fill width is computed at runtime
+                style={{ width: `${fillPercent}%` }}
               />
             </View>
           </View>
@@ -93,7 +85,7 @@ export function CompareScoreBreakdownSection({ details }: CompareScoreBreakdownS
       subtitle="Criterios del modelo educativo RN-04."
       defaultExpanded={false}
     >
-      <View style={styles.criteriaList}>
+      <View className="gap-lg">
         {criteria.map((criterion) => (
           <CompareCriterionBars
             key={criterion.id}
@@ -105,30 +97,3 @@ export function CompareScoreBreakdownSection({ details }: CompareScoreBreakdownS
     </CompareCollapsibleSection>
   );
 }
-
-const styles = StyleSheet.create({
-  criteriaList: {
-    gap: Spacing.lg,
-  },
-  criterionBlock: {
-    gap: Spacing.sm,
-  },
-  fundBarRow: {
-    gap: Spacing.xs,
-  },
-  fundBarHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  track: {
-    height: 6,
-    borderRadius: Radius.full,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: Radius.full,
-  },
-});

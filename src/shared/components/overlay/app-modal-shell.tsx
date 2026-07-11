@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, StyleSheet, type ModalProps } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, type ModalProps } from 'react-native';
 
 import type {
   HeaderActionHandlers,
@@ -72,7 +72,7 @@ export function AppModalShell({
     >
       {keyboardAvoiding ? (
         <KeyboardAvoidingView
-          style={styles.keyboardRoot}
+          className="flex-1"
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
         >
@@ -84,9 +84,3 @@ export function AppModalShell({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  keyboardRoot: {
-    flex: 1,
-  },
-});

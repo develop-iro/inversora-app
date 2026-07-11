@@ -245,5 +245,6 @@ export const Layout = {
   screenPaddingHorizontal: Spacing.lg,
   maxContentWidth: 760,
   contentSummaryMaxWidth: Size.contentNarrow,
-  bottomTabInset: Platform.select({ ios: 50, android: 80 }) ?? 0,
+  /** @deprecated Prefer `useTabScreenInsets()` for tab screens. Web used to resolve to 0. */
+  bottomTabInset: Platform.select({ ios: 50, android: 80, default: 142 }) ?? 142,
 } as const;

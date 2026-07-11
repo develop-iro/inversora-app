@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type SpinnerLayoutProps = {
   readonly children?: ReactNode;
   /** Expands to fill the parent and centers the spinner content. */
   readonly fullscreen?: boolean;
+  readonly className?: string;
   readonly style?: StyleProp<ViewStyle>;
   readonly accessibilityLabel?: string;
 };
@@ -17,12 +18,18 @@ export type SpinnerLayoutProps = {
 export function SpinnerLayout({
   children,
   fullscreen = false,
+  className,
   style,
   accessibilityLabel = 'Cargando',
 }: SpinnerLayoutProps) {
   return (
     <View
-      style={[fullscreen ? styles.fullscreen : styles.inline, style]}
+      className={cn(
+        'items-center justify-center',
+        fullscreen ? 'flex-1 py-xl' : 'py-md',
+        className,
+      )}
+      style={style}
       accessibilityRole="progressbar"
       accessibilityLabel={accessibilityLabel}
     >
@@ -30,17 +37,3 @@ export function SpinnerLayout({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  inline: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.md,
-  },
-  fullscreen: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.xl,
-  },
-});

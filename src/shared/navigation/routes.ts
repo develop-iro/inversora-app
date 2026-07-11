@@ -4,6 +4,10 @@ import type { Href } from 'expo-router';
 export const routes = {
   home: '/' as Href,
   learn: '/learn' as Href,
+  learnInitial: {
+    pathname: '/learn',
+    params: { mode: 'initial' },
+  } as Href,
   fundsCatalog: '/funds' as Href,
   fundsCatalogWithProfileHints: {
     pathname: '/funds',
@@ -27,4 +31,10 @@ export const routes = {
       params: { isin: isin.trim().toUpperCase() },
     }) as Href,
   legal: '/legal' as Href,
+  rankings: '/rankings' as Href,
+  rankingBenchmark: (benchmarkKey: string): Href =>
+    ({
+      pathname: '/rankings/[benchmarkKey]',
+      params: { benchmarkKey },
+    }) as unknown as Href,
 };

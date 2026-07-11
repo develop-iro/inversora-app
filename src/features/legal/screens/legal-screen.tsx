@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LEGAL_SECTIONS } from '@/features/legal/constants/legal-sections';
@@ -8,7 +8,6 @@ import { ScreenShell } from '@/shared/components/layout/screen-shell';
 import { Header } from '@/shared/components/headers';
 import { TextHeading, TextLegal, TextParagraph } from '@/shared/components/text';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
-import { useTheme } from '@/shared/hooks/use-theme';
 import { Layout, Spacing } from '@/shared/theme/theme';
 
 /**
@@ -17,7 +16,6 @@ import { Layout, Spacing } from '@/shared/theme/theme';
 export default function LegalScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
   const { contentWidth } = useMobileLayout();
 
   return (
@@ -33,18 +31,17 @@ export default function LegalScreen() {
       }
       body={
         <ScrollView
-          style={[styles.scroll, { backgroundColor: theme.background }]}
-          contentContainerStyle={[
-            styles.content,
-            {
-              width: contentWidth,
-              maxWidth: contentWidth,
-              paddingBottom: insets.bottom + Spacing['3xl'],
-            },
-          ]}
+          className="min-h-0 w-full flex-1 bg-background"
+          contentContainerClassName="gap-lg self-center pt-lg"
+          contentContainerStyle={{
+            width: contentWidth,
+            maxWidth: contentWidth,
+            paddingHorizontal: Layout.screenPaddingHorizontal,
+            paddingBottom: insets.bottom + Spacing['3xl'],
+          }}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.intro}>
+          <View className="gap-sm">
             <TextHeading variant="section">Avisos legales</TextHeading>
             <TextParagraph variant="secondary" themeColor="textSecondary">
               Textos de referencia para el uso educativo de Inversora. No sustituyen el
@@ -53,7 +50,7 @@ export default function LegalScreen() {
             </TextParagraph>
           </View>
 
-          <View style={styles.sections}>
+          <View className="gap-md">
             {LEGAL_SECTIONS.map((section, index) => (
               <CollapsibleSection
                 key={section.id}
@@ -65,7 +62,7 @@ export default function LegalScreen() {
             ))}
           </View>
 
-          <TextLegal themeColor="textSecondary" style={styles.footer}>
+          <TextLegal themeColor="textSecondary" className="pt-sm">
             Última revisión: junio 2026. Inversora MVP — uso informativo y educativo.
           </TextLegal>
         </ScrollView>
@@ -73,25 +70,3 @@ export default function LegalScreen() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-    width: '100%',
-  },
-  content: {
-    alignSelf: 'center',
-    gap: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-  },
-  intro: {
-    gap: Spacing.sm,
-  },
-  sections: {
-    gap: Spacing.md,
-  },
-  footer: {
-    paddingTop: Spacing.sm,
-  },
-});

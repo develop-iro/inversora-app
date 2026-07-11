@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
 import {
     Pressable,
-    StyleSheet,
     TextInput,
     View,
     type StyleProp,
@@ -15,12 +14,11 @@ import {
 import { AnimatedPlaceholder } from "@/shared/components/ui/search/animated-placeholder";
 import { AuroraBorder } from "@/shared/components/ui/search/aurora-border";
 import { SearchOrb } from "@/shared/components/ui/search/search-orb";
+import { typographyClassNames } from "@/shared/nativewind/theme-classes";
 import { isWeb } from "@/shared/platform/capabilities";
 import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
 import { useTheme } from "@/shared/hooks/use-theme";
-import { Radius, Spacing, Typography } from "@/shared/theme/theme";
-
-const SEARCH_FIELD_MIN_HEIGHT = 44;
+import { cn } from "@/shared/utils/cn";
 
 const DEFAULT_SUGGESTIONS = [
   "What do you want to achieve?",
@@ -55,6 +53,7 @@ export type SearchFieldVariant = "premium" | "plain";
 
 export type SearchBarProps = Omit<TextInputProps, "style"> & {
   leadingIcon?: ReactNode;
+  className?: string;
   containerStyle?: StyleProp<ViewStyle>;
   suggestions?: string[];
   variant?: SearchFieldVariant;
@@ -84,10 +83,7 @@ function SearchFieldClearButton({
       accessibilityLabel={CLEAR_BUTTON_ACCESSIBILITY_LABEL}
       hitSlop={CLEAR_BUTTON_HIT_SLOP}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.clearButton,
-        pressed && styles.clearButtonPressed,
-      ]}
+      className="h-11 w-11 shrink-0 -mr-sm items-center justify-center active:opacity-[0.72]"
     >
       <MaterialCommunityIcons name="close-circle" size={20} color={iconColor} />
     </Pressable>
@@ -96,6 +92,7 @@ function SearchFieldClearButton({
 
 function PlainSearchBar({
   leadingIcon,
+  className,
   containerStyle,
   editable = true,
   placeholder = "Buscar conceptos o fondos...",
@@ -108,7 +105,7 @@ function PlainSearchBar({
   accessibilityLabel = DEFAULT_ACCESSIBILITY_LABEL,
   ...inputProps
 }: SearchBarProps) {
-  const theme = useTheme();
+  const theme = useTheme(); // tailwind-exception: icon, cursor, selection, and text input colors
   const [isFocused, setIsFocused] = useState(false);
   const [uncontrolledValue, setUncontrolledValue] = useState(
     defaultValue ?? "",
@@ -154,17 +151,15 @@ function PlainSearchBar({
 
   return (
     <View
-      style={[
-        styles.plainShell,
-        {
-          backgroundColor: theme.surface,
-          borderColor: isFocused ? theme.primary : theme.border,
-        },
-        !editable && styles.disabled,
-        containerStyle,
-      ]}
+      className={cn(
+        'min-h-[44px] w-full flex-row items-center gap-sm self-stretch rounded-field border bg-surface px-md',
+        isFocused ? 'border-primary' : 'border-border',
+        !editable && 'opacity-60',
+        className,
+      )}
+      style={containerStyle}
     >
-      <View style={styles.icon}>
+      <View className="h-[18px] w-[18px] shrink-0 items-center justify-center">
         {leadingIcon ?? (
           <MaterialCommunityIcons
             name="magnify"
@@ -187,7 +182,8 @@ function PlainSearchBar({
         onBlur={handleBlur}
         placeholder={placeholder}
         placeholderTextColor={theme.textSecondary}
-        style={[styles.input, webInputStyle, { color: theme.text }]}
+        className={cn(typographyClassNames.body, 'm-0 min-w-0 flex-1 p-0 leading-5 text-text')}
+        style={webInputStyle}
         {...inputProps}
       />
 
@@ -203,6 +199,7 @@ function PlainSearchBar({
 /** Premium search surface with calm motion and educational prompt guidance. */
 function PremiumSearchBar({
   leadingIcon,
+  className,
   containerStyle,
   editable = true,
   placeholder,
@@ -216,7 +213,7 @@ function PremiumSearchBar({
   accessibilityLabel = DEFAULT_ACCESSIBILITY_LABEL,
   ...inputProps
 }: SearchBarProps) {
-  const theme = useTheme();
+  const theme = useTheme(); // tailwind-exception: icon, cursor, selection, and text input colors
   const reducedMotionEnabled = useReducedMotion();
   const [isFocused, setIsFocused] = useState(false);
   const [uncontrolledValue, setUncontrolledValue] = useState(
@@ -283,19 +280,22 @@ function PremiumSearchBar({
       surfaceColor={theme.surfaceMuted}
     >
       <View
-        style={[
-          styles.container,
-          !editable && styles.disabled,
-          containerStyle,
-        ]}
+        className={cn(
+          'min-h-[44px] w-full flex-row items-center gap-sm self-stretch',
+          !editable && 'opacity-60',
+          className,
+        )}
+        style={containerStyle}
       >
-        {leadingIcon ? <View style={styles.icon}>{leadingIcon}</View> : null}
+        {leadingIcon ? (
+          <View className="h-[18px] w-[18px] shrink-0 items-center justify-center">{leadingIcon}</View>
+        ) : null}
         <SearchOrb
           color={theme.primary}
           reducedMotionEnabled={reducedMotionEnabled}
         />
 
-        <View style={styles.inputWrapper}>
+        <View className="min-h-[22px] min-w-0 flex-1 justify-center self-stretch">
           {!isTyping ? (
             <AnimatedPlaceholder
               messages={suggestionMessages}
@@ -320,7 +320,8 @@ function PremiumSearchBar({
             placeholderTextColor={
               isFocused ? theme.primary : theme.textSecondary
             }
-            style={[styles.input, webInputStyle, { color: theme.text }]}
+            className={cn(typographyClassNames.body, 'm-0 min-w-0 w-full flex-1 p-0 leading-5 text-text')}
+            style={webInputStyle}
             {...inputProps}
           />
         </View>
@@ -348,63 +349,3 @@ export type SearchFieldProps = SearchBarProps;
 export function SearchField(props: SearchFieldProps) {
   return <SearchBar {...props} />;
 }
-
-const styles = StyleSheet.create({
-  plainShell: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "stretch",
-    width: "100%",
-    minHeight: SEARCH_FIELD_MIN_HEIGHT,
-    gap: Spacing.sm,
-    borderWidth: 1,
-    borderRadius: Radius.field,
-    paddingHorizontal: Spacing.md,
-  },
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "stretch",
-    width: "100%",
-    minHeight: SEARCH_FIELD_MIN_HEIGHT,
-    gap: Spacing.sm,
-  },
-  inputWrapper: {
-    flex: 1,
-    minWidth: 0,
-    alignSelf: "stretch",
-    minHeight: 22,
-    justifyContent: "center",
-  },
-  icon: {
-    width: 18,
-    height: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  input: {
-    flex: 1,
-    width: "100%",
-    minWidth: 0,
-    padding: 0,
-    margin: 0,
-    fontFamily: Typography.body.fontFamily,
-    fontSize: Typography.body.fontSize,
-    lineHeight: 20,
-  },
-  disabled: {
-    opacity: 0.6,
-  },
-  clearButton: {
-    width: SEARCH_FIELD_MIN_HEIGHT,
-    height: SEARCH_FIELD_MIN_HEIGHT,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    marginRight: -Spacing.sm,
-  },
-  clearButtonPressed: {
-    opacity: 0.72,
-  },
-});

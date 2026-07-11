@@ -1,12 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import type { CatalogCategoryOption } from '@/features/funds/utils/build-catalog-category-options';
 import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { palette } from '@/shared/theme/palette';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FundCatalogCategoryFilterChipsProps = {
   categories: readonly CatalogCategoryOption[];
@@ -32,7 +31,7 @@ export function FundCatalogCategoryFilterChips({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.chipRow}
+      contentContainerClassName="gap-sm pr-md"
       accessibilityRole="tablist"
       accessibilityLabel="Filtrar por índice o categoría"
     >
@@ -64,22 +63,16 @@ type CategoryChipProps = {
 };
 
 function CategoryChip({ label, count, selected, onPress }: CategoryChipProps) {
-  const theme = useTheme();
-
   return (
     <Pressable
       accessibilityRole="tab"
       accessibilityState={{ selected }}
       accessibilityLabel={`${label}, ${count} fondos`}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.chip,
-        {
-          backgroundColor: selected ? theme.primarySurface : theme.surface,
-          borderColor: selected ? theme.primary : theme.border,
-        },
-        pressed && styles.chipPressed,
-      ]}
+      className={cn(
+        'max-w-[220px] flex-row items-center gap-xs rounded-pill border px-md py-sm active:opacity-90',
+        selected ? 'border-primary bg-primary-surface' : 'border-border bg-surface',
+      )}
     >
       <TextLabel variant="meta" themeColor="deepOcean" numberOfLines={1}>
         {label}
@@ -96,6 +89,7 @@ export type FundCatalogCategoryFiltersProps = {
   selectedCategoryId: string | 'all';
   totalFundCount: number;
   onCategoryChange: (categoryId: string | 'all') => void;
+  className?: string;
 };
 
 /**
@@ -106,6 +100,7 @@ export function FundCatalogCategoryFilters({
   selectedCategoryId,
   totalFundCount,
   onCategoryChange,
+  className,
 }: FundCatalogCategoryFiltersProps) {
   const theme = useTheme();
 
@@ -114,8 +109,8 @@ export function FundCatalogCategoryFilters({
   }
 
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.header}>
+    <View className={cn('gap-sm', className)}>
+      <View className="gap-xs">
         <TextParagraph variant="emphasis">Explora por índice</TextParagraph>
         <TextLabel variant="meta" themeColor="textSecondary">
           Toca una categoría para filtrar
@@ -125,7 +120,7 @@ export function FundCatalogCategoryFilters({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
+        contentContainerClassName="gap-sm pr-md"
         accessibilityRole="tablist"
         accessibilityLabel="Filtrar catálogo por índice o categoría"
       >
@@ -156,9 +151,9 @@ export function FundCatalogCategoryFilters({
           accessibilityRole="button"
           accessibilityLabel="Ver todos los índices del catálogo"
           onPress={() => onCategoryChange('all')}
-          style={({ pressed }) => [styles.viewAll, pressed && styles.viewAllPressed]}
+          className="min-h-9 flex-row items-center gap-xs self-start active:opacity-[0.85]"
         >
-          <TextParagraph variant="emphasis" style={{ color: theme.primary }}>
+          <TextParagraph variant="emphasis" themeColor="primary">
             Ver todos los índices
           </TextParagraph>
           <MaterialCommunityIcons name="chevron-right" size={18} color={theme.primary} />
@@ -193,108 +188,35 @@ function CategoryFilterCard({
       accessibilityState={{ selected }}
       accessibilityLabel={`${label}, ${valueLabel} ${valueCaption}`}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: selected ? theme.backgroundSoft : theme.surface,
-          borderColor: selected ? theme.primary : theme.border,
-        },
-        pressed && styles.cardPressed,
-      ]}
+      className={cn(
+        'h-[132px] w-28 items-center gap-xs rounded-card border px-sm py-md active:opacity-90',
+        selected ? 'border-primary bg-background-soft' : 'border-border bg-surface',
+      )}
     >
       <View
-        style={[
-          styles.iconWrap,
-          {
-            backgroundColor: selected ? palette.mintAccent : theme.backgroundSoft,
-          },
-        ]}
+        className={cn(
+          'h-10 w-10 items-center justify-center rounded-full',
+          selected ? 'bg-mint-accent' : 'bg-background-soft',
+        )}
       >
         <MaterialCommunityIcons name={icon} size={22} color={theme.primary} />
       </View>
 
-      <TextLabel variant="listMeta" themeColor="textSecondary" numberOfLines={2} style={styles.cardLabel}>
+      <TextLabel
+        variant="listMeta"
+        themeColor="textSecondary"
+        numberOfLines={2}
+        className="min-h-9 text-center"
+      >
         {label}
       </TextLabel>
 
-      <TextHeading variant="hero" themeColor="deepOcean" style={styles.cardValue}>
+      <TextHeading variant="hero" themeColor="deepOcean" className="mt-half">
         {valueLabel}
       </TextHeading>
-      <TextLabel variant="meta" themeColor="textSecondary" style={styles.cardCaption}>
+      <TextLabel variant="meta" themeColor="textSecondary" className="text-center lowercase tracking-[0.2px]">
         {valueCaption}
       </TextLabel>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  chipRow: {
-    gap: Spacing.sm,
-    paddingRight: Spacing.md,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    maxWidth: 220,
-  },
-  chipPressed: {
-    opacity: 0.9,
-  },
-  wrapper: {
-    gap: Spacing.sm,
-  },
-  header: {
-    gap: Spacing.xs,
-  },
-  row: {
-    gap: Spacing.sm,
-    paddingRight: Spacing.md,
-  },
-  card: {
-    width: 112,
-    minHeight: 132,
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  cardPressed: {
-    opacity: 0.9,
-  },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardLabel: {
-    textAlign: 'center',
-    minHeight: 36,
-  },
-  cardValue: {
-    marginTop: Spacing.half,
-  },
-  cardCaption: {
-    textAlign: 'center',
-    letterSpacing: 0.2,
-    textTransform: 'lowercase',
-  },
-  viewAll: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    alignSelf: 'flex-start',
-    minHeight: 36,
-  },
-  viewAllPressed: {
-    opacity: 0.85,
-  },
-});

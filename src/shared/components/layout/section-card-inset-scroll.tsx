@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { ScrollView, type StyleProp, type ViewStyle } from 'react-native';
 
-import { SECTION_CARD_CONTENT_INSET } from '@/shared/components/layout/section-card';
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type SectionCardInsetScrollProps = {
   children: ReactNode;
+  className?: string;
   style?: StyleProp<ViewStyle>;
+  contentClassName?: string;
   contentContainerStyle?: StyleProp<ViewStyle>;
 };
 
@@ -15,28 +16,21 @@ export type SectionCardInsetScrollProps = {
  */
 export function SectionCardInsetScroll({
   children,
+  className,
   style,
+  contentClassName,
   contentContainerStyle,
 }: SectionCardInsetScrollProps) {
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={[styles.bleed, style]}
-      contentContainerStyle={[styles.content, contentContainerStyle]}
+      className={cn('-mx-lg', className)}
+      style={style}
+      contentContainerClassName={cn('gap-sm px-lg py-xs', contentClassName)}
+      contentContainerStyle={contentContainerStyle}
     >
       {children}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  bleed: {
-    marginHorizontal: -SECTION_CARD_CONTENT_INSET,
-  },
-  content: {
-    gap: Spacing.sm,
-    paddingHorizontal: SECTION_CARD_CONTENT_INSET,
-    paddingVertical: Spacing.xs,
-  },
-});

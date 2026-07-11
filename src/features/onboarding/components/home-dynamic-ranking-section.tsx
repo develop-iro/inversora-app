@@ -12,7 +12,7 @@ import type { RankingThemeOption } from '@/features/onboarding/utils/build-ranki
 import { DISCLAIMER_RANKING_EDUCATIONAL } from '@/features/legal/constants/disclaimer-snippets';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { TextParagraph } from '@/shared/components/text';
-import { ContentEmptyState } from '@/shared/components/ui';
+import { ContentEmptyState, ReloadState, SkeletonShimmerProvider } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
 
@@ -79,11 +79,13 @@ export function HomeDynamicRankingSection({
   if (loadState === 'loading') {
     return (
       <HomeSectionCard title={title} summary={summary} headerPlacement="inside">
-        <View className="gap-sm pt-half">
-          {Array.from({ length: skeletonRows }, (_, index) => (
-            <HomeRankingRow key={`ranking-loading-${index}`} loading />
-          ))}
-        </View>
+        <SkeletonShimmerProvider>
+          <View className="gap-sm pt-half">
+            {Array.from({ length: skeletonRows }, (_, index) => (
+              <HomeRankingRow key={`ranking-loading-${index}`} loading />
+            ))}
+          </View>
+        </SkeletonShimmerProvider>
       </HomeSectionCard>
     );
   }
@@ -91,11 +93,9 @@ export function HomeDynamicRankingSection({
   if (loadState === 'error') {
     return (
       <HomeSectionCard title={title} summary={summary} headerPlacement="inside">
-        <ContentEmptyState
-          icon="chart-timeline-variant-shimmer"
+        <ReloadState
           title="El ranking no ha podido cargarse"
           message="Puede ser un problema temporal de conexión. Inténtalo de nuevo en unos segundos."
-          actionLabel="Reintentar"
           onAction={onRetry}
         />
       </HomeSectionCard>
@@ -118,7 +118,6 @@ export function HomeDynamicRankingSection({
 
       {loadState === 'empty' || (result && result.funds.length === 0) ? (
         <ContentEmptyState
-          icon={hasQuery ? 'magnify-close' : 'finance'}
           title={hasQuery ? 'Sin coincidencias en el ranking' : 'Sin fondos en esta temática'}
           message={
             hasQuery
@@ -137,7 +136,7 @@ export function HomeDynamicRankingSection({
                     router.push(routes.fundsCatalog);
                   }
           }
-          className="self-stretch py-lg"
+          className="self-stretch"
         />
       ) : null}
 
@@ -161,13 +160,9 @@ export function HomeDynamicRankingSection({
         accessibilityLabel="Ver ranking completo"
         accessibilityHint="Navega al listado completo de fondos"
         onPress={() => {
-          router.push(routes.fundsCatalog);
+          router.push(routes.rankings);
         }}
-        className="mt-xs min-h-[44px] flex-row items-center gap-xs self-start rounded-pill border px-md py-sm active:opacity-[0.85]"
-        style={{
-          borderColor: theme.primary,
-          backgroundColor: theme.backgroundSoft,
-        }}
+        className="mt-xs min-h-[44px] flex-row items-center gap-xs self-start rounded-pill border border-primary bg-background-soft px-md py-sm active:opacity-[0.85]"
       >
         <TextParagraph variant="secondary" themeColor="primary" className="leading-5">
           Ver ranking completo

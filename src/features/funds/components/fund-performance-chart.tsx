@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useMemo, useState } from 'react';
-import { Platform, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { Platform, View, type LayoutChangeEvent } from 'react-native';
 
 import type { FundPerformancePoint } from '@/core/domain/fund-market';
 import {
@@ -20,7 +20,8 @@ import { DISCLAIMER_PAST_PERFORMANCE } from '@/features/legal/constants/disclaim
 import { useTheme } from '@/shared/hooks/use-theme';
 import { useThemeGradients } from '@/shared/hooks/use-theme-gradients';
 import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
-import { Radius, Size, Spacing, Typography } from '@/shared/theme/theme';
+import { Size, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 const CHART_HEIGHT = 176;
 const Y_AXIS_WIDTH = 40;
@@ -34,6 +35,7 @@ export type FundPerformanceChartProps = {
   points: FundPerformancePoint[];
   navBase: number;
   accessibilityLabel: string;
+  className?: string;
 };
 
 type ChartSegmentProps = {
@@ -60,17 +62,16 @@ function ChartSegment({ startX, startY, endX, endY, color }: ChartSegmentProps) 
   return (
     <View
       pointerEvents="none"
-      style={[
-        styles.segment,
-        {
-          width: length,
-          height: LINE_THICKNESS,
-          left: centerX - length / 2,
-          top: centerY - LINE_THICKNESS / 2,
-          backgroundColor: color,
-          transform: [{ rotate: angle }],
-        },
-      ]}
+      className="absolute rounded-full"
+      // tailwind-exception: chart segment geometry is computed at runtime
+      style={{
+        width: length,
+        height: LINE_THICKNESS,
+        left: centerX - length / 2,
+        top: centerY - LINE_THICKNESS / 2,
+        backgroundColor: color,
+        transform: [{ rotate: angle }],
+      }}
     />
   );
 }
@@ -109,6 +110,7 @@ export function FundPerformanceChart({
   points,
   navBase,
   accessibilityLabel,
+  className,
 }: FundPerformanceChartProps) {
   const theme = useTheme();
   const gradients = useThemeGradients();
@@ -193,17 +195,21 @@ export function FundPerformanceChart({
       accessibilityRole="adjustable"
       accessibilityLabel={liveA11yLabel}
       accessibilityHint="Desliza o pasa el cursor sobre el gráfico para ver el valor liquidativo en cada fecha"
-      style={[styles.wrapper, { backgroundColor: theme.backgroundSoft }]}
+      className={cn('w-full gap-xs overflow-hidden rounded-card bg-background-soft py-sm', className)}
     >
-      <View style={styles.chartRow}>
-        <View style={[styles.yAxis, { width: Y_AXIS_WIDTH, height: CHART_HEIGHT }]}>
+      <View className="flex-row items-stretch">
+        <View
+          className="justify-between py-2 pr-xs"
+          // tailwind-exception: y-axis width is fixed for chart layout
+          style={{ width: Y_AXIS_WIDTH, height: CHART_HEIGHT }}
+        >
           {hasChart
             ? yAxisNavTicks.map((tick) => (
                 <TextLabel
                   key={tick}
                   variant="meta"
                   themeColor="textSecondary"
-                  style={styles.yAxisLabel}
+                  className="text-right font-display text-chartAxis"
                 >
                   {tick.toFixed(1).replace('.', ',')}
                 </TextLabel>
@@ -212,7 +218,9 @@ export function FundPerformanceChart({
         </View>
 
         <View
-          style={[styles.plotArea, { height: CHART_HEIGHT }]}
+          className="min-w-0 flex-1"
+          // tailwind-exception: plot height is fixed for chart geometry
+          style={{ height: CHART_HEIGHT }}
           onLayout={handlePlotLayout}
           onStartShouldSetResponder={() => true}
           onMoveShouldSetResponder={() => true}
@@ -223,11 +231,15 @@ export function FundPerformanceChart({
           {...webPointerHandlers}
         >
           {hasChart ? (
-            <View style={[styles.canvas, { width: plotWidth, height: CHART_HEIGHT }]}>
+            <View
+              className="relative overflow-hidden"
+              // tailwind-exception: canvas size matches measured plot width
+              style={{ width: plotWidth, height: CHART_HEIGHT }}
+            >
               <LinearGradient
                 pointerEvents="none"
                 colors={[...chartAreaFill.colors]}
-                style={styles.areaFill}
+                className="absolute inset-0"
               />
               {chartGeometry.coordinates.slice(1).map((end, index) => {
                 const start = chartGeometry.coordinates[index];
@@ -247,31 +259,34 @@ export function FundPerformanceChart({
                 <>
                   <View
                     pointerEvents="none"
-                    style={[
-                      styles.crosshair,
-                      {
-                        left: activeCoordinate.x - CROSSHAIR_WIDTH / 2,
-                        height: CHART_HEIGHT - CHART_PADDING,
-                        backgroundColor: theme.chartCrosshair,
-                      },
-                    ]}
+                    className="absolute"
+                    // tailwind-exception: crosshair position follows active data point
+                    style={{
+                      left: activeCoordinate.x - CROSSHAIR_WIDTH / 2,
+                      top: CHART_PADDING,
+                      height: CHART_HEIGHT - CHART_PADDING,
+                      width: CROSSHAIR_WIDTH,
+                      backgroundColor: theme.chartCrosshair,
+                    }}
                   />
                   <View
                     pointerEvents="none"
-                    style={[
-                      styles.activeDot,
-                      {
-                        left: activeCoordinate.x - ACTIVE_DOT_SIZE / 2,
-                        top: activeCoordinate.y - ACTIVE_DOT_SIZE / 2,
-                        backgroundColor: theme.primary,
-                        borderColor: theme.surface,
-                      },
-                    ]}
+                    className="absolute rounded-full border-2"
+                    // tailwind-exception: active dot position follows scrub index
+                    style={{
+                      left: activeCoordinate.x - ACTIVE_DOT_SIZE / 2,
+                      top: activeCoordinate.y - ACTIVE_DOT_SIZE / 2,
+                      width: ACTIVE_DOT_SIZE,
+                      height: ACTIVE_DOT_SIZE,
+                      backgroundColor: theme.primary,
+                      borderColor: theme.surface,
+                    }}
                   />
                   <View
                     pointerEvents="none"
+                    className="absolute min-w-[120px] gap-half rounded-chip border border-primary bg-surface px-sm py-xs"
+                    // tailwind-exception: tooltip position tracks crosshair within plot bounds
                     style={[
-                      styles.valueTooltip,
                       shadows.tooltip,
                       {
                         left: Math.min(
@@ -279,15 +294,13 @@ export function FundPerformanceChart({
                           plotWidth - 148,
                         ),
                         top: Math.max(activeCoordinate.y - 52, Spacing.xs),
-                        backgroundColor: theme.surface,
-                        borderColor: theme.primary,
                       },
                     ]}
                   >
                     <TextLabel variant="meta" themeColor="textSecondary">
                       Valor liquidativo
                     </TextLabel>
-                    <TextParagraph variant="emphasis" style={{ color: theme.deepOcean }}>
+                    <TextParagraph variant="emphasis" themeColor="deepOcean">
                       {formatNavCurrency(activeNav ?? 0)}
                     </TextParagraph>
                   </View>
@@ -295,13 +308,17 @@ export function FundPerformanceChart({
               ) : null}
             </View>
           ) : (
-            <View style={[styles.placeholder, { backgroundColor: theme.surfaceMuted }]} />
+            <View className="min-h-[176px] flex-1 rounded-card bg-surface-muted" />
           )}
         </View>
       </View>
 
       {hasChart ? (
-        <View style={[styles.xAxisRow, { marginLeft: Y_AXIS_WIDTH }]}>
+        <View
+          className="relative mr-sm mt-xs"
+          // tailwind-exception: x-axis row aligns with y-axis gutter
+          style={{ marginLeft: Y_AXIS_WIDTH, height: X_AXIS_HEIGHT }}
+        >
           {xAxisLabels.map(({ index, label }) => {
             const ratio = index / Math.max(renderPoints.length - 1, 1);
             return (
@@ -309,7 +326,12 @@ export function FundPerformanceChart({
                 key={`${label}-${index}`}
                 variant="meta"
                 themeColor="textSecondary"
-                style={[styles.xAxisLabel, { left: `${ratio * 100}%` }]}
+                className="absolute min-w-8 text-center font-display text-chartAxis"
+                // tailwind-exception: axis labels are positioned by data index ratio
+                style={{
+                  left: `${ratio * 100}%`,
+                  transform: [{ translateX: -Size.iconLg }],
+                }}
               >
                 {label}
               </TextLabel>
@@ -321,116 +343,23 @@ export function FundPerformanceChart({
       {activePoint ? (
         <View
           pointerEvents="none"
-          style={[
-            styles.dateChip,
-            {
-              marginLeft: Y_AXIS_WIDTH,
-              backgroundColor: theme.deepOcean,
-            },
-          ]}
+          className="mt-xs self-start rounded-chip bg-deep-ocean px-sm py-xs"
+          // tailwind-exception: date chip aligns with y-axis gutter
+          style={{ marginLeft: Y_AXIS_WIDTH, marginHorizontal: Spacing.sm }}
         >
-          <TextLabel variant="meta" style={{ color: theme.surface }}>
+          <TextLabel variant="meta" themeColor="surface">
             {formatChartTooltipDate(activePoint.date)}
           </TextLabel>
         </View>
       ) : (
-        <TextLabel variant="meta" themeColor="textSecondary" style={styles.hint}>
+        <TextLabel variant="meta" themeColor="textSecondary" className="mx-sm mt-xs">
           Valores liquidativos en EUR · Toca o desliza el gráfico para explorar
         </TextLabel>
       )}
 
-      <TextLegal themeColor="textSecondary" style={styles.hint}>
+      <TextLegal themeColor="textSecondary" className="mx-sm mt-xs">
         {DISCLAIMER_PAST_PERFORMANCE}
       </TextLegal>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    width: '100%',
-    borderRadius: Radius.card,
-    overflow: 'hidden',
-    paddingVertical: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  chartRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-  },
-  yAxis: {
-    justifyContent: 'space-between',
-    paddingVertical: CHART_PADDING,
-    paddingRight: Spacing.xs,
-  },
-  yAxisLabel: {
-    ...Typography.chartAxis,
-    textAlign: 'right',
-  },
-  plotArea: {
-    flex: 1,
-    minWidth: 0,
-  },
-  canvas: {
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  areaFill: {
-    ...StyleSheet.absoluteFill,
-  },
-  segment: {
-    position: 'absolute',
-    borderRadius: LINE_THICKNESS / 2,
-  },
-  crosshair: {
-    position: 'absolute',
-    top: CHART_PADDING,
-    width: CROSSHAIR_WIDTH,
-  },
-  activeDot: {
-    position: 'absolute',
-    width: ACTIVE_DOT_SIZE,
-    height: ACTIVE_DOT_SIZE,
-    borderRadius: ACTIVE_DOT_SIZE / 2,
-    borderWidth: 2,
-  },
-  valueTooltip: {
-    position: 'absolute',
-    minWidth: 120,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radius.chip,
-    borderWidth: 1,
-    gap: Spacing.half,
-  },
-  placeholder: {
-    flex: 1,
-    minHeight: CHART_HEIGHT,
-    borderRadius: Radius.card,
-  },
-  xAxisRow: {
-    position: 'relative',
-    height: X_AXIS_HEIGHT,
-    marginTop: Spacing.xs,
-    marginRight: Spacing.sm,
-  },
-  xAxisLabel: {
-    position: 'absolute',
-    ...Typography.chartAxis,
-    transform: [{ translateX: -Size.iconLg }],
-    minWidth: Size.iconLg,
-    textAlign: 'center',
-  },
-  dateChip: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.xs,
-    marginHorizontal: Spacing.sm,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radius.chip,
-  },
-  hint: {
-    marginHorizontal: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-});

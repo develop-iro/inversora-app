@@ -1,17 +1,17 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import type {
   HeaderActionId,
   HeaderActionPresentation,
 } from '@/shared/components/headers/header-types';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Size, Spacing, Typography } from '@/shared/theme/theme';
+import { Size } from '@/shared/theme/theme';
+import { typographyClassNames } from '@/shared/nativewind/theme-classes';
+import { cn } from '@/shared/utils/cn';
 
-const HEADER_ACTION_ICON_SIZE = Size.headerActionIcon;
 const HEADER_ACTION_GLYPH_SIZE = Size.headerActionGlyph;
-const HEADER_CAPTION_GAP = Spacing.threeQuarter;
 
 type HeaderActionIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -41,6 +41,7 @@ export type HeaderActionProps = {
   onPress: () => void;
   presentation?: HeaderActionPresentation;
   accessibilityLabel?: string;
+  className?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -52,9 +53,10 @@ export function HeaderAction({
   onPress,
   presentation = 'compact',
   accessibilityLabel,
+  className,
   style,
 }: HeaderActionProps) {
-  const theme = useTheme();
+  const theme = useTheme(); // tailwind-exception: icon colors
   const label = accessibilityLabel ?? ACTION_A11Y_LABEL[action];
   const hint =
     action === 'learn'
@@ -65,16 +67,16 @@ export function HeaderAction({
 
   if (presentation === 'caption') {
     return (
-      <View style={[styles.actionColumn, style]}>
+      <View className={cn('shrink-0 items-center gap-[3px]', className)} style={style}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={label}
           accessibilityHint={hint}
           onPress={onPress}
           hitSlop={8}
-          style={({ pressed }) => [styles.captionRoot, pressed && styles.pressed]}
+          className="items-center justify-center active:opacity-[0.82]"
         >
-          <View style={[styles.captionIconCircle, { backgroundColor: theme.deepOceanSurfaceSubtle }]}>
+          <View className="h-[34px] w-[34px] items-center justify-center rounded-full bg-deep-ocean-surface-subtle">
             <MaterialCommunityIcons
               name={ACTION_ICON[action]}
               size={HEADER_ACTION_GLYPH_SIZE}
@@ -83,7 +85,7 @@ export function HeaderAction({
           </View>
         </Pressable>
         <Text
-          style={[styles.actionCaption, { color: theme.deepOcean }]}
+          className={cn(typographyClassNames.micro, 'text-center text-deep-ocean leading-3')}
           importantForAccessibility="no"
           accessibilityElementsHidden
         >
@@ -100,15 +102,11 @@ export function HeaderAction({
       accessibilityHint={hint}
       onPress={onPress}
       hitSlop={8}
-      style={({ pressed }) => [
-        styles.compactButton,
-        {
-          backgroundColor: theme.surface,
-          borderColor: theme.border,
-        },
-        pressed && styles.pressed,
-        style,
-      ]}
+      className={cn(
+        'h-10 w-10 items-center justify-center rounded-full border border-border bg-surface active:opacity-[0.82]',
+        className,
+      )}
+      style={style}
     >
       <MaterialCommunityIcons
         name={ACTION_ICON[action]}
@@ -118,38 +116,3 @@ export function HeaderAction({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  compactButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  captionRoot: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  captionIconCircle: {
-    width: HEADER_ACTION_ICON_SIZE,
-    height: HEADER_ACTION_ICON_SIZE,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionColumn: {
-    alignItems: 'center',
-    gap: HEADER_CAPTION_GAP,
-    flexShrink: 0,
-  },
-  actionCaption: {
-    ...Typography.micro,
-    lineHeight: Typography.chartAxis.lineHeight,
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.82,
-  },
-});

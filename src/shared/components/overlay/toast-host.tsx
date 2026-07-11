@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useToastStore } from '@/core/overlay/toast-store';
@@ -20,12 +20,12 @@ export function ToastHost() {
   return (
     <View
       pointerEvents="box-none"
-      style={[
-        styles.host,
-        {
-          bottom: insets.bottom + Spacing.md,
-        },
-      ]}
+      className="absolute left-md right-md z-[1000] gap-sm"
+      // tailwind-exception: safe-area bottom inset is runtime-only
+      style={{
+        bottom: insets.bottom + Spacing.md,
+        elevation: 1000,
+      }}
     >
       {toasts.map((entry) => (
         <ToastView key={entry.id} entry={entry} onDismiss={dismiss} />
@@ -33,14 +33,3 @@ export function ToastHost() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  host: {
-    position: 'absolute',
-    left: Spacing.md,
-    right: Spacing.md,
-    gap: Spacing.sm,
-    zIndex: 1000,
-    elevation: 1000,
-  },
-});

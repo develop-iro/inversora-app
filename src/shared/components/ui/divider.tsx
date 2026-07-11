@@ -1,7 +1,6 @@
-import { StyleSheet, View, type ViewProps } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type DividerProps = ViewProps & {
   /** Vertical space above and below the line. */
@@ -10,38 +9,31 @@ export type DividerProps = ViewProps & {
   insetStart?: number;
   /** Indent from the end edge. */
   insetEnd?: number;
+  className?: string;
 };
 
 export function Divider({
-  spacing = Spacing.lg,
+  spacing,
   insetStart = 0,
   insetEnd = 0,
+  className,
   style,
   ...viewProps
 }: DividerProps) {
-  const theme = useTheme();
-
   return (
     <View
+      className={cn('self-stretch', spacing === 0 ? undefined : spacing === undefined ? 'my-lg' : undefined, className)}
       style={[
-        styles.wrapper,
-        { marginVertical: spacing, marginStart: insetStart, marginEnd: insetEnd },
+        spacing !== undefined && spacing !== 0 ? { marginVertical: spacing } : undefined,
+        insetStart !== 0 || insetEnd !== 0
+          ? { marginStart: insetStart, marginEnd: insetEnd }
+          : undefined,
         style,
       ]}
       accessibilityRole="none"
-      {...viewProps}>
-      <View style={[styles.line, { backgroundColor: theme.border }]} />
+      {...viewProps}
+    >
+      <View className="h-px min-h-[1px] w-full bg-border" />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    alignSelf: 'stretch',
-  },
-  line: {
-    height: StyleSheet.hairlineWidth,
-    minHeight: 1,
-    width: '100%',
-  },
-});

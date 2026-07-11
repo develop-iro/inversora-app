@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { ExposureTabId, FundDetailProfile } from '@/core/domain/fund-detail-profile';
 import { FundDetailSectionEmptyState } from '@/features/funds/components/detail/fund-detail-section-empty-state';
@@ -8,7 +8,6 @@ import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { TextParagraph } from '@/shared/components/text';
 import { AllocationBarList, TabHeader } from '@/shared/components/ui';
 import { getExposureTabsWithData } from '@/features/funds/utils/fund-detail-presentation';
-import { Spacing } from '@/shared/theme/theme';
 
 const EXPOSURE_TAB_LABELS: Record<ExposureTabId, string> = {
   sectorial: 'Sectorial',
@@ -57,11 +56,11 @@ export function FundDetailExposureSection({ profile }: FundDetailExposureSection
         accessibilityLabel="Tipo de exposición del fondo"
       />
 
-      <TextParagraph variant="emphasis" style={styles.subtitle}>
+      <TextParagraph variant="emphasis" className="mt-sm">
         {EXPOSURE_SUBTITLES[activeTab]}
       </TextParagraph>
 
-      <View style={styles.panel}>
+      <View className="pt-xs">
         {slices.length > 0 ? (
           <AllocationBarList slices={slices} />
         ) : (
@@ -71,12 +70,3 @@ export function FundDetailExposureSection({ profile }: FundDetailExposureSection
     </FundDetailSectionShell>
   );
 }
-
-const styles = StyleSheet.create({
-  subtitle: {
-    marginTop: Spacing.sm,
-  },
-  panel: {
-    paddingTop: Spacing.xs,
-  },
-});

@@ -1,5 +1,4 @@
 import type { CatalogFund } from '@/core/domain/catalog';
-import type { RiskLevel } from '@/core/domain/fund';
 
 import { apiGet } from '@/core/api/client';
 import { shouldUseMockData } from '@/core/config/app-environment';
@@ -92,6 +91,13 @@ function toFundsFetchError(error: unknown): AppError {
 }
 
 /**
+ * Returns true when the active sort is return-based.
+ */
+function isReturnBasedCatalogSort(filters?: FundCatalogFilters): boolean {
+  return filters?.sortBy === 'return1y';
+}
+
+/**
  * Applies filters that the API cannot express (risk ranges).
  *
  * @param funds - Funds returned by the API.
@@ -101,15 +107,16 @@ export function applyClientOnlyCatalogFilters(
   funds: CatalogFund[],
   filters?: FundCatalogFilters,
 ): CatalogFund[] {
-  if (!filters?.riskLevel || filters.riskLevel === 'all') {
-    return [...funds].sort((left, right) => right.inversoraScore - left.inversoraScore);
+  const filtered =
+    !filters?.riskLevel || filters.riskLevel === 'all'
+      ? funds
+      : funds.filter((fund) => fund.riskLevel === filters.riskLevel);
+
+  if (isReturnBasedCatalogSort(filters) || filters?.minReturnPercent != null) {
+    return [...filtered];
   }
 
-  const riskLevel: RiskLevel = filters.riskLevel;
-
-  return funds
-    .filter((fund) => fund.riskLevel === riskLevel)
-    .sort((left, right) => right.inversoraScore - left.inversoraScore);
+  return [...filtered].sort((left, right) => right.inversoraScore - left.inversoraScore);
 }
 
 function getMockCatalogFunds(filters?: FundCatalogFilters): CatalogFund[] {

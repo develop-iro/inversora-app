@@ -2,12 +2,16 @@ import type { RiskLevel } from '@/core/domain/fund';
 import type { CatalogSortState } from '@/features/funds/types/catalog-sort';
 import { DEFAULT_CATALOG_SORT } from '@/features/funds/types/catalog-sort';
 
+export type CatalogReturnPeriod = '1y' | '3y';
+
 export type FundCatalogFilters = {
   query?: string;
   riskLevel?: RiskLevel | 'all';
   categoryLabel?: string | 'all';
   maxTerPercent?: number | null;
   minScore?: number | null;
+  minReturnPercent?: number | null;
+  returnPeriod?: CatalogReturnPeriod;
   idealForBeginnersOnly?: boolean;
   sortBy?: CatalogSortState['sortBy'];
   sortOrder?: CatalogSortState['sortOrder'];
@@ -20,6 +24,8 @@ export type FundCatalogFiltersState = {
   categoryLabel: string | 'all';
   maxTerPercent: number | null;
   minScore: number | null;
+  minReturnPercent: number | null;
+  returnPeriod: CatalogReturnPeriod;
   idealForBeginnersOnly: boolean;
   sortBy: CatalogSortState['sortBy'];
   sortOrder: CatalogSortState['sortOrder'];
@@ -31,6 +37,8 @@ export const DEFAULT_CATALOG_FILTERS: FundCatalogFiltersState = {
   categoryLabel: 'all',
   maxTerPercent: null,
   minScore: null,
+  minReturnPercent: null,
+  returnPeriod: '1y',
   idealForBeginnersOnly: false,
   sortBy: DEFAULT_CATALOG_SORT.sortBy,
   sortOrder: DEFAULT_CATALOG_SORT.sortOrder,
@@ -53,6 +61,8 @@ export function toServiceFilters(state: FundCatalogFiltersState): FundCatalogFil
     categoryLabel: state.categoryLabel,
     maxTerPercent: state.maxTerPercent,
     minScore: state.minScore,
+    minReturnPercent: state.minReturnPercent,
+    returnPeriod: state.returnPeriod,
     idealForBeginnersOnly: state.idealForBeginnersOnly,
     sortBy: state.sortBy,
     sortOrder: state.sortOrder,

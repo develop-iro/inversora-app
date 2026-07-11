@@ -1,42 +1,50 @@
-import { StyleSheet, View } from 'react-native';
+import type { ReactNode } from 'react';
 
-import { TextParagraph } from '@/shared/components/text';
-import { Button } from '@/shared/components/ui';
-import { Spacing } from '@/shared/theme/theme';
+import { ReloadState, type ReloadStateLayout } from '@/shared/components/ui/reload-state';
+import type { StatusIconVariant } from '@/shared/components/ui/status-icon-tokens';
+import { cn } from '@/shared/utils/cn';
 
 export type FundApiErrorStateProps = {
   title: string;
   message: string;
   onRetry?: () => void;
   retryLabel?: string;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
+  variant?: StatusIconVariant;
+  layout?: ReloadStateLayout;
+  children?: ReactNode;
+  className?: string;
 };
 
+/**
+ * Funds-domain wrapper around the shared reload state.
+ */
 export function FundApiErrorState({
   title,
   message,
   onRetry,
   retryLabel = 'Reintentar',
+  secondaryActionLabel,
+  onSecondaryAction,
+  variant = 'error',
+  layout = 'screen',
+  children,
+  className,
 }: FundApiErrorStateProps) {
   return (
-    <View style={styles.wrapper} accessibilityRole="alert">
-      <TextParagraph variant="emphasis">{title}</TextParagraph>
-      <TextParagraph variant="secondary" themeColor="textSecondary">
-        {message}
-      </TextParagraph>
-      {onRetry ? (
-        <Button label={retryLabel} variant="outline" onPress={onRetry} style={styles.retry} />
-      ) : null}
-    </View>
+    <ReloadState
+      title={title}
+      message={message}
+      actionLabel={retryLabel}
+      onAction={onRetry}
+      secondaryActionLabel={secondaryActionLabel}
+      onSecondaryAction={onSecondaryAction}
+      variant={variant}
+      layout={layout}
+      className={cn(className)}
+    >
+      {children}
+    </ReloadState>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xl,
-  },
-  retry: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.xs,
-  },
-});

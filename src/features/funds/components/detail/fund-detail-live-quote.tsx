@@ -1,17 +1,18 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { FundLiveMarketSnapshot } from '@/core/domain/fund-live-market';
 import { TextParagraph } from '@/shared/components/text';
 import { Spinner } from '@/shared/components/ui';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 import { formatReturnPercent } from '@/shared/utils/format-return-percent';
+import { cn } from '@/shared/utils/cn';
 
 export type FundDetailLiveQuoteProps = {
   snapshot: FundLiveMarketSnapshot | null;
   isLoading: boolean;
+  className?: string;
 };
 
 function formatAsOfLabel(snapshot: FundLiveMarketSnapshot): string {
@@ -66,12 +67,16 @@ function buildHeadline(snapshot: FundLiveMarketSnapshot): string {
 export function FundDetailLiveQuote({
   snapshot,
   isLoading,
+  className,
 }: FundDetailLiveQuoteProps) {
   const theme = useTheme();
 
   if (isLoading) {
     return (
-      <View style={styles.row} accessibilityLabel="Cargando cotización reciente">
+      <View
+        className={cn('flex-row items-center gap-xs', className)}
+        accessibilityLabel="Cargando cotización reciente"
+      >
         <Spinner.BarChart size="sm" />
         <TextParagraph variant="secondary" themeColor="textSecondary">
           Actualizando cotización…
@@ -93,11 +98,14 @@ export function FundDetailLiveQuote({
 
   return (
     <View
-      style={[styles.container, { borderColor: theme.border, backgroundColor: theme.surfaceMuted }]}
+      className={cn(
+        'gap-xs rounded-card border border-border bg-surface-muted px-md py-sm',
+        className,
+      )}
       accessibilityRole="text"
       accessibilityLabel={`${headline}. ${freshnessLabel}. ${FUND_GLOSSARY.pastPerformance.explanation}`}
     >
-      <View style={styles.row}>
+      <View className="flex-row items-center gap-xs">
         {snapshot.changePercent !== null ? (
           <MaterialCommunityIcons
             name={trendUp ? 'pulse' : 'chart-line-variant'}
@@ -107,7 +115,7 @@ export function FundDetailLiveQuote({
             importantForAccessibility="no"
           />
         ) : null}
-        <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.headline}>
+        <TextParagraph variant="secondary" themeColor="textSecondary" className="flex-1">
           {headline}
         </TextParagraph>
       </View>
@@ -118,21 +126,3 @@ export function FundDetailLiveQuote({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  headline: {
-    flex: 1,
-  },
-});

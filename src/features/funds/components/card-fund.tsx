@@ -5,7 +5,6 @@ import {
   Easing,
   Platform,
   Pressable,
-  StyleSheet,
   View,
   type StyleProp,
   type ViewStyle,
@@ -28,17 +27,14 @@ import { useTheme } from '@/shared/hooks/use-theme';
 import { isWeb } from '@/shared/platform/capabilities';
 import { getEfficiencyBadgeVariant, getEfficiencyLabel } from '@/shared/utils/fund-efficiency';
 import { getRiskBadgeVariant, getRiskLabel } from '@/shared/utils/fund-risk';
-import { Radius, Size, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 import type { WithLoading } from '@/shared/types/component-loading';
-
-const CARD_INSET = Spacing.lg;
-const SECTION_GAP = Spacing.md;
-const METRICS_GAP = Spacing.sm;
 
 type CardFundLayout = 'default' | 'compact';
 
 type CardFundContentProps = {
   fund: FundSummarySource;
+  className?: string;
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
   onInteractionStart?: () => void;
@@ -50,33 +46,32 @@ type CardFundContentProps = {
 
 export type CardFundProps = WithLoading<
   CardFundContentProps,
-  Pick<CardFundContentProps, 'style' | 'layout'>
+  Pick<CardFundContentProps, 'className' | 'style' | 'layout'>
 >;
 
 function CardFundLoading({
+  className,
   style,
   layout = 'default',
-}: Pick<CardFundContentProps, 'style' | 'layout'>) {
+}: Pick<CardFundContentProps, 'className' | 'style' | 'layout'>) {
   if (layout === 'compact') {
     return (
-      <SkeletonShimmerProvider>
-        <View accessibilityLabel="Cargando ficha de fondo" style={style}>
-          <SkeletonPanel style={styles.loadingCompactCard}>
-            <View style={styles.loadingCompactTopRow}>
-              <SkeletonBone width={36} height={36} borderRadius={Radius.image} />
-              <SkeletonBone width={18} height={18} borderRadius={Radius.full} />
-            </View>
-            <SkeletonTextBlock
-              gap={Spacing.xs}
-              lines={[
-                { width: '56%', height: 14 },
-                { width: '88%', height: 10 },
-              ]}
-            />
-            <SkeletonBone width={52} height={24} borderRadius={Radius.full} />
-          </SkeletonPanel>
-        </View>
-      </SkeletonShimmerProvider>
+      <View accessibilityLabel="Cargando ficha de fondo" className={className} style={style}>
+        <SkeletonPanel style={{ flex: 1, minHeight: 118 }}>
+          <View className="flex-row items-start justify-between">
+            <SkeletonBone width={36} height={36} borderRadius={6} />
+            <SkeletonBone width={18} height={18} borderRadius={9999} />
+          </View>
+          <SkeletonTextBlock
+            gap={4}
+            lines={[
+              { width: '56%', height: 14 },
+              { width: '88%', height: 10 },
+            ]}
+          />
+          <SkeletonBone width={52} height={24} borderRadius={9999} />
+        </SkeletonPanel>
+      </View>
     );
   }
 
@@ -84,19 +79,20 @@ function CardFundLoading({
     <SkeletonShimmerProvider>
       <Card
         variant="elevated"
-        style={[styles.card, styles.loadingCard, style]}
-        contentStyle={styles.cardContent}
+        className={cn('min-h-[420px] flex-1 rounded-card border border-border', className)}
+        contentClassName="p-0"
+        style={style}
         accessibilityLabel="Cargando ficha de fondo"
       >
-        <View style={styles.loadingDefaultBody}>
-          <SkeletonBone width={Size.iconXl} height={Size.iconXl} borderRadius={Radius.image} />
-          <View style={styles.loadingDefaultText}>
+        <View className="gap-lg p-lg">
+          <SkeletonBone width={40} height={40} borderRadius={6} />
+          <View className="gap-sm">
             <SkeletonBone width="72%" height={18} />
             <SkeletonBone width="48%" height={14} />
           </View>
-          <View style={styles.loadingMetricsRow}>
+          <View className="flex-row gap-md">
             <SkeletonBone width={72} height={36} />
-            <SkeletonBone width={88} height={28} borderRadius={Radius.chip} />
+            <SkeletonBone width={88} height={28} borderRadius={16} />
           </View>
           <SkeletonBone width="55%" height={14} />
         </View>
@@ -107,7 +103,7 @@ function CardFundLoading({
 
 export function CardFund(props: CardFundProps) {
   if (props.loading) {
-    return <CardFundLoading style={props.style} layout={props.layout} />;
+    return <CardFundLoading className={props.className} style={props.style} layout={props.layout} />;
   }
 
   return <CardFundContent {...props} />;
@@ -115,6 +111,7 @@ export function CardFund(props: CardFundProps) {
 
 function CardFundContent({
   fund,
+  className,
   style,
   onPress,
   onInteractionStart,
@@ -187,10 +184,7 @@ function CardFundContent({
 
   const favoriteControl =
     showFavorite ? (
-      <View
-        pointerEvents={onPress && isWeb ? 'auto' : undefined}
-        style={styles.favoriteSlot}
-      >
+      <View pointerEvents={onPress && isWeb ? 'auto' : undefined} className="shrink-0">
         <FavoriteToggleButton
           isin={fund.isin}
           isFavorite={isFavorite}
@@ -203,31 +197,27 @@ function CardFundContent({
   const cardBody = (
     <Card
       variant="elevated"
-      style={[
-        styles.card,
-        {
-          borderWidth: 1,
-          borderColor: theme.border,
-        },
-        hovered && styles.cardHovered,
-        supportsPointerHover && styles.cardWeb,
-      ]}
-      contentStyle={styles.cardContent}
+      className={cn(
+        'min-h-[420px] flex-1 rounded-card border border-border',
+        hovered && 'shadow-elevated',
+        supportsPointerHover && 'overflow-visible',
+      )}
+      contentClassName="p-0"
     >
-      <View style={styles.content}>
-        <View style={styles.topRow}>
-          <View style={[styles.toneBar, { backgroundColor: theme.primary }]} />
+      <View className="flex-1 flex-col gap-md p-lg">
+        <View className="flex-row items-center gap-sm">
+          <View className="h-1 min-w-0 flex-1 rounded-full bg-primary" />
           {favoriteControl}
         </View>
 
-        <View style={styles.headerTitleRow}>
+        <View className="flex-row items-center gap-md">
           <FundCardIcon
             size="md"
             symbol={fund.symbol}
             logoUrl={fund.logoUrl}
             accessibilityLabel={`Logo gestora de ${fund.name}`}
           />
-          <View style={styles.headerText}>
+          <View className="min-w-0 flex-1 gap-xs">
             <TextHeading variant="card" numberOfLines={2}>
               {fund.name}
             </TextHeading>
@@ -237,21 +227,21 @@ function CardFundContent({
           </View>
         </View>
 
-        <View style={styles.scoreRow}>
-          <View style={styles.metricPillSlot}>
-            <ScorePill score={score} style={styles.metricPill} />
+        <View className="flex-row items-stretch gap-sm">
+          <View className="min-w-0 flex-1">
+            <ScorePill score={score} className="w-full self-stretch" />
           </View>
-          <View style={styles.metricPillSlot}>
+          <View className="min-w-0 flex-1">
             <FundReturnChip
               variant="surface"
               label="1A hist."
               value={fund.returns.oneYear}
-              style={styles.metricPill}
+              className="w-full self-stretch"
             />
           </View>
         </View>
 
-        <View style={styles.metricsSection}>
+        <View className="gap-sm">
           <FundMetricBlock
             icon="tag-text-outline"
             label="Temática"
@@ -259,33 +249,33 @@ function CardFundContent({
             value={fund.themeLabel.trim() || '—'}
           />
 
-          <View style={styles.badgesRow}>
-            <View style={styles.badgeColumn}>
+          <View className="flex-row items-start gap-sm">
+            <View className="min-w-0 flex-1 items-start gap-xs">
               <TextLabel variant="meta" themeColor="textSecondary">
                 Riesgo
               </TextLabel>
               <Badge
                 label={riskLabel}
                 variant={getRiskBadgeVariant(fund.riskLevel)}
-                style={styles.badge}
+                className="max-w-full self-stretch"
               />
             </View>
-            <View style={styles.badgeColumn}>
+            <View className="min-w-0 flex-1 items-start gap-xs">
               <TextLabel variant="meta" themeColor="textSecondary">
                 Eficiencia
               </TextLabel>
               <Badge
                 label={efficiencyLabel}
                 variant={getEfficiencyBadgeVariant(score)}
-                style={styles.badge}
+                className="max-w-full self-stretch"
               />
             </View>
           </View>
         </View>
 
-        <View style={styles.footer}>
-          <View style={styles.moreWrap}>
-            <TextLabel variant="meta" style={[styles.more, { color: theme.primary }]}>
+        <View className="mt-auto flex-row items-center justify-end">
+          <View className="flex-row items-center gap-xs">
+            <TextLabel variant="meta" themeColor="primary" className="tracking-[0.8px]">
               Ver detalle
             </TextLabel>
             <MaterialCommunityIcons name="arrow-right" size={16} color={theme.primary} />
@@ -302,15 +292,19 @@ function CardFundContent({
   };
 
   return (
-    <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, styles.fill, style]}>
+    <Animated.View
+      className={cn('grow self-stretch', className)}
+      // tailwind-exception: Animated scale feedback requires transform
+      style={[{ transform: [{ scale: scaleAnim }] }, style]}
+    >
       {onPress ? (
         isWeb ? (
           <View
             {...(supportsPointerHover ? cardHoverProps : {})}
-            style={[
-              styles.pressableRoot,
-              supportsPointerHover && styles.cardWebCursor,
-            ]}
+            className={cn(
+              'relative flex-1 self-stretch',
+              supportsPointerHover && 'cursor-pointer',
+            )}
           >
             <Pressable
               {...pressableA11y}
@@ -319,9 +313,9 @@ function CardFundContent({
               onPressOut={handlePressOut}
               onFocus={handleFocus}
               onBlur={handleBlur}
-              style={({ pressed }) => [styles.detailHitArea, pressed && styles.pressablePressed]}
+              className="absolute inset-0 z-0 active:opacity-[0.97]"
             />
-            <View pointerEvents="none" style={styles.cardContentLayer}>
+            <View pointerEvents="none" className="z-[1] flex-1">
               {cardBody}
             </View>
           </View>
@@ -333,10 +327,7 @@ function CardFundContent({
             onPressOut={handlePressOut}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            style={({ pressed }) => [
-              styles.nativePressable,
-              pressed && styles.pressablePressed,
-            ]}
+            className="flex-1 self-stretch active:opacity-[0.97]"
           >
             {cardBody}
           </Pressable>
@@ -347,149 +338,3 @@ function CardFundContent({
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  fill: {
-    flexGrow: 1,
-    alignSelf: 'stretch',
-  },
-  card: {
-    flex: 1,
-    minHeight: 420,
-    borderRadius: Radius.card,
-  },
-  cardHovered: {
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  cardContent: {
-    flex: 1,
-    padding: 0,
-  },
-  pressableRoot: {
-    flex: 1,
-    alignSelf: 'stretch',
-    position: 'relative',
-  },
-  nativePressable: {
-    flex: 1,
-    alignSelf: 'stretch',
-  },
-  detailHitArea: {
-    ...StyleSheet.absoluteFill,
-    zIndex: 0,
-  },
-  cardContentLayer: {
-    flex: 1,
-    zIndex: 1,
-  },
-  favoriteSlot: {
-    flexShrink: 0,
-  },
-  pressablePressed: {
-    opacity: 0.97,
-  },
-  content: {
-    flex: 1,
-    flexDirection: 'column',
-    padding: CARD_INSET,
-    gap: SECTION_GAP,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  toneBar: {
-    flex: 1,
-    height: 4,
-    borderRadius: Radius.full,
-    minWidth: 0,
-  },
-  headerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  headerText: {
-    flex: 1,
-    gap: Spacing.xs,
-    minWidth: 0,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: Spacing.sm,
-  },
-  metricPillSlot: {
-    flex: 1,
-    minWidth: 0,
-  },
-  metricPill: {
-    alignSelf: 'stretch',
-    width: '100%',
-  },
-  metricsSection: {
-    gap: METRICS_GAP,
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-  },
-  badgeColumn: {
-    flex: 1,
-    gap: Spacing.xs,
-    minWidth: 0,
-    alignItems: 'flex-start',
-  },
-  badge: {
-    alignSelf: 'stretch',
-    maxWidth: '100%',
-  },
-  cardWeb: {
-    overflow: 'visible',
-  },
-  cardWebCursor: Platform.select({
-    web: { cursor: 'pointer' as const },
-    default: {},
-  }),
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: 'auto',
-  },
-  more: {
-    letterSpacing: 0.8,
-  },
-  moreWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  loadingCompactCard: {
-    flex: 1,
-    minHeight: 118,
-  },
-  loadingCompactTopRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  loadingCard: {
-    minHeight: 420,
-  },
-  loadingDefaultBody: {
-    gap: Spacing.lg,
-    padding: CARD_INSET,
-  },
-  loadingDefaultText: {
-    gap: Spacing.sm,
-  },
-  loadingMetricsRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-});

@@ -12,6 +12,8 @@ export type FundListApiQuery = {
   investmentTheme?: InvestmentTheme;
   maxTer?: number;
   minScore?: number;
+  minReturn1y?: number;
+  minReturn3y?: number;
   idealForBeginnersOnly?: boolean;
 };
 
@@ -87,6 +89,14 @@ export function mapCatalogFiltersToApiQuery(
 
   if (filters.idealForBeginnersOnly) {
     query.idealForBeginnersOnly = true;
+  }
+
+  if (filters.minReturnPercent != null) {
+    if (filters.returnPeriod === '3y') {
+      query.minReturn3y = filters.minReturnPercent;
+    } else {
+      query.minReturn1y = filters.minReturnPercent;
+    }
   }
 
   return query;

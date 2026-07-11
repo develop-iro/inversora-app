@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { memo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { FavoriteToggleButton } from '@/features/funds/components/favorite-toggle-button';
@@ -12,39 +12,40 @@ import {
 } from '@/features/funds/utils/fund-summary';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
-import { Badge, InfoHintTrigger, ScorePill, SkeletonBone, SkeletonPanel, SkeletonShimmerProvider, SkeletonTextBlock } from '@/shared/components/ui';
+import { Badge, InfoHintTrigger, ScorePill, SkeletonBone, SkeletonPanel, SkeletonTextBlock } from '@/shared/components/ui';
 import { InfoHintHost } from '@/shared/components/ui/info-hint-host';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { isWeb } from '@/shared/platform/capabilities';
 import { getEfficiencyBadgeVariant, getEfficiencyLabel } from '@/shared/utils/fund-efficiency';
 import { getRiskBadgeVariant, getRiskLabel } from '@/shared/utils/fund-risk';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 import type { WithLoading } from '@/shared/types/component-loading';
 
 type FundListRowContentProps = {
   fund: CatalogFund;
   onPress?: () => void;
+  className?: string;
 };
 
 export type FundListRowProps = WithLoading<FundListRowContentProps>;
 
 function FundListRowLoading() {
   return (
-    <SkeletonShimmerProvider>
-      <View accessibilityLabel="Cargando fila del catálogo">
-        <SkeletonPanel style={styles.loadingRow}>
-          <SkeletonBone width={40} height={40} borderRadius={Radius.image} />
+    <View accessibilityLabel="Cargando fila del catálogo">
+      <SkeletonPanel padded={false}>
+        <View className="flex-row items-center gap-md px-lg py-md">
+          <SkeletonBone width={40} height={40} borderRadius={6} />
           <SkeletonTextBlock
-            gap={Spacing.xs}
+            gap={4}
             lines={[
               { width: '72%', height: 14 },
               { width: '48%', height: 10 },
             ]}
           />
-          <SkeletonBone width={44} height={28} borderRadius={Radius.full} />
-        </SkeletonPanel>
-      </View>
-    </SkeletonShimmerProvider>
+          <SkeletonBone width={44} height={28} borderRadius={9999} />
+        </View>
+      </SkeletonPanel>
+    </View>
   );
 }
 
@@ -77,8 +78,8 @@ function FundListRowContent({
   return (
     <>
       <InfoHintHost>
-        <View style={styles.header}>
-          <View style={styles.titleBlock}>
+        <View className="gap-xs">
+          <View className="gap-half">
             {fund.rank != null ? (
               <TextLabel variant="meta" themeColor="deepOcean">
                 #{fund.rank}
@@ -93,7 +94,7 @@ function FundListRowContent({
           </View>
         </View>
 
-        <View style={styles.scoreRow}>
+        <View className="flex-row items-start gap-sm">
           <ScorePill score={score} />
           <InfoHintTrigger
             surface="catalog"
@@ -102,14 +103,14 @@ function FundListRowContent({
           />
         </View>
 
-        <View style={styles.metricsRow}>
+        <View className="flex-row flex-wrap items-end justify-between gap-md">
           <FundMetricBlock
             icon="tag-text-outline"
             label="Temática"
             surface="catalog"
             value={fund.themeLabel}
           />
-          <View style={styles.riskBadgeWrap}>
+          <View className="items-end">
             <Badge label={riskLabel} variant={getRiskBadgeVariant(fund.riskLevel)} />
           </View>
         </View>
@@ -117,15 +118,15 @@ function FundListRowContent({
         <Badge label={efficiencyLabel} variant={getEfficiencyBadgeVariant(score)} />
       </InfoHintHost>
 
-      <View style={styles.footer}>
+      <View className="flex-row items-center justify-between gap-sm">
         <FavoriteToggleButton
           isin={fund.isin}
           isFavorite={isFavorite}
           isLoading={isFavoriteLoading}
           onToggle={onToggleFavorite}
         />
-        <View style={styles.detailCue}>
-          <TextLabel variant="meta" style={{ color: theme.primary }}>
+        <View className="flex-row items-center gap-xs">
+          <TextLabel variant="meta" themeColor="primary">
             Ver detalle
           </TextLabel>
           <MaterialCommunityIcons name="chevron-right" size={18} color={theme.primary} />
@@ -140,14 +141,14 @@ export function FundListRow(props: FundListRowProps) {
     return <FundListRowLoading />;
   }
 
-  return <FundListRowLoaded fund={props.fund} onPress={props.onPress} />;
+  return <FundListRowLoaded fund={props.fund} onPress={props.onPress} className={props.className} />;
 }
 
 const FundListRowLoaded = memo(function FundListRowLoaded({
   fund,
   onPress,
+  className,
 }: FundListRowContentProps) {
-  const theme = useTheme();
   const { isFavorite, isLoading: isFavoriteLoading, toggle } = useFavorite(fund.isin);
   const score = getFundScore(fund);
   const efficiencyLabel = getEfficiencyLabel(score);
@@ -171,101 +172,34 @@ const FundListRowLoaded = memo(function FundListRowLoaded({
       <Pressable
         {...a11y}
         onPress={onPress}
-        style={({ pressed }) => [
-          styles.row,
-          {
-            backgroundColor: theme.surface,
-            borderColor: theme.border,
-          },
-          pressed && styles.pressed,
-        ]}
+        className={cn(
+          'relative overflow-hidden rounded-card border border-border bg-surface active:opacity-[0.92]',
+          className,
+        )}
       >
-        <View style={styles.content}>{content}</View>
+        <View className="z-[1] gap-md p-lg">{content}</View>
       </Pressable>
     );
   }
 
   return (
     <View
-      style={[
-        styles.row,
-        {
-          backgroundColor: theme.surface,
-          borderColor: theme.border,
-        },
-      ]}
+      className={cn(
+        'relative overflow-hidden rounded-card border border-border bg-surface',
+        className,
+      )}
     >
       {onPress ? (
         <Pressable
           {...a11y}
           onPress={onPress}
-          style={({ pressed }) => [styles.detailHitArea, pressed && styles.pressed]}
+          className="absolute inset-0 z-0 active:opacity-[0.92]"
         />
       ) : null}
 
-      <View pointerEvents="box-none" style={styles.content}>
+      <View pointerEvents="box-none" className="z-[1] gap-md p-lg">
         {content}
       </View>
     </View>
   );
-});
-
-const styles = StyleSheet.create({
-  row: {
-    position: 'relative',
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    overflow: 'hidden',
-  },
-  detailHitArea: {
-    ...StyleSheet.absoluteFill,
-    zIndex: 0,
-  },
-  pressed: {
-    opacity: 0.92,
-  },
-  content: {
-    padding: Spacing.lg,
-    gap: Spacing.md,
-    zIndex: 1,
-  },
-  header: {
-    gap: Spacing.xs,
-  },
-  titleBlock: {
-    gap: Spacing.half,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-  },
-  metricsRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-    flexWrap: 'wrap',
-  },
-  riskBadgeWrap: {
-    alignItems: 'flex-end',
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  detailCue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  loadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-  },
 });

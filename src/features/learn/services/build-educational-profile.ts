@@ -1,6 +1,8 @@
 import type {
   EducationalProfile,
+  FinancialReadiness,
   InvestmentHorizon,
+  InvestorStyle,
   KnowledgeLevel,
   LearningGoal,
   RiskOrientation,
@@ -72,68 +74,104 @@ function getScoreWeights(answers: Record<string, string>): ScoreWeights {
   };
 }
 
+function resolveFinancialReadiness(answers: Record<string, string>): FinancialReadiness {
+  const cushion = answers.cushion;
+  const debt = answers.debt;
+
+  if (cushion === 'none' || debt === 'high-debt') {
+    return 'not-ready';
+  }
+
+  if (cushion === 'partial' || debt === 'manageable-debt') {
+    return 'caution';
+  }
+
+  return 'ready';
+}
+
 function detectInconsistencies(answers: Record<string, string>): ProfileInconsistency[] {
   const inconsistencies: ProfileInconsistency[] = [];
   const knowledge = answers.knowledge;
   const horizon = answers.horizon;
   const volatility = answers.volatility;
   const cushion = answers.cushion;
+  const debt = answers.debt;
 
   if (volatility === 'high' && cushion === 'none') {
     inconsistencies.push({
       id: 'high-volatility-no-cushion',
-      title: 'Alta tolerancia sin colchón de ahorro',
+      title: 'Mucha tolerancia al riesgo, poca holgura',
       body:
-        'Indicas que aceptarías caídas con perspectiva, pero también que no tienes margen para imprevistos. En la práctica, una caída podría obligarte a vender en mal momento.',
+        'Aceptas caídas con perspectiva, pero también indicas poco margen para imprevistos. Es una combinación habitual: te orientaremos con especial prudencia.',
     });
   }
 
   if (horizon === 'short' && volatility === 'high') {
     inconsistencies.push({
       id: 'short-horizon-high-volatility',
-      title: 'Horizonte corto y alta tolerancia a caídas',
+      title: 'Plazo corto con alta tolerancia',
       body:
-        'Un horizonte inferior a 3 años suele dejar poco margen para recuperar bajadas fuertes, aunque mentalmente aceptes la volatilidad.',
+        'Con menos de 4 años suele haber poco margen para recuperar bajadas fuertes. Tu perfil encaja mejor con un enfoque gradual y contenido prudente.',
     });
   }
 
   if (knowledge === 'beginner' && volatility === 'high') {
     inconsistencies.push({
       id: 'beginner-high-volatility',
-      title: 'Principiante con alta tolerancia declarada',
+      title: 'Estás aprendiendo y asumes mucha volatilidad',
       body:
-        'Es habitual empezar con cautela. Si aún estás aprendiendo, conviene revisar si realmente te sentirías cómodo con fondos más volátiles.',
+        'Es normal empezar con cautela. Si aún estás formándote, adaptaremos las explicaciones a un ritmo más pausado.',
     });
   }
 
   if (horizon === 'short' && cushion === 'none') {
     inconsistencies.push({
       id: 'short-horizon-no-cushion',
-      title: 'Poco margen en todos los frentes',
+      title: 'Poca holgura financiera',
       body:
-        'Combinar horizonte corto y sin colchón de ahorro suele encajar mejor con perfiles muy prudentes y productos de menor riesgo.',
+        'Combinas plazo corto y poco colchón de ahorro. Es un perfil válido que suele ir de la mano con productos más estables; te guiaremos en esa línea.',
+    });
+  }
+
+  if (debt === 'high-debt' && volatility === 'high') {
+    inconsistencies.push({
+      id: 'high-debt-high-volatility',
+      title: 'Deuda alta y alta tolerancia',
+      body:
+        'Con deudas costosas conviene priorizar estabilidad. Tu perfil orientativo reflejará ese contexto antes de sugerir comparaciones.',
     });
   }
 
   return inconsistencies;
 }
 
+function hasCriticalInconsistency(inconsistencies: readonly ProfileInconsistency[]): boolean {
+  return inconsistencies.some(
+    (item) =>
+      item.id === 'short-horizon-high-volatility' ||
+      item.id === 'high-volatility-no-cushion' ||
+      item.id === 'high-debt-high-volatility',
+  );
+}
+
 /**
  * Builds an orientative educational profile from questionnaire answers.
- * Scoring is deterministic and capped for beginners or weak financial cushions.
+ * Scoring is deterministic and capped for beginners, weak cushions, or high debt.
  */
 export function buildEducationalProfile(
   answers: Record<string, string>,
 ): BuildEducationalProfileResult {
   const knowledgeLevel = answers.knowledge as KnowledgeLevel;
   const investmentHorizon = answers.horizon as InvestmentHorizon;
+  const investorStyle = answers['investor-style'] as InvestorStyle;
   const learningGoal = answers.goal as LearningGoal;
+  const financialReadiness = resolveFinancialReadiness(answers);
   const weights = getScoreWeights(answers);
   const rawScore = weights.volatility + weights.horizon + weights.cushion;
   let riskOrientation = scoreToRiskOrientation(rawScore);
 
-  if (knowledgeLevel === 'beginner') {
-    riskOrientation = capRiskOrientation(riskOrientation, 'moderate');
+  if (answers.debt === 'high-debt') {
+    riskOrientation = capRiskOrientation(riskOrientation, 'conservative');
   }
 
   if (answers.cushion === 'none') {
@@ -144,15 +182,13 @@ export function buildEducationalProfile(
     riskOrientation = capRiskOrientation(riskOrientation, 'moderate');
   }
 
+  if (knowledgeLevel === 'beginner') {
+    riskOrientation = capRiskOrientation(riskOrientation, 'moderate');
+  }
+
   const inconsistencies = detectInconsistencies(answers);
 
-  if (
-    inconsistencies.some(
-      (item) =>
-        item.id === 'short-horizon-high-volatility' ||
-        item.id === 'high-volatility-no-cushion',
-    )
-  ) {
+  if (hasCriticalInconsistency(inconsistencies)) {
     riskOrientation = capRiskOrientation(riskOrientation, 'moderate');
   }
 
@@ -160,7 +196,10 @@ export function buildEducationalProfile(
     knowledgeLevel,
     riskOrientation,
     investmentHorizon,
+    investorStyle,
+    financialReadiness,
     learningGoal,
+    profileVersion: 2,
     answers,
     completedAt: new Date().toISOString(),
   };
@@ -210,12 +249,46 @@ export function getKnowledgeLevelLabel(level: KnowledgeLevel): string {
 export function getInvestmentHorizonLabel(horizon: InvestmentHorizon): string {
   switch (horizon) {
     case 'long':
-      return 'Largo (más de 7 años)';
+      return 'Largo (más de 10 años)';
     case 'medium':
-      return 'Medio (3–7 años)';
+      return 'Medio (5–10 años)';
     case 'short':
     default:
-      return 'Corto (menos de 3 años)';
+      return 'Corto (menos de 4 años)';
+  }
+}
+
+/**
+ * Returns a human-readable label for an investor style.
+ *
+ * @param style - Graham-style investor effort preference.
+ */
+export function getInvestorStyleLabel(style: InvestorStyle): string {
+  switch (style) {
+    case 'defensive':
+      return 'Defensivo (piloto automático)';
+    case 'enterprising':
+      return 'Emprendedor (activo)';
+    case 'balanced':
+    default:
+      return 'Equilibrado';
+  }
+}
+
+/**
+ * Returns a human-readable label for financial readiness.
+ *
+ * @param readiness - Orientative financial prerequisite tier.
+ */
+export function getFinancialReadinessLabel(readiness: FinancialReadiness): string {
+  switch (readiness) {
+    case 'not-ready':
+      return 'Convendría reforzar colchón o deuda';
+    case 'caution':
+      return 'Con cautela';
+    case 'ready':
+    default:
+      return 'Con margen razonable';
   }
 }
 
@@ -244,6 +317,19 @@ export function getLearningGoalLabel(goal: LearningGoal): string {
 export function getEducationalProfileSummary(profile: EducationalProfile): string {
   const riskLabel = getRiskOrientationLabel(profile.riskOrientation).toLowerCase();
   const horizonLabel = getInvestmentHorizonLabel(profile.investmentHorizon).toLowerCase();
+  const styleLabel = getInvestorStyleLabel(profile.investorStyle).toLowerCase();
 
-  return `Tu perfil orientativo es ${riskLabel}, con horizonte ${horizonLabel}. Usaremos esto para contextualizar explicaciones y filtros educativos, no para recomendarte productos concretos.`;
+  let summary = `Tu perfil orientativo es ${riskLabel}, con horizonte ${horizonLabel} y estilo ${styleLabel}.`;
+
+  if (profile.financialReadiness === 'not-ready') {
+    summary +=
+      ' Antes de invertir, convendría reforzar tu colchón de emergencia o reducir deudas con intereses altos.';
+  } else if (profile.financialReadiness === 'caution') {
+    summary += ' Tu situación financiera sugiere avanzar con cautela.';
+  }
+
+  summary +=
+    ' Usaremos esto para contextualizar explicaciones y filtros educativos, no para recomendarte productos concretos.';
+
+  return summary;
 }

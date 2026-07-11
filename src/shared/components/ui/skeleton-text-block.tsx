@@ -1,7 +1,7 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { SkeletonBone } from '@/shared/components/ui/skeleton-bone';
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type SkeletonTextLine = {
   width: number | `${number}%`;
@@ -11,14 +11,15 @@ export type SkeletonTextLine = {
 export type SkeletonTextBlockProps = {
   lines: readonly SkeletonTextLine[];
   gap?: number;
+  className?: string;
 };
 
 /**
  * Stacked pill bars with varied widths to mimic loading copy.
  */
-export function SkeletonTextBlock({ lines, gap = Spacing.sm }: SkeletonTextBlockProps) {
+export function SkeletonTextBlock({ lines, gap, className }: SkeletonTextBlockProps) {
   return (
-    <View style={[styles.block, { gap }]}>
+    <View className={cn('self-stretch', gap === undefined ? 'gap-sm' : undefined, className)} style={gap !== undefined ? { gap } : undefined}>
       {lines.map((line, index) => (
         <SkeletonBone
           key={`${String(line.width)}-${index}`}
@@ -29,9 +30,3 @@ export function SkeletonTextBlock({ lines, gap = Spacing.sm }: SkeletonTextBlock
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  block: {
-    alignSelf: 'stretch',
-  },
-});

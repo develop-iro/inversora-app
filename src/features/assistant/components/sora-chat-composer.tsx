@@ -1,10 +1,10 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
 
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { getThemeShadows } from '@/shared/theme/shadows';
-import { Layout, Radius, Spacing, Typography } from '@/shared/theme/theme';
+import { Layout, Typography } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type SoraChatComposerProps = {
   value: string;
@@ -31,33 +31,20 @@ export function SoraChatComposer({
   placeholder = 'Pregunta sobre conceptos, score o comparación…',
 }: SoraChatComposerProps) {
   const theme = useTheme();
-  const shadows = getThemeShadows(theme);
   const trimmed = value.trim();
   const canSend = trimmed.length > 0 && !isLoading;
 
   return (
-    <View style={[styles.root, { borderTopColor: theme.borderSubtle }]}>
-      <View
-        style={[
-          styles.composerCard,
-          shadows.elevated,
-          {
-            backgroundColor: theme.surface,
-            borderColor: theme.border,
-          },
-        ]}
-      >
-        <View style={styles.contextRow}>
+    <View
+      className="gap-xs border-t border-border-subtle pt-sm"
+      style={{ paddingHorizontal: Layout.screenPaddingHorizontal, paddingBottom: 8 }}
+    >
+      <View className="gap-sm rounded-card border border-border bg-surface p-md shadow-card">
+        <View className="flex-row flex-wrap gap-xs">
           {contextChips.map((chip) => (
             <View
               key={chip}
-              style={[
-                styles.contextChip,
-                {
-                  backgroundColor: theme.surfaceMuted,
-                  borderColor: theme.borderSubtle,
-                },
-              ]}
+              className="max-w-full rounded-pill border border-border-subtle bg-surface-muted px-sm py-half"
             >
               <TextLabel variant="meta" themeColor="textSecondary" numberOfLines={1}>
                 {chip}
@@ -73,7 +60,14 @@ export function SoraChatComposer({
           value={value}
           onChangeText={onChangeText}
           multiline
-          style={[styles.input, { color: theme.text }]}
+          className="min-h-[44px] max-h-[120px] py-0 text-text"
+          // tailwind-exception: TextInput uses theme typography tokens for font metrics
+          style={{
+            fontFamily: Typography.body.fontFamily,
+            fontSize: Typography.body.fontSize,
+            lineHeight: Typography.body.lineHeight,
+            color: theme.text,
+          }}
           textAlignVertical="top"
           onSubmitEditing={() => {
             if (canSend) {
@@ -82,22 +76,15 @@ export function SoraChatComposer({
           }}
         />
 
-        <View style={styles.toolbar}>
-          <View style={styles.suggestedRow}>
+        <View className="flex-row items-end justify-between gap-sm">
+          <View className="min-w-0 flex-1 flex-row flex-wrap gap-xs">
             {suggestedPrompts.slice(0, 3).map((prompt) => (
               <Pressable
                 key={prompt}
                 accessibilityRole="button"
                 accessibilityLabel={`Sugerencia: ${prompt}`}
                 onPress={() => onSuggestedPromptPress?.(prompt)}
-                style={({ pressed }) => [
-                  styles.suggestedChip,
-                  {
-                    borderColor: theme.border,
-                    backgroundColor: theme.background,
-                  },
-                  pressed && styles.suggestedChipPressed,
-                ]}
+                className="max-w-full rounded-pill border border-border bg-background px-sm py-half active:opacity-[0.86]"
               >
                 <TextParagraph variant="secondary" numberOfLines={1}>
                   {prompt}
@@ -112,13 +99,10 @@ export function SoraChatComposer({
             accessibilityState={{ disabled: !canSend }}
             onPress={onSubmit}
             disabled={!canSend}
-            style={({ pressed }) => [
-              styles.sendButton,
-              {
-                backgroundColor: canSend ? theme.deepOcean : theme.surfaceMuted,
-              },
-              pressed && canSend && styles.sendButtonPressed,
-            ]}
+            className={cn(
+              'h-9 w-9 shrink-0 items-center justify-center rounded-full active:opacity-90',
+              canSend ? 'bg-deep-ocean' : 'bg-surface-muted',
+            )}
           >
             {isLoading ? (
               <ActivityIndicator size="small" color={theme.textOnDark} />
@@ -133,87 +117,9 @@ export function SoraChatComposer({
         </View>
       </View>
 
-      <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.hint}>
+      <TextParagraph variant="secondary" themeColor="textSecondary" className="text-center text-[11px] leading-4 opacity-[0.78]">
         Respuestas educativas. No es asesoramiento financiero personalizado.
       </TextParagraph>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  composerCard: {
-    borderWidth: 1,
-    borderRadius: Radius.card + 4,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  contextRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-  },
-  contextChip: {
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.half,
-    maxWidth: '100%',
-  },
-  input: {
-    minHeight: 44,
-    maxHeight: 120,
-    fontFamily: Typography.body.fontFamily,
-    fontSize: Typography.body.fontSize,
-    lineHeight: Typography.body.lineHeight,
-    paddingVertical: 0,
-  },
-  toolbar: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  suggestedRow: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-    minWidth: 0,
-  },
-  suggestedChip: {
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.half,
-    maxWidth: '100%',
-  },
-  suggestedChipPressed: {
-    opacity: 0.86,
-  },
-  sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  sendButtonPressed: {
-    opacity: 0.9,
-  },
-  hint: {
-    textAlign: 'center',
-    lineHeight: 16,
-    fontSize: 11,
-    opacity: 0.78,
-  },
-});

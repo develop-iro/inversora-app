@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { FundDetailProfile, RatioHorizon } from '@/core/domain/fund-detail-profile';
 import { FundDetailSectionShell } from '@/features/funds/components/detail/fund-detail-section-shell';
@@ -9,7 +9,6 @@ import {
 } from '@/features/funds/utils/fund-detail-presentation';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { KeyValueList, TabHeader } from '@/shared/components/ui';
-import { Spacing } from '@/shared/theme/theme';
 
 const RATIO_TAB_LABELS: Record<RatioHorizon, string> = {
   '12m': '12 meses',
@@ -57,15 +56,9 @@ export function FundDetailRatiosSection({ profile, fundName }: FundDetailRatiosS
         onChange={setHorizon}
         accessibilityLabel="Horizonte temporal de ratios"
       />
-      <View style={styles.panel}>
+      <View className="pt-xs">
         <KeyValueList rows={rows} />
       </View>
     </FundDetailSectionShell>
   );
 }
-
-const styles = StyleSheet.create({
-  panel: {
-    paddingTop: Spacing.xs,
-  },
-});

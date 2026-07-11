@@ -1,44 +1,48 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
+import { Pressable, Text, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+
 import {
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-    type PressableProps,
-    type StyleProp,
-    type ViewStyle,
-} from "react-native";
+  badgeLabelClassNames,
+  badgeVariantClassNames,
+} from '@/shared/nativewind/theme-classes';
+import { cn } from '@/shared/utils/cn';
 
-import { useTheme } from "@/shared/hooks/use-theme";
-import { Radius, Size, Spacing, Typography } from "@/shared/theme/theme";
+export type BadgeVariant = 'soft' | 'muted' | 'warning' | 'danger' | 'mint';
 
-export type BadgeVariant = "soft" | "muted" | "warning" | "danger" | "mint";
-
-export type BadgeProps = Omit<PressableProps, "children" | "style"> & {
+export type BadgeProps = Omit<PressableProps, 'children' | 'style'> & {
   label: string;
   variant?: BadgeVariant;
   icon?: ReactNode;
+  className?: string;
   style?: StyleProp<ViewStyle>;
 };
 
 export function Badge({
   label,
-  variant = "soft",
+  variant = 'soft',
   icon,
+  className,
   style,
   disabled,
   onPress,
   ...pressableProps
 }: BadgeProps) {
-  const theme = useTheme();
-  const variantStyles = getVariantStyles(variant, theme);
+  const containerClassName = cn(
+    'min-h-[28px] flex-row items-center gap-xs self-start rounded-chip px-md py-smPlus',
+    badgeVariantClassNames[variant],
+    disabled && 'opacity-50',
+    className,
+  );
 
   const content = (
     <>
-      <Text style={[styles.label, { color: variantStyles.labelColor }]} numberOfLines={1}>
+      <Text
+        className={cn('font-display-bold text-metaLabel uppercase', badgeLabelClassNames[variant])}
+        numberOfLines={1}
+      >
         {label}
       </Text>
-      {icon ? <View style={styles.icon}>{icon}</View> : null}
+      {icon ? <View className="h-4 w-4 items-center justify-center">{icon}</View> : null}
     </>
   );
 
@@ -48,13 +52,8 @@ export function Badge({
         accessibilityRole="button"
         disabled={disabled}
         onPress={onPress}
-        style={({ pressed }) => [
-          styles.base,
-          { backgroundColor: variantStyles.backgroundColor },
-          pressed && styles.pressed,
-          disabled && styles.disabled,
-          style,
-        ]}
+        className={cn(containerClassName, 'active:opacity-[0.88]')}
+        style={style}
         {...pressableProps}
       >
         {content}
@@ -63,83 +62,8 @@ export function Badge({
   }
 
   return (
-    <View
-      accessibilityRole="text"
-      style={[
-        styles.base,
-        { backgroundColor: variantStyles.backgroundColor },
-        disabled && styles.disabled,
-        style,
-      ]}
-    >
+    <View accessibilityRole="text" className={containerClassName} style={style}>
       {content}
     </View>
   );
 }
-
-type BadgeVariantStyles = {
-  backgroundColor: string;
-  labelColor: string;
-};
-
-function getVariantStyles(
-  variant: BadgeVariant,
-  theme: ReturnType<typeof useTheme>,
-): BadgeVariantStyles {
-  switch (variant) {
-    case "muted":
-      return {
-        backgroundColor: theme.surfaceMuted,
-        labelColor: theme.text,
-      };
-    case "warning":
-      return {
-        backgroundColor: theme.surfaceMuted,
-        labelColor: theme.warningBadgeLabel,
-      };
-    case "danger":
-      return {
-        backgroundColor: theme.surfaceMuted,
-        labelColor: theme.dangerBadgeLabel,
-      };
-    case "mint":
-      return {
-        backgroundColor: theme.surfaceMuted,
-        labelColor: theme.deepOcean,
-      };
-    case "soft":
-    default:
-      return {
-        backgroundColor: theme.surfaceMuted,
-        labelColor: theme.deepOcean,
-      };
-  }
-}
-
-const styles = StyleSheet.create({
-  base: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    gap: Spacing.xs,
-    minHeight: Size.badgeMinHeight,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.smPlus,
-    borderRadius: Radius.chip,
-  },
-  label: {
-    ...Typography.metaLabel,
-  },
-  icon: {
-    width: Size.iconXs,
-    height: Size.iconXs,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pressed: {
-    opacity: 0.88,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-});

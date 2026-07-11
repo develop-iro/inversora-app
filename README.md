@@ -49,9 +49,8 @@ Excluded from the MVP:
 - Expo Router.
 - Planned client state: Zustand.
 - Planned validation: Zod.
-- Planned backend: Supabase Edge Functions or a lightweight API.
-- Planned database: Supabase PostgreSQL.
-- Planned AI layer: OpenAI API or Vercel AI SDK on the backend.
+- **Backend oficial:** [inversora-api](https://github.com/) (NestJS + PostgreSQL + Prisma). Ver `inversora-api/docs/README.md`.
+- **IA explicativa:** servicio de asistente en backend; nunca API key en el cliente.
 
 Before changing Expo-related code, read the versioned documentation:
 

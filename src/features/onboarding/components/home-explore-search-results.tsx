@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import type { HomeSearchResult } from '@/features/onboarding/services/resolve-home-search';
 import { HomeSearchAnswerCard } from '@/features/onboarding/components/home-search-answer-card';
 import { TextParagraph } from '@/shared/components/text';
-import { useTheme } from '@/shared/hooks/use-theme';
+import { ReloadState } from '@/shared/components/ui';
 
 export type HomeExploreFundMatchPromptProps = {
   result: HomeSearchResult;
@@ -17,8 +17,6 @@ export function HomeExploreFundMatchPrompt({
   result,
   onOpenRanking,
 }: HomeExploreFundMatchPromptProps) {
-  const theme = useTheme();
-
   if (result.kind !== 'fund-match') {
     return null;
   }
@@ -40,11 +38,7 @@ export function HomeExploreFundMatchPrompt({
         accessibilityLabel="Ver coincidencias en el ranking"
         accessibilityHint="Cambia a la pestaña Ranking con los resultados filtrados"
         onPress={onOpenRanking}
-        className="mt-xs min-h-[44px] self-start rounded-pill border px-lg py-sm active:opacity-[0.88]"
-        style={{
-          backgroundColor: theme.backgroundSoft,
-          borderColor: theme.border,
-        }}
+        className="mt-xs min-h-[44px] self-start rounded-pill border border-border bg-background-soft px-lg py-sm active:opacity-[0.88]"
       >
         <TextParagraph variant="emphasis" themeColor="deepOcean">
           Ver en Ranking
@@ -80,23 +74,11 @@ export function HomeExploreAnswerSection({
 
   if (loadState === 'error') {
     return (
-      <View className="gap-sm">
-        <TextParagraph variant="secondary" themeColor="textSecondary">
-          No pudimos obtener una respuesta de SORA. Comprueba tu conexión o inténtalo de nuevo.
-        </TextParagraph>
-        {onRetry ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Reintentar búsqueda educativa"
-            onPress={onRetry}
-            className="min-h-[44px] self-start rounded-pill border px-lg py-sm active:opacity-[0.88]"
-          >
-            <TextParagraph variant="emphasis" themeColor="deepOcean">
-              Reintentar
-            </TextParagraph>
-          </Pressable>
-        ) : null}
-      </View>
+      <ReloadState
+        title="No pudimos obtener una respuesta"
+        message="Comprueba tu conexión o inténtalo de nuevo. SORA vuelve en cuanto esté disponible."
+        onAction={onRetry}
+      />
     );
   }
 

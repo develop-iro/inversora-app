@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { HeaderAction } from '@/shared/components/headers/header-action';
 import type {
@@ -12,7 +12,6 @@ import {
   resolveHeaderActionPressOverride,
 } from '@/shared/components/headers/header-types';
 import { resolveHeaderActionPress } from '@/shared/components/headers/use-header-action-handlers';
-import { Spacing } from '@/shared/theme/theme';
 
 export type HeaderActionsRowProps = {
   actions: readonly HeaderActionSpec[];
@@ -54,21 +53,8 @@ export function HeaderActionsRow({
     .filter((node) => node !== null);
 
   if (nodes.length === 0) {
-    return <View style={styles.spacer} />;
+    return <View className="h-10 w-10" />;
   }
 
-  return <View style={styles.row}>{nodes}</View>;
+  return <View className="shrink-0 flex-row items-center gap-sm">{nodes}</View>;
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    flexShrink: 0,
-  },
-  spacer: {
-    width: 40,
-    height: 40,
-  },
-});

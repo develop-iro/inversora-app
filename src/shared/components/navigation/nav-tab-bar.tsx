@@ -25,9 +25,9 @@ import {
   isLearnPath,
   isLegalPath,
 } from "@/shared/navigation/tab-route-state";
-import { Radius, Size, Spacing, Typography } from "@/shared/theme/theme";
+import { Size, Spacing } from "@/shared/theme/theme";
+import { Typography } from "@/shared/theme/tokens";
 
-const TAB_BAR_RADIUS = Radius.tabBar;
 const FILL_ANIMATION_DURATION_MS = 280;
 const ICON_SIZE = Size.iconMd;
 const ICON_SLOT_SIZE = Size.iconSlot;
@@ -35,6 +35,25 @@ const ICON_SLOT_SIZE = Size.iconSlot;
 export const NAV_TAB_BAR_HEIGHT = 76;
 export const NAV_TAB_BAR_BOTTOM_GAP = Spacing.lgPlus;
 export const NAV_TAB_BAR_CONTENT_GAP = Spacing['3xl'] + Spacing.lg;
+
+/**
+ * Matches the safe-area clamp used when positioning the floating tab bar.
+ */
+export function resolveNavTabSafeBottomInset(insetsBottom: number): number {
+  return Platform.OS === 'ios' ? Math.min(Math.max(insetsBottom, 8), 28) : 0;
+}
+
+/**
+ * Vertical space reserved above the bottom edge for the floating tab bar plus content breathing room.
+ */
+export function getTabBarClearance(safeBottomInset: number): number {
+  return (
+    safeBottomInset +
+    NAV_TAB_BAR_BOTTOM_GAP +
+    NAV_TAB_BAR_HEIGHT +
+    NAV_TAB_BAR_CONTENT_GAP
+  );
+}
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>["name"];
 
@@ -187,6 +206,7 @@ function TabBarVisual({
           adjustsFontSizeToFit
           minimumFontScale={0.85}
           numberOfLines={1}
+          // tailwind-exception: animated label crossfade; Typography via StyleSheet for correct width/ellipsis
           style={[
             styles.label,
             styles.labelLayer,
@@ -200,6 +220,7 @@ function TabBarVisual({
           adjustsFontSizeToFit
           minimumFontScale={0.85}
           numberOfLines={1}
+          // tailwind-exception: animated label crossfade; Typography via StyleSheet for correct width/ellipsis
           style={[
             styles.label,
             styles.labelActive,
@@ -224,7 +245,7 @@ export function NavTabBar({
   navigation,
   state,
 }: NavTabBarProps) {
-  const theme = useTheme();
+  const theme = useTheme(); // tailwind-exception: tab icon colors and native shadowColor
   const isReducedMotionEnabled = useReducedMotion();
   const { width } = useWindowDimensions();
   const tabNavigation = navigation as {
@@ -266,19 +287,19 @@ export function NavTabBar({
   return (
     <View
       pointerEvents="box-none"
-      style={[
-        styles.wrapper,
-        { bottom: bottomInset + NAV_TAB_BAR_BOTTOM_GAP },
-      ]}
+      className="absolute inset-x-0 items-center bg-transparent"
+      // tailwind-exception: bottom offset combines safe area and design gap
+      style={{ bottom: bottomInset + NAV_TAB_BAR_BOTTOM_GAP }}
     >
       <View
+        className="h-[76px] flex-row items-center justify-between overflow-hidden rounded-tabBar border border-border bg-surface px-lgPlus py-tight shadow-card"
+        // tailwind-exception: responsive width cap, native shadowColor, web box model
         style={[
           styles.container,
           {
             width: Math.min(width - 36, 560),
-            borderColor: theme.border,
-            backgroundColor: theme.surface,
             shadowColor: theme.shadow,
+            elevation: 5,
           },
         ]}
       >
@@ -328,6 +349,7 @@ export function NavTabBar({
               key={route.key}
               onLongPress={onLongPress}
               onPress={onPress}
+              // tailwind-exception: equal tab slots + web button reset
               style={({ pressed }) => [
                 styles.item,
                 !isReducedMotionEnabled &&
@@ -354,53 +376,32 @@ export function NavTabBar({
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    backgroundColor: "transparent",
-  },
-  container: {
-    height: NAV_TAB_BAR_HEIGHT,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lgPlus,
-    paddingVertical: Spacing.tight,
-    borderRadius: TAB_BAR_RADIUS,
-    borderWidth: 1,
-    overflow: "hidden",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    elevation: 5,
-    ...Platform.select({
-      web: {
-        boxSizing: "border-box",
-      },
-      default: {},
-    }),
-  },
+  container: Platform.select({
+    web: {
+      boxSizing: 'border-box',
+    },
+    default: {},
+  }),
   tabContent: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
+    width: '100%',
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   item: {
     flex: 1,
     flexBasis: 0,
     minHeight: Size.tabBarItemMin,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "transparent",
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
     ...Platform.select({
       web: {
         borderWidth: 0,
         outlineWidth: 0,
-        boxShadow: "none",
-        cursor: "pointer",
-        appearance: "none",
+        boxShadow: 'none',
+        cursor: 'pointer',
+        appearance: 'none',
       } as const,
       default: {},
     }),
@@ -412,31 +413,32 @@ const styles = StyleSheet.create({
   iconSlot: {
     width: ICON_SLOT_SIZE,
     height: ICON_SLOT_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "visible",
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
   },
   iconStack: {
     width: ICON_SIZE,
     height: ICON_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "visible",
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
   },
   iconLayer: {
     ...StyleSheet.absoluteFill,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   labelBox: {
-    width: "100%",
+    alignSelf: 'stretch',
+    width: '100%',
     height: Typography.tabLabel.lineHeight,
     marginTop: Spacing.xs,
-    position: "relative",
+    position: 'relative',
   },
   label: {
     ...Typography.tabLabel,
-    textAlign: "center",
+    textAlign: 'center',
     ...Platform.select({
       android: {
         includeFontPadding: false,
@@ -444,13 +446,13 @@ const styles = StyleSheet.create({
       default: {},
     }),
   },
+  labelActive: {
+    ...Typography.tabLabelActive,
+  },
   labelLayer: {
-    position: "absolute",
+    position: 'absolute',
     left: 0,
     right: 0,
     top: 0,
-  },
-  labelActive: {
-    ...Typography.tabLabelActive,
   },
 });

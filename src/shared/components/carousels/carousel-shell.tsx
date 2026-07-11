@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   View,
+  useWindowDimensions,
   type ListRenderItem,
   type StyleProp,
   type ViewStyle,
@@ -64,7 +65,12 @@ export function CarouselShell<T>({
   accessibilityHint,
 }: CarouselShellProps<T>) {
   const reducedMotionEnabled = useReducedMotion();
+  const { width: windowWidth } = useWindowDimensions();
   const [viewportWidth, setViewportWidth] = useState(0);
+  const resolvedViewportWidth = useMemo(
+    () => (viewportWidth > 0 ? viewportWidth : Math.max(280, windowWidth)),
+    [viewportWidth, windowWidth],
+  );
 
   const {
     listRef,
@@ -79,15 +85,17 @@ export function CarouselShell<T>({
   } = useCarouselAutoplay<T>({
     itemCount: data.length,
     autoplayMs,
-    enabled: autoplayEnabled && viewportWidth > 0,
+    enabled: autoplayEnabled && resolvedViewportWidth > 0,
     reduceMotion: reducedMotionEnabled,
   });
 
   const renderItem = useCallback<ListRenderItem<T>>(
     ({ item }) => (
-      <View style={{ width: viewportWidth }}>{renderSlide(item, viewportWidth)}</View>
+      <View style={{ width: resolvedViewportWidth }}>
+        {renderSlide(item, resolvedViewportWidth)}
+      </View>
     ),
-    [renderSlide, viewportWidth],
+    [renderSlide, resolvedViewportWidth],
   );
 
   const resolvedDotsLabel =
@@ -125,30 +133,31 @@ export function CarouselShell<T>({
         className="w-full"
         style={viewportStyle}
       >
-        {viewportWidth > 0 ? (
+        {resolvedViewportWidth > 0 ? (
           <FlatList
             ref={listRef}
             data={[...data]}
             horizontal
+            nestedScrollEnabled
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             onScrollBeginDrag={pauseAutoplay}
             onScroll={(event) => {
-              handleScrollEvent(event, viewportWidth);
+              handleScrollEvent(event, resolvedViewportWidth);
             }}
             onScrollEndDrag={(event) => {
-              handleScrollEvent(event, viewportWidth);
+              handleScrollEvent(event, resolvedViewportWidth);
             }}
             onMomentumScrollEnd={(event) => {
-              handleScrollEvent(event, viewportWidth);
+              handleScrollEvent(event, resolvedViewportWidth);
             }}
             onScrollToIndexFailed={() => {
-              handleScrollToIndexFailed(viewportWidth);
+              handleScrollToIndexFailed(resolvedViewportWidth);
             }}
             scrollEventThrottle={16}
             getItemLayout={(_, index) => ({
-              length: viewportWidth,
-              offset: viewportWidth * index,
+              length: resolvedViewportWidth,
+              offset: resolvedViewportWidth * index,
               index,
             })}
             keyExtractor={keyExtractor}

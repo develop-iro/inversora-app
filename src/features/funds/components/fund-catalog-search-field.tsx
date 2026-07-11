@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { shouldUseMockData } from '@/core/config/app-environment';
-import { FundCatalogSearchSuggestions } from '@/features/funds/components/fund-catalog-search-suggestions';
 import { CATALOG_FUNDS_MOCK } from '@/features/funds/mocks/catalog-funds-mock';
 import { searchCatalogFunds } from '@/features/funds/services/get-funds';
 import {
@@ -13,13 +12,15 @@ import {
 } from '@/features/funds/utils/fund-search';
 import { SearchField } from '@/shared/components/ui';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
+import { FundCatalogSearchSuggestions } from '@/features/funds/components/fund-catalog-search-suggestions';
 
 const BLUR_DISMISS_DELAY_MS = 160;
 
 export type FundCatalogSearchFieldProps = {
   query: string;
   onQueryChange: (query: string) => void;
+  className?: string;
 };
 
 function mapCatalogFundsToSuggestions(
@@ -35,6 +36,7 @@ function mapCatalogFundsToSuggestions(
 export function FundCatalogSearchField({
   query,
   onQueryChange,
+  className,
 }: FundCatalogSearchFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [apiSuggestions, setApiSuggestions] = useState<FundSearchSuggestion[]>([]);
@@ -123,7 +125,7 @@ export function FundCatalogSearchField({
   );
 
   return (
-    <View style={styles.wrapper}>
+    <View className={cn('relative z-20', className)}>
       <SearchField
         variant="plain"
         accessibilityLabel="Buscar fondos por nombre o ISIN"
@@ -138,7 +140,7 @@ export function FundCatalogSearchField({
       />
 
       {showSuggestions ? (
-        <View style={styles.suggestionsSlot} pointerEvents="box-none">
+        <View className="mt-sm" pointerEvents="box-none">
           <FundCatalogSearchSuggestions
             suggestions={suggestions}
             onSelect={handleSelectSuggestion}
@@ -148,13 +150,3 @@ export function FundCatalogSearchField({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    position: 'relative',
-    zIndex: 20,
-  },
-  suggestionsSlot: {
-    marginTop: Spacing.sm,
-  },
-});

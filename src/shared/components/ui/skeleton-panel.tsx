@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react';
-import { useMemo } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { getSkeletonTokens } from '@/shared/components/ui/skeleton-tokens';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type SkeletonPanelProps = {
   children: ReactNode;
+  className?: string;
   style?: StyleProp<ViewStyle>;
   padded?: boolean;
 };
@@ -16,37 +15,21 @@ export type SkeletonPanelProps = {
 /**
  * Elevated white surface that groups skeleton lines (BBVA-style content card).
  */
-export function SkeletonPanel({ children, style, padded = true }: SkeletonPanelProps) {
-  const theme = useTheme();
-  const shadows = useThemeShadows();
-  const skeletonTokens = useMemo(() => getSkeletonTokens(theme), [theme]);
+export function SkeletonPanel({ children, className, style, padded = true }: SkeletonPanelProps) {
+  const theme = useTheme(); // tailwind-exception: skeleton panel border uses theme token
+  const skeletonTokens = getSkeletonTokens(theme);
 
   return (
     <View
-      style={[
-        styles.panel,
-        padded && styles.padded,
-        {
-          backgroundColor: skeletonTokens.panelBackground,
-          borderColor: skeletonTokens.panelBorder,
-        },
-        shadows.card,
-        style,
-      ]}
+      className={cn(
+        'overflow-hidden rounded-card border bg-surface shadow-card',
+        padded && 'gap-md p-lg',
+        className,
+      )}
+      // tailwind-exception: skeleton panel border color from theme tokens
+      style={[{ borderColor: skeletonTokens.panelBorder }, style]}
     >
       {children}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  panel: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.card,
-    overflow: 'hidden',
-  },
-  padded: {
-    padding: Spacing.lg,
-    gap: Spacing.md,
-  },
-});

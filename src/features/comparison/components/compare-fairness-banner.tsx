@@ -1,10 +1,9 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { CompareFairnessResult } from '@/features/comparison/models/compare-fund-entry';
 import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type CompareFairnessBannerProps = {
   fairness: CompareFairnessResult;
@@ -23,16 +22,10 @@ export function CompareFairnessBanner({ fairness }: CompareFairnessBannerProps) 
   return (
     <View
       accessibilityRole="alert"
-      style={[
-        styles.banner,
-        {
-          backgroundColor: theme.warningBannerSurface,
-          borderColor: theme.warningBannerBorder,
-        },
-      ]}
+      className="flex-row items-start gap-sm rounded-card border border-warning-banner-border bg-warning-banner-surface p-md"
     >
       <MaterialCommunityIcons name="information-outline" size={20} color={theme.deepOcean} />
-      <View style={styles.copy}>
+      <View className="flex-1 gap-xs">
         <TextParagraph variant="emphasis">
           {fairness.warnings.length === 1
             ? fairness.warnings[0]
@@ -53,18 +46,3 @@ export function CompareFairnessBanner({ fairness }: CompareFairnessBannerProps) 
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    padding: Spacing.md,
-  },
-  copy: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-});

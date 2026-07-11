@@ -1,18 +1,11 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react';
-import {
-  cancelAnimation,
-  Easing,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  type SharedValue,
-} from 'react-native-reanimated';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { Animated, Easing } from 'react-native';
 
 import { SKELETON_SHIMMER_DURATION_MS } from '@/shared/components/ui/skeleton-tokens';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 
 type SkeletonShimmerContextValue = {
-  progress: SharedValue<number>;
+  progress: Animated.Value;
   reducedMotionEnabled: boolean;
 };
 
@@ -34,27 +27,29 @@ export function SkeletonShimmerProvider({
   durationMs = SKELETON_SHIMMER_DURATION_MS,
 }: SkeletonShimmerProviderProps) {
   const reducedMotionEnabled = useReducedMotion();
-  const progress = useSharedValue(0);
+  const [progress] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     if (reducedMotionEnabled) {
-      cancelAnimation(progress);
-      progress.value = 0;
+      progress.stopAnimation();
+      progress.setValue(0);
       return;
     }
 
-    progress.value = 0;
-    progress.value = withRepeat(
-      withTiming(1, {
+    progress.setValue(0);
+    const loop = Animated.loop(
+      Animated.timing(progress, {
+        toValue: 1,
         duration: durationMs,
         easing: Easing.linear,
+        useNativeDriver: true,
       }),
-      -1,
-      false,
     );
 
+    loop.start();
+
     return () => {
-      cancelAnimation(progress);
+      loop.stop();
     };
   }, [durationMs, progress, reducedMotionEnabled]);
 

@@ -61,7 +61,7 @@ Traducción del score numérico a lenguaje accesible:
 
 ## Protección al principiante (HU-16)
 
-- Fondos con score **&lt; 30** no deben aparecer en **destacados** ni como “compatibles” para flujos orientados a principiantes.
+- Fondos con score **&lt; 30** no deben aparecer en **destacados**, **rankings de home**, **`/rankings`** ni como “compatibles” para flujos orientados a principiantes cuando `knowledgeLevel` es `beginner` (o sin perfil, por defecto MVP).
 - Pueden seguir existiendo en catálogo con advertencias si el producto lo permite.
 
 ## Fondos destacados (HU-02)

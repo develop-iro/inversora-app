@@ -1,13 +1,12 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useEffect } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 
 import type { ToastEntry, ToastVariant } from '@/core/overlay/overlay.types';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type ToastViewProps = {
   entry: ToastEntry;
@@ -17,29 +16,29 @@ export type ToastViewProps = {
 type ToastVisual = {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   accentColorKey: 'success' | 'danger' | 'primary' | 'warning';
-  surfaceColorKey: 'primarySurfaceSubtle' | 'dangerBannerSurface' | 'softTealSurface' | 'warningBannerSurface';
+  surfaceClassName: string;
 };
 
 const TOAST_VISUALS: Record<ToastVariant, ToastVisual> = {
   success: {
     icon: 'check-circle-outline',
     accentColorKey: 'success',
-    surfaceColorKey: 'primarySurfaceSubtle',
+    surfaceClassName: 'bg-primary-surface-subtle',
   },
   error: {
     icon: 'alert-circle-outline',
     accentColorKey: 'danger',
-    surfaceColorKey: 'dangerBannerSurface',
+    surfaceClassName: 'bg-danger-banner-surface',
   },
   info: {
     icon: 'information-outline',
     accentColorKey: 'primary',
-    surfaceColorKey: 'softTealSurface',
+    surfaceClassName: 'bg-soft-teal-surface',
   },
   warning: {
     icon: 'alert-outline',
     accentColorKey: 'warning',
-    surfaceColorKey: 'warningBannerSurface',
+    surfaceClassName: 'bg-warning-banner-surface',
   },
 };
 
@@ -47,8 +46,7 @@ const TOAST_VISUALS: Record<ToastVariant, ToastVisual> = {
  * Single toast card with auto-dismiss timer.
  */
 export function ToastView({ entry, onDismiss }: ToastViewProps) {
-  const theme = useTheme();
-  const shadows = useThemeShadows();
+  const theme = useTheme(); // tailwind-exception: icon accent colors
   const visual = TOAST_VISUALS[entry.variant];
 
   useEffect(() => {
@@ -62,11 +60,7 @@ export function ToastView({ entry, onDismiss }: ToastViewProps) {
   }, [entry.durationMs, entry.id, onDismiss]);
 
   return (
-    <Animated.View
-      entering={FadeInUp.duration(220)}
-      exiting={FadeOutUp.duration(180)}
-      style={styles.wrapper}
-    >
+    <Animated.View entering={FadeInUp.duration(220)} exiting={FadeOutUp.duration(180)} className="w-full">
       <Pressable
         accessibilityRole="alert"
         accessibilityLiveRegion="polite"
@@ -74,20 +68,13 @@ export function ToastView({ entry, onDismiss }: ToastViewProps) {
         onPress={() => {
           onDismiss(entry.id);
         }}
-        style={[
-          styles.card,
-          shadows.card,
-          {
-            backgroundColor: theme.surface,
-            borderColor: theme.borderSubtle,
-          },
-        ]}
+        className="flex-row items-start gap-sm rounded-card border border-border-subtle bg-surface px-md py-sm shadow-card"
       >
         <View
-          style={[
-            styles.iconWrap,
-            { backgroundColor: theme[visual.surfaceColorKey] },
-          ]}
+          className={cn(
+            'mt-[2px] h-8 w-8 items-center justify-center rounded-chip',
+            visual.surfaceClassName,
+          )}
         >
           <MaterialCommunityIcons
             name={visual.icon}
@@ -96,7 +83,7 @@ export function ToastView({ entry, onDismiss }: ToastViewProps) {
           />
         </View>
 
-        <View style={styles.copy}>
+        <View className="flex-1 gap-[2px]">
           {entry.title ? (
             <TextLabel variant="meta" themeColor="deepOcean">
               {entry.title}
@@ -110,30 +97,3 @@ export function ToastView({ entry, onDismiss }: ToastViewProps) {
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    width: '100%',
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    borderRadius: Radius.card,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  iconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: Radius.chip,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  copy: {
-    flex: 1,
-    gap: 2,
-  },
-});

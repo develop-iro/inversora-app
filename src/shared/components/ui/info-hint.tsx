@@ -3,7 +3,6 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Pressable,
-  StyleSheet,
   View,
   type StyleProp,
   type ViewStyle,
@@ -14,13 +13,13 @@ import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { usePlatformCapabilities } from '@/shared/hooks/use-platform-capabilities';
 import { useWebHover, type WebHoverProps } from '@/shared/hooks/use-web-hover';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { useThemeShadows } from '@/shared/hooks/use-theme-shadows';
 import {
   isWeb,
   shouldShowInfoHint,
   type InfoHintSurface,
 } from '@/shared/platform/capabilities';
-import { Radius, Spacing, webElevationShadow } from '@/shared/theme/theme';
+import { Spacing, webElevationShadow } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type { InfoHintSurface } from '@/shared/platform/capabilities';
 
@@ -29,6 +28,7 @@ export type InfoHintPlacement = 'below' | 'beside';
 export type InfoHintTriggerProps = {
   term: string;
   explanation: string;
+  className?: string;
   style?: StyleProp<ViewStyle>;
   placement?: InfoHintPlacement;
   surface?: InfoHintSurface;
@@ -45,14 +45,12 @@ function InfoHintWebPopup({
   position,
   theme,
   hoverProps,
-  shadows,
 }: {
   term: string;
   explanation: string;
   position: PopupPosition;
   theme: ReturnType<typeof useTheme>;
   hoverProps: WebHoverProps;
-  shadows: ReturnType<typeof useThemeShadows>;
 }) {
   if (typeof document === 'undefined') {
     return null;
@@ -63,23 +61,19 @@ function InfoHintWebPopup({
       {...hoverProps}
       accessibilityRole="text"
       accessibilityLabel={`${term}. ${explanation}`}
-      style={[
-        styles.portalPopup,
-        shadows.card,
-        {
-          position: 'fixed',
-          top: position.top,
-          left: position.left,
-          backgroundColor: theme.surface,
-          borderColor: theme.border,
-          boxShadow: webElevationShadow(theme),
-        } as unknown as ViewStyle,
-      ]}
+      className="z-[9999] min-w-[200px] max-w-[280px] gap-xs rounded-card border border-border bg-surface px-md py-sm shadow-card"
+      // tailwind-exception: fixed portal position and web box shadow
+      style={{
+        position: 'fixed',
+        top: position.top,
+        left: position.left,
+        boxShadow: webElevationShadow(theme),
+      } as ViewStyle}
     >
-      <TextLabel variant="meta" themeColor="deepOcean" style={styles.popupTerm}>
+      <TextLabel variant="meta" themeColor="deepOcean" className="tracking-[0.4px]">
         {term}
       </TextLabel>
-      <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.popupBody}>
+      <TextParagraph variant="secondary" themeColor="textSecondary" className="leading-[18px]">
         {explanation}
       </TextParagraph>
     </View>,
@@ -91,12 +85,12 @@ function InfoHintWebPopup({
 export function InfoHintTrigger({
   term,
   explanation,
+  className,
   style,
   placement = 'below',
   surface = 'catalog',
 }: InfoHintTriggerProps) {
-  const theme = useTheme();
-  const shadows = useThemeShadows();
+  const theme = useTheme(); // tailwind-exception: icon color and web popup shadow
   const hintId = useId();
   const host = useInfoHintHost();
   const { supportsInfoHintPopover } = usePlatformCapabilities();
@@ -220,7 +214,12 @@ export function InfoHintTrigger({
         collapsable={false}
         pointerEvents="auto"
         {...(useHoverPopup ? hoverProps : {})}
-        style={[styles.wrapper, useHoverPopup && styles.wrapperWeb, style]}
+        className={cn(
+          'max-w-[220px] items-start',
+          useHoverPopup && 'z-[1] w-6 max-w-6',
+          className,
+        )}
+        style={style}
       >
         <Pressable
           accessibilityRole="button"
@@ -237,7 +236,7 @@ export function InfoHintTrigger({
           onPress={useHoverPopup ? undefined : toggle}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          style={({ pressed }) => [styles.iconButton, pressed && !useHoverPopup && styles.iconPressed]}
+          className="min-h-6 min-w-6 items-center justify-center rounded-full active:opacity-75"
         >
           <MaterialCommunityIcons
             name={showPopup || expanded ? 'information' : 'information-outline'}
@@ -247,7 +246,7 @@ export function InfoHintTrigger({
         </Pressable>
 
         {!useHoverPopup && expanded ? (
-          <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.explanation}>
+          <TextParagraph variant="secondary" themeColor="textSecondary" className="mt-xs leading-[18px]">
             {explanation}
           </TextParagraph>
         ) : null}
@@ -259,7 +258,6 @@ export function InfoHintTrigger({
           explanation={explanation}
           position={popupPosition}
           theme={theme}
-          shadows={shadows}
           hoverProps={popupHoverProps}
         />
       ) : null}
@@ -270,15 +268,16 @@ export function InfoHintTrigger({
 export type InfoHintProps = {
   term: string;
   explanation: string;
+  className?: string;
   style?: StyleProp<ViewStyle>;
   surface?: InfoHintSurface;
 };
 
-export function InfoHint({ term, explanation, style, surface = 'detail' }: InfoHintProps) {
+export function InfoHint({ term, explanation, className, style, surface = 'detail' }: InfoHintProps) {
   return (
-    <View style={[styles.labeledWrapper, style]}>
-      <View style={styles.labelRow}>
-        <TextLabel variant="meta" themeColor="textSecondary" style={styles.term}>
+    <View className={cn('gap-xs', className)} style={style}>
+      <View className="flex-row items-center gap-xs">
+        <TextLabel variant="meta" themeColor="textSecondary" className="shrink">
           {term}
         </TextLabel>
         <InfoHintTrigger term={term} explanation={explanation} surface={surface} />
@@ -286,56 +285,3 @@ export function InfoHint({ term, explanation, style, surface = 'detail' }: InfoH
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    alignItems: 'flex-start',
-    maxWidth: 220,
-  },
-  wrapperWeb: {
-    width: 24,
-    maxWidth: 24,
-    zIndex: 1,
-  },
-  labeledWrapper: {
-    gap: Spacing.xs,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  term: {
-    flexShrink: 1,
-  },
-  iconButton: {
-    minWidth: 24,
-    minHeight: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radius.full,
-  },
-  iconPressed: {
-    opacity: 0.75,
-  },
-  portalPopup: {
-    minWidth: 200,
-    maxWidth: 280,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.card,
-    borderWidth: 1,
-    gap: Spacing.xs,
-    zIndex: 9999,
-  },
-  popupTerm: {
-    letterSpacing: 0.4,
-  },
-  popupBody: {
-    lineHeight: 18,
-  },
-  explanation: {
-    lineHeight: 18,
-    marginTop: Spacing.xs,
-  },
-});

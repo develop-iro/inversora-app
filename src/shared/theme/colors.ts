@@ -84,10 +84,10 @@ const lightSemanticColors = {
   skeletonBoneMuted: withAlpha(palette.deepOcean, 0.07),
   skeletonPanelBorder: withAlpha(palette.deepOcean, 0.09),
   skeletonShimmerTransparent: withAlpha(palette.white, 0),
-  skeletonShimmerHighlight: withAlpha(palette.white, 0.98),
-  skeletonShimmerAccent: withAlpha(palette.mintAccent, 0.85),
-  skeletonShimmerShadow: withAlpha(palette.deepOcean, 0.35),
-  skeletonShimmerDeep: withAlpha(palette.deepOcean, 0.55),
+  skeletonShimmerHighlight: withAlpha(palette.white, 0.95),
+  skeletonShimmerAccent: withAlpha(palette.deepOcean, 0.08),
+  skeletonShimmerShadow: withAlpha(palette.deepOcean, 0.16),
+  skeletonShimmerDeep: withAlpha(palette.deepOcean, 0.24),
 } as const;
 
 const darkSemanticColors = {
@@ -165,10 +165,10 @@ const darkSemanticColors = {
   skeletonBoneMuted: withAlpha(palette.white, 0.07),
   skeletonPanelBorder: withAlpha(palette.white, 0.09),
   skeletonShimmerTransparent: withAlpha(palette.darkOceanSurface, 0),
-  skeletonShimmerHighlight: withAlpha(palette.white, 0.12),
-  skeletonShimmerAccent: withAlpha(palette.primaryTeal, 0.35),
-  skeletonShimmerShadow: withAlpha(palette.black, 0.45),
-  skeletonShimmerDeep: withAlpha(palette.black, 0.65),
+  skeletonShimmerHighlight: withAlpha(palette.white, 0.28),
+  skeletonShimmerAccent: withAlpha(palette.white, 0.14),
+  skeletonShimmerShadow: withAlpha(palette.black, 0.35),
+  skeletonShimmerDeep: withAlpha(palette.black, 0.5),
 } as const;
 
 export const semanticColors = {

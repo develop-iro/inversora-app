@@ -1,126 +1,37 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-
-import { StyleSheet, View } from 'react-native';
-
-
+import { View } from 'react-native';
 
 import { TextLabel, TextParagraph } from '@/shared/components/text';
-
 import { useTheme } from '@/shared/hooks/use-theme';
 
-import { Radius, Spacing } from '@/shared/theme/theme';
-
-
-
 /**
-
  * Hero promo card for the compare empty state (high-contrast deep surface).
-
  */
-
 export function CompareHeroCard() {
-
   const theme = useTheme();
 
-
-
   return (
-
     <View
-
-      style={[styles.card, { backgroundColor: theme.deepOcean }]}
-
+      className="gap-sm rounded-card bg-deep-ocean p-lg"
       accessibilityRole="summary"
-
       accessibilityLabel="Compara fondos con criterios educativos objetivos"
-
     >
-
-      <View style={styles.topRow}>
-
-        <View style={[styles.badge, { backgroundColor: theme.accentMintSurface }]}>
-
-          <TextLabel variant="meta" style={[styles.badgeText, { color: theme.accentMintText }]}>
-
+      <View className="flex-row items-center justify-between">
+        <View className="rounded-pill bg-accent-mint-surface px-md py-xs">
+          <TextLabel variant="meta" themeColor="accentMintText" className="uppercase tracking-[0.5px]">
             Guía educativa
-
           </TextLabel>
-
         </View>
-
         <MaterialCommunityIcons name="scale-balance" size={28} color={theme.primary} />
-
       </View>
 
-
-
       <TextParagraph variant="emphasis" themeColor="textOnDark">
-
         Compara con criterios claros
-
       </TextParagraph>
-
-      <TextParagraph variant="secondary" themeColor="textOnDarkMuted" style={styles.subtitle}>
-
+      <TextParagraph variant="secondary" themeColor="textOnDarkMuted" className="leading-5">
         TER, tracking error, riesgo y Score Inversora en una sola vista. Sin recomendación de
-
         inversión.
-
       </TextParagraph>
-
     </View>
-
   );
-
 }
-
-
-
-const styles = StyleSheet.create({
-
-  card: {
-
-    borderRadius: Radius.card,
-
-    padding: Spacing.lg,
-
-    gap: Spacing.sm,
-
-  },
-
-  topRow: {
-
-    flexDirection: 'row',
-
-    alignItems: 'center',
-
-    justifyContent: 'space-between',
-
-  },
-
-  badge: {
-
-    borderRadius: Radius.pill,
-
-    paddingHorizontal: Spacing.md,
-
-    paddingVertical: Spacing.xs,
-
-  },
-
-  badgeText: {
-
-    textTransform: 'uppercase',
-
-    letterSpacing: 0.5,
-
-  },
-
-  subtitle: {
-
-    lineHeight: 20,
-
-  },
-
-});
-

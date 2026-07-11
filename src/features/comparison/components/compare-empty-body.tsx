@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { CompareHeroCard } from '@/features/comparison/components/compare-hero-card';
 import { CompareSuggestedPairCard } from '@/features/comparison/components/compare-suggested-pair-card';
@@ -17,7 +17,6 @@ import { InvestmentCard } from '@/shared/components/ui/card';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { routes } from '@/shared/navigation/routes';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 /** Switch suggested pairs from horizontal scroll to a wrapped grid. */
 const COMPARE_PAIR_GRID_BREAKPOINT = 640;
@@ -43,10 +42,14 @@ export function CompareEmptyBody({
   const canCompareFavorites = favoriteIsins.length >= 2;
 
   return (
-    <View style={styles.wrapper}>
+    <View className="gap-lg">
       <CompareHeroCard />
 
-      <SectionCard title="Nueva comparación" borderless contentStyle={styles.sectionContent}>
+      <SectionCard
+        title="Nueva comparación"
+        borderless
+        contentClassName="gap-sm p-0 pt-0"
+      >
         <ScreenQuickActionsRow>
           <ScreenQuickAction
             icon="magnify-plus-outline"
@@ -89,12 +92,12 @@ export function CompareEmptyBody({
       <SectionCard
         title="Comparaciones sugeridas"
         borderless
-        contentStyle={styles.sectionContent}
+        contentClassName="gap-sm p-0 pt-0"
       >
         {usePairGrid ? (
-          <View style={styles.pairGrid}>
+          <View className="flex-row flex-wrap gap-sm">
             {COMPARE_SUGGESTED_PAIRS.map((pair) => (
-              <View key={pair.id} style={styles.pairGridItem}>
+              <View key={pair.id} className="max-w-full grow basis-[220px]">
                 <CompareSuggestedPairCard pair={pair} onPress={() => onApplyPair(pair.isins)} />
               </View>
             ))}
@@ -103,13 +106,13 @@ export function CompareEmptyBody({
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.pairScroll}
+            contentContainerClassName="gap-sm py-xs"
           >
             {COMPARE_SUGGESTED_PAIRS.map((pair) => (
               <CompareSuggestedPairCard
                 key={pair.id}
                 pair={pair}
-                style={styles.pairScrollCard}
+                className="w-[220px]"
                 onPress={() => onApplyPair(pair.isins)}
               />
             ))}
@@ -117,14 +120,14 @@ export function CompareEmptyBody({
         )}
       </SectionCard>
 
-      <SectionCard title="Qué vas a comparar" borderless contentStyle={styles.sectionContent}>
-        <View style={styles.tipsGrid}>
+      <SectionCard title="Qué vas a comparar" borderless contentClassName="gap-sm p-0 pt-0">
+        <View className="flex-row flex-wrap gap-sm">
           {COMPARE_METRIC_TIPS.map((tip) => (
             <InvestmentCard
               key={tip.id}
-              style={styles.tipCard}
+              className="min-h-[132px] min-w-[140px] grow basis-[160px]"
               icon={
-                <View style={[styles.tipIcon, { backgroundColor: theme.backgroundSoft }]}>
+                <View className="h-8 w-8 items-center justify-center rounded-full bg-background-soft">
                   <MaterialCommunityIcons name={tip.icon} size={18} color={theme.deepOcean} />
                 </View>
               }
@@ -137,50 +140,3 @@ export function CompareEmptyBody({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: Spacing.lg,
-  },
-  sectionContent: {
-    paddingHorizontal: 0,
-    paddingTop: 0,
-    paddingBottom: 0,
-    gap: Spacing.sm,
-  },
-  pairGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  pairScroll: {
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  pairGridItem: {
-    flexGrow: 1,
-    flexBasis: 220,
-    maxWidth: '100%',
-  },
-  pairScrollCard: {
-    width: 220,
-  },
-  tipsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  tipCard: {
-    flexGrow: 1,
-    flexBasis: 160,
-    minWidth: 140,
-    minHeight: 132,
-  },
-  tipIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

@@ -16,5 +16,6 @@ export function useModal() {
     close,
     closeAll,
     alert: modal.alert,
+    confirm: modal.confirm,
   };
 }

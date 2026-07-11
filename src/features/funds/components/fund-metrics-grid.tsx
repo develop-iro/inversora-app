@@ -1,8 +1,8 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { HeaderSection } from '@/shared/components/headers/header-section';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FundMetricCell = {
   id: string;
@@ -15,23 +15,29 @@ export type FundMetricCell = {
 export type FundMetricsGridProps = {
   title: string;
   metrics: FundMetricCell[];
+  className?: string;
 };
 
-export function FundMetricsGrid({ title, metrics }: FundMetricsGridProps) {
+export function FundMetricsGrid({ title, metrics, className }: FundMetricsGridProps) {
   if (metrics.length === 0) {
     return null;
   }
 
   return (
-    <View style={styles.section}>
-      <HeaderSection title={title} variant="compact" style={styles.header} />
-      <View style={styles.grid}>
+    <View className={cn('gap-sm self-stretch', className)}>
+      <HeaderSection
+        title={title}
+        variant="compact"
+        // tailwind-exception: HeaderSection has no className prop yet
+        style={{ paddingBottom: 0 }}
+      />
+      <View className="flex-row flex-wrap gap-y-md">
         {metrics.map((metric) => (
-          <View key={metric.id} style={styles.cell}>
+          <View key={metric.id} className="w-1/2 gap-xs pr-sm">
             <TextLabel variant="meta" themeColor="textSecondary">
               {metric.label}
             </TextLabel>
-            <View style={styles.valueRow}>
+            <View className="flex-row flex-wrap items-baseline gap-xs">
               <TextParagraph variant="emphasis">{metric.value}</TextParagraph>
               {metric.hint ? (
                 <TextParagraph variant="secondary" themeColor="primary">
@@ -45,29 +51,3 @@ export function FundMetricsGrid({ title, metrics }: FundMetricsGridProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: {
-    gap: Spacing.sm,
-    alignSelf: 'stretch',
-  },
-  header: {
-    paddingBottom: 0,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    rowGap: Spacing.md,
-  },
-  cell: {
-    width: '50%',
-    gap: Spacing.xs,
-    paddingRight: Spacing.sm,
-  },
-  valueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-  },
-});

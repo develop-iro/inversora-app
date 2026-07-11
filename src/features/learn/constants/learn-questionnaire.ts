@@ -9,12 +9,22 @@ export type LearnQuestionOption = {
   readonly icon?: IconName;
 };
 
+export type LearnConceptCard = {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly icon: IconName;
+};
+
 export type LearnInfoStep = {
   readonly id: string;
   readonly kind: 'info';
   readonly title: string;
   readonly body: string;
   readonly eyebrow?: string;
+  readonly conceptCards?: readonly LearnConceptCard[];
+  /** When false, the step is shown before the questionnaire and excluded from progress. */
+  readonly countsTowardProgress?: boolean;
 };
 
 export type LearnChoiceStep = {
@@ -24,6 +34,7 @@ export type LearnChoiceStep = {
   readonly body?: string;
   readonly eyebrow?: string;
   readonly options: readonly LearnQuestionOption[];
+  readonly countsTowardProgress?: boolean;
 };
 
 export type LearnQuestionStep = LearnInfoStep | LearnChoiceStep;
@@ -33,18 +44,136 @@ export const LEARN_QUESTIONNAIRE_STEPS: readonly LearnQuestionStep[] = [
   {
     id: 'welcome',
     kind: 'info',
-    eyebrow: 'Modo educativo',
-    title: 'Antes de comparar fondos, conversemos',
+    countsTowardProgress: false,
+    title: 'Hola, futuro inversor',
     body:
-      'Este cuestionario es orientativo y educativo. No sustituye un test de idoneidad ni una recomendación personalizada. Tus respuestas se guardan solo en este dispositivo.',
+      'Antes de explorar fondos, ETFs y otros vehículos de inversión, conversemos un momento. Este cuestionario te orienta para encontrar el producto que mejor encaje contigo: comparar, analizar y guardar tus preferencias en el dispositivo. Es orientativo: no sustituye un test de idoneidad ni una recomendación personalizada.',
   },
   {
-    id: 'risk-education',
+    id: 'prerequisites-education',
     kind: 'info',
-    eyebrow: 'Concepto clave',
-    title: '¿Qué significa el riesgo al invertir?',
+    eyebrow: 'Conceptos clave',
+    title: 'Preparación antes de invertir',
     body:
-      'Invertir implica que el valor puede subir o bajar. A más riesgo suele corresponder más volatilidad, pero también más incertidumbre a corto plazo. El horizonte temporal y tu colchón de ahorro influyen en cuánta variación puedes asumir con calma.',
+      'Invertir busca rentabilidad a largo plazo, pero el valor puede subir o bajar. Antes de perseguir ganancias, conviene ordenar las bases: estos conceptos te ayudan a prepararte con calma.',
+    conceptCards: [
+      {
+        id: 'emergency-cushion',
+        title: 'Reserva de emergencia',
+        description:
+          'Ahorro líquido para imprevistos. Muchas fuentes sugieren cubrir entre 4 y 12 meses de gastos antes de asumir más riesgo.',
+        icon: 'lifebuoy',
+      },
+      {
+        id: 'high-interest-debt',
+        title: 'Deudas con intereses altos',
+        description:
+          'Reducir créditos caros libera capacidad de ahorro y evita que los intereses se coman tu rentabilidad futura.',
+        icon: 'credit-card-off-outline',
+      },
+      {
+        id: 'time-horizon',
+        title: 'Horizonte temporal',
+        description:
+          'Cuánto tiempo puedes dejar el dinero invertido sin necesitarlo. A más plazo, más margen suele haber para recuperar caídas temporales.',
+        icon: 'calendar-clock',
+      },
+      {
+        id: 'volatility',
+        title: 'Variación del valor',
+        description:
+          'Subidas y bajadas son normales. Tu temperamento marca cuánta oscilación puedes tolerar sin tomar decisiones impulsivas.',
+        icon: 'chart-line-variant',
+      },
+      {
+        id: 'profitability-goal',
+        title: 'Rentabilidad con paciencia',
+        description:
+          'El objetivo es que tu dinero crezca por encima de la inflación con el tiempo. No hay ganancias garantizadas ni resultados inmediatos.',
+        icon: 'sprout-outline',
+      },
+    ],
+  },
+  {
+    id: 'horizon',
+    kind: 'choice',
+    eyebrow: 'Horizonte',
+    title: '¿Cuándo crees que podrías necesitar este dinero?',
+    body: 'Es la variable más importante: a más plazo, más margen suele haber para recuperar caídas temporales.',
+    options: [
+      {
+        id: 'short',
+        label: 'Menos de 4 años',
+        description: 'Podría necesitarlo pronto; conviene pensar en estabilidad.',
+        icon: 'clock-fast',
+      },
+      {
+        id: 'medium',
+        label: 'Entre 5 y 10 años',
+        description: 'Tengo un objetivo de mediano plazo.',
+        icon: 'calendar-range',
+      },
+      {
+        id: 'long',
+        label: 'Más de 10 años',
+        description: 'Es dinero que no tocaría durante mucho tiempo.',
+        icon: 'calendar-clock',
+      },
+    ],
+  },
+  {
+    id: 'cushion',
+    kind: 'choice',
+    eyebrow: 'Colchón',
+    title: '¿Tienes ahorro para imprevistos aparte de lo que invertirías?',
+    body: 'Un colchón de 4 a 12 meses de gastos reduce la presión de vender en mal momento.',
+    options: [
+      {
+        id: 'none',
+        label: 'No o muy justo',
+        description: 'Cualquier imprevisto me obligaría a tocar la inversión.',
+        icon: 'alert-circle-outline',
+      },
+      {
+        id: 'partial',
+        label: 'Cubre algunos meses',
+        description: 'Tengo algo aparte, pero no me sentiría cómodo sin más.',
+        icon: 'wallet-outline',
+      },
+      {
+        id: 'solid',
+        label: 'Cubre 4 meses o más',
+        description: 'Tengo margen para no depender de la inversión a corto plazo.',
+        icon: 'shield-check-outline',
+      },
+    ],
+  },
+  {
+    id: 'debt',
+    kind: 'choice',
+    eyebrow: 'Deudas',
+    title: '¿Tienes deudas con intereses altos (tarjetas, créditos al consumo)?',
+    body: 'Muchas fuentes recomiendan reducir deuda cara antes de invertir, porque cuesta más que muchas rentabilidades sin riesgo.',
+    options: [
+      {
+        id: 'high-debt',
+        label: 'Sí, con intereses altos',
+        description: 'Tengo deudas que me preocupan y cuesta pagarlas.',
+        icon: 'credit-card-off-outline',
+      },
+      {
+        id: 'manageable-debt',
+        label: 'Algo de deuda, pero manejable',
+        description: 'Tengo deudas, pero las controlo y no me ahogan.',
+        icon: 'credit-card-outline',
+      },
+      {
+        id: 'no-debt',
+        label: 'No tengo deuda relevante',
+        description: 'Estoy libre de deudas con intereses altos.',
+        icon: 'check-circle-outline',
+      },
+    ],
   },
   {
     id: 'knowledge',
@@ -74,29 +203,29 @@ export const LEARN_QUESTIONNAIRE_STEPS: readonly LearnQuestionStep[] = [
     ],
   },
   {
-    id: 'horizon',
+    id: 'investor-style',
     kind: 'choice',
-    eyebrow: 'Horizonte',
-    title: '¿Durante cuánto tiempo podrías mantener el dinero invertido?',
-    body: 'Un horizonte más largo suele dar más margen para recuperar caídas temporales.',
+    eyebrow: 'Estilo',
+    title: '¿Cuánto tiempo y atención quieres dedicar a tus inversiones?',
+    body: 'Benjamin Graham distingue al inversor defensivo, que busca simplicidad, del emprendedor, que disfruta investigando.',
     options: [
       {
-        id: 'short',
-        label: 'Menos de 3 años',
-        description: 'Podría necesitar el dinero en el corto plazo.',
-        icon: 'clock-fast',
+        id: 'defensive',
+        label: 'Piloto automático',
+        description: 'Prefiero simplicidad, pocas decisiones y fondos de bajo coste.',
+        icon: 'shield-home-outline',
       },
       {
-        id: 'medium',
-        label: 'Entre 3 y 7 años',
-        description: 'Tengo un objetivo de mediano plazo.',
-        icon: 'calendar-range',
+        id: 'balanced',
+        label: 'Algo de seguimiento',
+        description: 'Quiero entender lo básico y revisar de vez en cuando.',
+        icon: 'scale-balance',
       },
       {
-        id: 'long',
-        label: 'Más de 7 años',
-        description: 'Pienso en objetivos lejanos, como jubilación o patrimonio.',
-        icon: 'calendar-clock',
+        id: 'enterprising',
+        label: 'Me gusta investigar',
+        description: 'Disfruto comparando, leyendo y tomando decisiones activas.',
+        icon: 'magnify-scan',
       },
     ],
   },
@@ -104,53 +233,26 @@ export const LEARN_QUESTIONNAIRE_STEPS: readonly LearnQuestionStep[] = [
     id: 'volatility',
     kind: 'choice',
     eyebrow: 'Tolerancia',
-    title: 'Imagina que tu inversión baja un 15 % en un año. ¿Qué harías?',
-    body: 'Esta pregunta ayuda a entender tu comodidad con las fluctuaciones.',
+    title: 'Imagina que tu inversión cae un 25 % en tres meses. ¿Qué harías?',
+    body: 'El riesgo real no está solo en el mercado, sino en cómo reaccionamos ante las caídas.',
     options: [
       {
         id: 'low',
-        label: 'Me incomodaría mucho',
-        description: 'Preferiría reducir exposición para evitar más pérdidas.',
+        label: 'Reduciría o vendería',
+        description: 'Preferiría limitar pérdidas aunque mi horizonte sea largo.',
         icon: 'shield-alert-outline',
       },
       {
         id: 'medium',
-        label: 'Me incomodaría, pero aguantaría',
-        description: 'Entiendo que puede pasar, aunque no me guste.',
+        label: 'Aguantaría, aunque me inquiete',
+        description: 'Entiendo que puede pasar, aunque no me guste verlo en rojo.',
         icon: 'scale-balance',
       },
       {
         id: 'high',
         label: 'Lo vería con perspectiva',
-        description: 'Lo consideraría normal si mi horizonte es largo.',
+        description: 'Lo consideraría normal si mi horizonte es largo y tengo colchón.',
         icon: 'chart-line',
-      },
-    ],
-  },
-  {
-    id: 'cushion',
-    kind: 'choice',
-    eyebrow: 'Colchón',
-    title: '¿Tienes ahorro para imprevistos aparte de lo que invertirías?',
-    body: 'Un colchón reduce la presión de vender en mal momento.',
-    options: [
-      {
-        id: 'none',
-        label: 'No o muy justo',
-        description: 'Cualquier imprevisto me obligaría a tocar la inversión.',
-        icon: 'alert-circle-outline',
-      },
-      {
-        id: 'partial',
-        label: 'Cubre algunos meses',
-        description: 'Tengo algo aparte, pero no me sentiría cómodo sin más.',
-        icon: 'wallet-outline',
-      },
-      {
-        id: 'solid',
-        label: 'Cubre 6 meses o más',
-        description: 'Tengo margen para no depender de la inversión a corto plazo.',
-        icon: 'shield-check-outline',
       },
     ],
   },
@@ -182,4 +284,35 @@ export const LEARN_QUESTIONNAIRE_STEPS: readonly LearnQuestionStep[] = [
   },
 ] as const;
 
+export const LEARN_WELCOME_STEP_ID = 'welcome';
+
 export const LEARN_QUESTIONNAIRE_TOTAL_STEPS = LEARN_QUESTIONNAIRE_STEPS.length;
+
+/** Steps that advance the progress counter (excludes the welcome intro). */
+export const LEARN_QUESTIONNAIRE_PROGRESS_TOTAL = LEARN_QUESTIONNAIRE_STEPS.filter(
+  (step) => step.countsTowardProgress !== false,
+).length;
+
+/**
+ * Returns the 1-based progress index for a questionnaire step, or null for the welcome intro.
+ *
+ * @param stepIndex - Zero-based index in {@link LEARN_QUESTIONNAIRE_STEPS}.
+ */
+export function getLearnQuestionnaireProgressIndex(stepIndex: number): number | null {
+  const step = LEARN_QUESTIONNAIRE_STEPS[stepIndex];
+
+  if (!step || step.countsTowardProgress === false) {
+    return null;
+  }
+
+  return LEARN_QUESTIONNAIRE_STEPS.slice(0, stepIndex + 1).filter(
+    (item) => item.countsTowardProgress !== false,
+  ).length;
+}
+
+export function isLearnWelcomeStep(stepIndex: number): boolean {
+  return LEARN_QUESTIONNAIRE_STEPS[stepIndex]?.id === LEARN_WELCOME_STEP_ID;
+}
+
+/** Stack header title for the educational profiling questionnaire. */
+export const LEARN_QUESTIONNAIRE_SCREEN_TITLE = 'Perfil orientativo';

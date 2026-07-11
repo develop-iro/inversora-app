@@ -7,9 +7,11 @@ import { describe, it } from 'node:test';
 import { camelCaseToKebab, readPalettePrimitives } from './generate-global-css.mjs';
 import {
   buildTailwindColors,
+  buildTailwindSemanticColors,
   buildTailwindSpacing,
   generateTailwindConfigContent,
 } from './generate-tailwind-config.mjs';
+import { buildSemanticColors } from './theme/semantic-colors.mjs';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(SCRIPT_DIR, '..');
@@ -39,12 +41,23 @@ describe('buildTailwindSpacing', () => {
   });
 });
 
+describe('buildTailwindSemanticColors', () => {
+  it('maps semantic keys to CSS variable references', () => {
+    const semantic = buildSemanticColors();
+    const colors = buildTailwindSemanticColors(semantic);
+
+    assert.equal(colors.surface, 'var(--color-surface)');
+    assert.equal(colors['text-secondary'], 'var(--color-text-secondary)');
+  });
+});
+
 describe('generateTailwindConfigContent', () => {
   it('includes nativewind preset and src content paths', () => {
     const config = generateTailwindConfigContent();
 
     assert.match(config, /presets: \[require\('nativewind\/preset'\)\]/);
     assert.match(config, /content: \['\.\/src\/\*\*\/\*\.\{js,jsx,ts,tsx\}'\]/);
+    assert.match(config, /darkMode: 'class'/);
   });
 
   it('emits one color entry per palette primitive', () => {

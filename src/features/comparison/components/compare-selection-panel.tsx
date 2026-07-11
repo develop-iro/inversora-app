@@ -1,5 +1,3 @@
-import { StyleSheet } from 'react-native';
-
 import { MIN_COMPARE_FUNDS } from '@/core/storage/compare-selection-storage-key';
 import { CompareFundVersusHeader } from '@/features/comparison/components/compare-fund-versus-header';
 import { ComparePartialSelectionHint } from '@/features/comparison/components/compare-partial-selection-hint';
@@ -69,7 +67,7 @@ export function CompareSelectionPanel({
       ) : null}
 
       {!canAddMore && selectedCount >= MIN_COMPARE_FUNDS ? (
-        <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.maxCopy}>
+        <TextParagraph variant="secondary" themeColor="textSecondary" className="text-center">
           Máximo de fondos alcanzado.
         </TextParagraph>
       ) : null}
@@ -86,9 +84,3 @@ export function CompareSelectionPanel({
     </SectionCard>
   );
 }
-
-const styles = StyleSheet.create({
-  maxCopy: {
-    textAlign: 'center',
-  },
-});

@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Image, StyleSheet, View, type ImageProps, type ViewProps } from 'react-native';
+import { Image, View, type ImageProps, type ViewProps } from 'react-native';
 
 import { ThemedText } from '@/shared/components/themed-text';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Size, type TypographyToken } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
+import type { TypographyToken } from '@/shared/theme/theme';
 
 export type FundCardIconSize = 'sm' | 'md';
 
@@ -12,23 +12,24 @@ export type FundCardIconProps = ViewProps & {
   logoUrl?: string | null;
   size?: FundCardIconSize;
   accessibilityLabel?: string;
+  className?: string;
 };
 
 type FundCardIconLayout = {
-  container: number;
-  logo: number;
+  containerClassName: string;
+  logoSize: number;
   symbol: TypographyToken;
 };
 
 const ICON_LAYOUT: Record<FundCardIconSize, FundCardIconLayout> = {
   sm: {
-    container: Size.iconLg,
-    logo: Size.iconSlot,
+    containerClassName: 'h-8 w-8',
+    logoSize: 28,
     symbol: 'iconSymbolSm',
   },
   md: {
-    container: Size.iconXxl,
-    logo: Size.iconXl,
+    containerClassName: 'h-12 w-12',
+    logoSize: 40,
     symbol: 'iconSymbolMd',
   },
 };
@@ -41,10 +42,10 @@ export function FundCardIcon({
   logoUrl = null,
   size = 'sm',
   accessibilityLabel,
+  className,
   style,
   ...viewProps
 }: FundCardIconProps) {
-  const theme = useTheme();
   const [imageFailed, setImageFailed] = useState(false);
   const showRemoteLogo = logoUrl !== null && logoUrl.length > 0 && !imageFailed;
   const label = accessibilityLabel ?? `Logo gestora ${symbol}`;
@@ -56,16 +57,12 @@ export function FundCardIcon({
 
   return (
     <View
-      style={[
-        styles.container,
-        {
-          width: layout.container,
-          height: layout.container,
-          backgroundColor: theme.backgroundSoft,
-          borderColor: theme.border,
-        },
-        style,
-      ]}
+      className={cn(
+        'shrink-0 items-center justify-center overflow-hidden rounded-image border border-border bg-background-soft',
+        layout.containerClassName,
+        className,
+      )}
+      style={style}
       accessibilityRole="image"
       accessibilityLabel={label}
       {...viewProps}
@@ -73,7 +70,8 @@ export function FundCardIcon({
       {showRemoteLogo ? (
         <Image
           source={{ uri: logoUrl }}
-          style={{ width: layout.logo, height: layout.logo }}
+          // tailwind-exception: logo dimensions depend on icon size variant
+          style={{ width: layout.logoSize, height: layout.logoSize }}
           resizeMode="contain"
           onError={handleImageError}
           accessibilityIgnoresInvertColors
@@ -84,14 +82,3 @@ export function FundCardIcon({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: Radius.image,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    flexShrink: 0,
-  },
-});

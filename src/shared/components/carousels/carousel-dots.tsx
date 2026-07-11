@@ -1,13 +1,14 @@
-import { Animated, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useCarouselDotProgress } from '@/shared/components/carousels/use-carousel-dot-progress';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type CarouselDotsProps = {
   count: number;
   activeIndex: number;
   accessibilityLabel?: string;
+  className?: string;
   style?: StyleProp<ViewStyle>;
   animateScale?: boolean;
 };
@@ -19,10 +20,11 @@ export function CarouselDots({
   count,
   activeIndex,
   accessibilityLabel,
+  className,
   style,
   animateScale = false,
 }: CarouselDotsProps) {
-  const theme = useTheme();
+  const theme = useTheme(); // tailwind-exception: animated dot color interpolation
   const dotProgress = useCarouselDotProgress(count, activeIndex);
 
   if (count <= 1) {
@@ -35,14 +37,16 @@ export function CarouselDots({
       accessibilityLabel={
         accessibilityLabel ?? `Diapositiva ${activeIndex + 1} de ${count}`
       }
-      style={[styles.indicators, style]}
+      className={cn('flex-row items-center justify-center gap-sm', className)}
+      style={style}
     >
       {dotProgress.map((progress, index) => (
         <Animated.View
           accessible={false}
           key={`carousel-dot-${index}`}
+          className="h-2 rounded-full"
+          // tailwind-exception: animated width, scale, and color interpolation
           style={[
-            styles.dot,
             {
               width: progress.interpolate({
                 inputRange: [0, 1],
@@ -69,16 +73,3 @@ export function CarouselDots({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  indicators: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-  },
-  dot: {
-    height: 8,
-    borderRadius: Radius.full,
-  },
-});

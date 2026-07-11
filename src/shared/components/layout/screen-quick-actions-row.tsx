@@ -1,22 +1,23 @@
 import { Children, type ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type ScreenQuickActionsRowProps = {
   children: ReactNode;
+  className?: string;
   style?: StyleProp<ViewStyle>;
 };
 
 /**
  * Evenly spaced row for {@link ScreenQuickAction} items with consistent wrapping.
  */
-export function ScreenQuickActionsRow({ children, style }: ScreenQuickActionsRowProps) {
+export function ScreenQuickActionsRow({ children, className, style }: ScreenQuickActionsRowProps) {
   return (
-    <View style={[styles.row, style]}>
+    <View className={cn('flex-row flex-wrap gap-md', className)} style={style}>
       {Children.map(children, (child, index) =>
         child !== null && child !== undefined ? (
-          <View key={index} style={styles.item}>
+          <View key={index} className="max-w-[48%] min-w-[96px] flex-grow basis-[42%] items-center">
             {child}
           </View>
         ) : null,
@@ -24,18 +25,3 @@ export function ScreenQuickActionsRow({ children, style }: ScreenQuickActionsRow
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.md,
-  },
-  item: {
-    flexGrow: 1,
-    flexBasis: '42%',
-    maxWidth: '48%',
-    minWidth: 96,
-    alignItems: 'center',
-  },
-});

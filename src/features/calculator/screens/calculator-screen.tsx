@@ -1,24 +1,17 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import { ScrollView, StyleSheet, View, type View as ViewType } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, View, type View as ViewType } from 'react-native';
 
 import { parseOptionalFundIsinParam } from '@/core/domain/fund-isin';
+import { CalculatorBreakdownDonut } from '@/features/calculator/components/calculator-breakdown-donut';
 import { CalculatorFundContextCard } from '@/features/calculator/components/calculator-fund-context-card';
-import { CalculatorGrowthChart } from '@/features/calculator/components/calculator-growth-chart';
 import { CalculatorInputForm } from '@/features/calculator/components/calculator-input-form';
-import {
-  CalculatorBreakdownLegend,
-  CalculatorResultsSummary,
-} from '@/features/calculator/components/calculator-results-summary';
+import { CalculatorResultsSummary } from '@/features/calculator/components/calculator-results-summary';
 import { CalculatorYearlyTable } from '@/features/calculator/components/calculator-yearly-table';
 import { useCompoundInterestCalculator } from '@/features/calculator/hooks/use-compound-interest-calculator';
 import { CompareFundPickerModal } from '@/features/comparison/components/compare-fund-picker-modal';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
-import {
-  NAV_TAB_BAR_BOTTOM_GAP,
-  NAV_TAB_BAR_HEIGHT,
-} from '@/shared/components/navigation/nav-tab-bar';
+import { TabScreenScroll } from '@/shared/components/layout';
 import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { TabHeader } from '@/shared/components/ui';
 import { Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
@@ -56,15 +49,14 @@ function scrollToSection(
 }
 
 export default function CalculatorScreen() {
-  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ isin?: string | string[] }>();
   const initialIsin = parseIsinParam(params.isin);
   const [isPickerVisible, setIsPickerVisible] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const contentRef = useRef<ViewType>(null);
   const resultsRef = useRef<ViewType>(null);
-  const chartRef = useRef<ViewType>(null);
-  const pendingScrollTargetRef = useRef<'results' | 'chart' | null>(null);
+  const tableRef = useRef<ViewType>(null);
+  const pendingScrollTargetRef = useRef<'results' | 'table' | null>(null);
 
   const {
     mode,
@@ -103,8 +95,8 @@ export default function CalculatorScreen() {
     scrollToSection(scrollRef, contentRef, resultsRef, Spacing.lg);
   }, []);
 
-  const scrollToChart = useCallback(() => {
-    scrollToSection(scrollRef, contentRef, chartRef, Spacing.md);
+  const scrollToTable = useCallback(() => {
+    scrollToSection(scrollRef, contentRef, tableRef, Spacing.md);
   }, []);
 
   const handleCalculate = useCallback(() => {
@@ -115,10 +107,10 @@ export default function CalculatorScreen() {
     }
   }, [calculate]);
 
-  const handleViewEvolution = useCallback(() => {
-    pendingScrollTargetRef.current = 'chart';
-    scrollToChart();
-  }, [scrollToChart]);
+  const handleViewYearlyDetail = useCallback(() => {
+    pendingScrollTargetRef.current = 'table';
+    scrollToTable();
+  }, [scrollToTable]);
 
   useEffect(() => {
     const target = pendingScrollTargetRef.current;
@@ -130,8 +122,8 @@ export default function CalculatorScreen() {
     pendingScrollTargetRef.current = null;
 
     const runScroll = () => {
-      if (target === 'chart') {
-        scrollToChart();
+      if (target === 'table') {
+        scrollToTable();
         return;
       }
 
@@ -141,28 +133,30 @@ export default function CalculatorScreen() {
     requestAnimationFrame(() => {
       setTimeout(runScroll, 64);
     });
-  }, [hasCalculated, result, scrollToChart, scrollToResults]);
-
-  const bottomPadding =
-    insets.bottom + NAV_TAB_BAR_HEIGHT + NAV_TAB_BAR_BOTTOM_GAP + Spacing.xl;
+  }, [hasCalculated, result, scrollToTable, scrollToResults]);
 
   return (
     <>
-      <ScrollView
+      <TabScreenScroll
         ref={scrollRef}
-        style={styles.screen}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: Spacing.xl,
-            paddingBottom: bottomPadding,
-          },
-        ]}
+        extraBottomPadding={Spacing.xl}
+        contentContainerClassName="items-center"
+        contentContainerStyle={{
+          paddingTop: Spacing.xl,
+        }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View ref={contentRef} style={styles.inner} collapsable={false}>
-          <View style={styles.headerBlock}>
+        <View
+          ref={contentRef}
+          className="w-full gap-lg"
+          style={{
+            maxWidth: MaxContentWidth,
+            paddingHorizontal: Layout.screenPaddingHorizontal,
+          }}
+          collapsable={false}
+        >
+          <View className="gap-sm">
             <TextHeading variant="section">Calcular</TextHeading>
             <TextParagraph variant="secondary" themeColor="textSecondary">
               Simula el interés compuesto con escenarios claros y lenguaje sencillo. No es una
@@ -201,17 +195,16 @@ export default function CalculatorScreen() {
           />
 
           {hasCalculated && result ? (
-            <View ref={resultsRef} style={styles.resultsBlock} collapsable={false}>
+            <View ref={resultsRef} className="gap-lg" collapsable={false}>
               <CalculatorResultsSummary
                 result={result}
                 input={input}
-                onViewEvolutionPress={handleViewEvolution}
+                onViewYearlyDetailPress={handleViewYearlyDetail}
               />
-              <CalculatorBreakdownLegend breakdown={result.breakdown} />
-              <View ref={chartRef} collapsable={false}>
-                <CalculatorGrowthChart result={result} />
+              <CalculatorBreakdownDonut result={result} />
+              <View ref={tableRef} collapsable={false}>
+                <CalculatorYearlyTable rows={result.rows} input={input} result={result} />
               </View>
-              <CalculatorYearlyTable rows={result.rows} input={input} result={result} />
             </View>
           ) : null}
 
@@ -220,7 +213,7 @@ export default function CalculatorScreen() {
             body="Los resultados usan un tipo de interés constante y no reflejan volatilidad, impuestos, comisiones de custodia ni costes de compraventa. El rendimiento pasado no garantiza resultados futuros."
           />
         </View>
-      </ScrollView>
+      </TabScreenScroll>
 
       <CompareFundPickerModal
         visible={isPickerVisible}
@@ -235,24 +228,3 @@ export default function CalculatorScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  content: {
-    alignItems: 'center',
-  },
-  inner: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    gap: Spacing.lg,
-  },
-  headerBlock: {
-    gap: Spacing.sm,
-  },
-  resultsBlock: {
-    gap: Spacing.lg,
-  },
-});

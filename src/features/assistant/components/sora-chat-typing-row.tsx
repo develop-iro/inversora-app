@@ -1,9 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 /**
  * Inline loading row shown while SORA is generating a response.
@@ -15,15 +14,9 @@ export function SoraChatTypingRow() {
     <View
       accessibilityRole="progressbar"
       accessibilityLabel="SORA está escribiendo una respuesta"
-      style={[
-        styles.row,
-        {
-          backgroundColor: theme.softTealSurfaceMuted,
-          borderColor: theme.primaryBorderFaint,
-        },
-      ]}
+      className="max-w-[88%] flex-row items-center gap-sm self-start rounded-card border border-primary-border-faint bg-soft-teal-surface-muted px-md py-sm"
     >
-      <View style={[styles.iconWrap, { backgroundColor: theme.primaryIconSurface }]}>
+      <View className="h-6 w-6 items-center justify-center rounded-full bg-primary-icon-surface">
         <MaterialCommunityIcons name="creation" size={14} color={theme.deepOcean} />
       </View>
       <TextParagraph variant="secondary" themeColor="textSecondary">
@@ -33,24 +26,3 @@ export function SoraChatTypingRow() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: Spacing.sm,
-    borderWidth: 1,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    maxWidth: '88%',
-  },
-  iconWrap: {
-    width: 24,
-    height: 24,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

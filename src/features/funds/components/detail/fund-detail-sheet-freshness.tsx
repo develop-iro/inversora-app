@@ -1,10 +1,11 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
-import { Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type FundDetailSheetFreshnessProps = {
   asOf: string;
+  className?: string;
 };
 
 function formatSheetReviewDate(isoDate: string): string {
@@ -15,12 +16,12 @@ function formatSheetReviewDate(isoDate: string): string {
   return `${day}/${month}/${year}`;
 }
 
-export function FundDetailSheetFreshness({ asOf }: FundDetailSheetFreshnessProps) {
+export function FundDetailSheetFreshness({ asOf, className }: FundDetailSheetFreshnessProps) {
   const formattedDate = formatSheetReviewDate(asOf);
 
   return (
     <View
-      style={styles.wrapper}
+      className={cn('gap-xs', className)}
       accessibilityRole="text"
       accessibilityLabel={`Ficha del fondo revisada en su totalidad el ${formattedDate}`}
     >
@@ -32,9 +33,3 @@ export function FundDetailSheetFreshness({ asOf }: FundDetailSheetFreshnessProps
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: Spacing.xs,
-  },
-});

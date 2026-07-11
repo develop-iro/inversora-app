@@ -1,10 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SoraAnswerCard } from '@/features/assistant/components/sora-answer-card';
@@ -21,8 +17,8 @@ import type { AssistantSurface } from '@/features/assistant/types/assistant-cont
 import { AppModalShell } from '@/shared/components/overlay';
 import { TextParagraph } from '@/shared/components/text';
 import { routes } from '@/shared/navigation/routes';
-import { useTheme } from '@/shared/hooks/use-theme';
-import { Layout, Spacing } from '@/shared/theme/theme';
+import { Layout } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 export type SoraChatSheetProps = {
   visible: boolean;
@@ -69,7 +65,6 @@ export function SoraChatSheet({
   quickPrompts = [],
   conversationMode = false,
 }: SoraChatSheetProps) {
-  const theme = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const explainState = useAssistantExplain();
@@ -166,11 +161,12 @@ export function SoraChatSheet({
       body={
         <ScrollView
           ref={scrollRef}
-          style={[styles.messages, { backgroundColor: theme.backgroundSoft }]}
-          contentContainerStyle={[
-            styles.messagesContent,
-            showEmptyState && styles.messagesContentEmpty,
-          ]}
+          className="flex-1 bg-background-soft"
+          contentContainerClassName={cn(
+            'gap-md px-lg pb-lg pt-md',
+            showEmptyState && 'flex-grow',
+          )}
+          contentContainerStyle={{ paddingHorizontal: Layout.screenPaddingHorizontal }}
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={scrollToBottom}
         >
@@ -188,12 +184,7 @@ export function SoraChatSheet({
                 turn.role === 'user' ? (
                   <View
                     key={turn.id}
-                    style={[
-                      styles.userBubble,
-                      {
-                        backgroundColor: theme.deepOcean,
-                      },
-                    ]}
+                    className="max-w-[88%] self-end rounded-[18px] rounded-br-xs bg-deep-ocean px-md py-sm"
                   >
                     <TextParagraph variant="secondary" themeColor="textOnDark">
                       {turn.message}
@@ -217,14 +208,7 @@ export function SoraChatSheet({
 
           {!conversationMode && explainState.response ? (
             <>
-              <View
-                style={[
-                  styles.userBubble,
-                  {
-                    backgroundColor: theme.deepOcean,
-                  },
-                ]}
-              >
+              <View className="max-w-[88%] self-end rounded-[18px] rounded-br-xs bg-deep-ocean px-md py-sm">
                 <TextParagraph variant="secondary" themeColor="textOnDark">
                   {message}
                 </TextParagraph>
@@ -245,7 +229,7 @@ export function SoraChatSheet({
           {isLoading ? <SoraChatTypingRow /> : null}
 
           {errorMessage ? (
-            <TextParagraph variant="secondary" themeColor="textSecondary" style={styles.error}>
+            <TextParagraph variant="secondary" themeColor="textSecondary" className="leading-5">
               {errorMessage}
             </TextParagraph>
           ) : null}
@@ -271,29 +255,3 @@ export function SoraChatSheet({
     />
   );
 }
-
-const styles = StyleSheet.create({
-  messages: {
-    flex: 1,
-  },
-  messagesContent: {
-    paddingHorizontal: Layout.screenPaddingHorizontal,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
-    gap: Spacing.md,
-  },
-  messagesContentEmpty: {
-    flexGrow: 1,
-  },
-  userBubble: {
-    alignSelf: 'flex-end',
-    maxWidth: '88%',
-    borderRadius: 18,
-    borderBottomRightRadius: 6,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  error: {
-    lineHeight: 20,
-  },
-});

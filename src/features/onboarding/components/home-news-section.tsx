@@ -5,7 +5,7 @@ import { isSafeExternalUrl } from '@/core/security/safe-external-url';
 import { HomeNewsCard } from '@/features/onboarding/components/home-news-card';
 import { HomeSectionCard } from '@/features/onboarding/components/home-section-card';
 import type { HomeSectionLoadState } from '@/features/onboarding/hooks/use-home-screen-data';
-import { ContentEmptyState } from '@/shared/components/ui';
+import { ContentEmptyState, ReloadState } from '@/shared/components/ui';
 
 export type HomeNewsSectionProps = {
   items: readonly InvestmentNewsItem[];
@@ -45,11 +45,9 @@ export function HomeNewsSection({ items, loadState, onRetry }: HomeNewsSectionPr
           ))}
         </View>
       ) : loadState === 'error' ? (
-        <ContentEmptyState
-          icon="newspaper-variant-outline"
+        <ReloadState
           title="No hemos podido cargar las noticias"
           message="Revisa tu conexión o vuelve a intentarlo. El contexto educativo volverá en cuanto esté disponible."
-          actionLabel="Reintentar"
           onAction={onRetry}
         />
       ) : items.length > 0 ? (
@@ -60,7 +58,6 @@ export function HomeNewsSection({ items, loadState, onRetry }: HomeNewsSectionPr
         </View>
       ) : (
         <ContentEmptyState
-          icon="text-box-outline"
           title="Sin noticias por ahora"
           message="Cuando haya novedades educativas del entorno, las verás aquí con contexto y sin prisa."
           actionLabel="Actualizar"

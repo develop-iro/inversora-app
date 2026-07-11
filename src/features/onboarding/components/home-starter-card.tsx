@@ -1,10 +1,9 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
 
 export type HomeStarterCardProps = {
   title: string;
@@ -33,40 +32,14 @@ export function HomeStarterCard({
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        { backgroundColor: pressed ? theme.deepOcean : theme.primary },
-      ]}
+      className="min-h-[88px] min-w-0 flex-1 justify-center gap-sm rounded-card bg-primary px-md py-md active:bg-deep-ocean"
     >
-      <View style={[styles.iconWrap, { backgroundColor: theme.onPrimarySurface }]}>
+      <View className="h-8 w-8 items-center justify-center rounded-full bg-on-primary-surface">
         <MaterialCommunityIcons name={iconName} size={18} color={theme.textOnPrimary} />
       </View>
-      <TextParagraph variant="emphasis" themeColor="textOnPrimary" style={styles.title}>
+      <TextParagraph variant="emphasis" themeColor="textOnPrimary" className="leading-[22px]">
         {title}
       </TextParagraph>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 88,
-    borderRadius: Radius.card,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
-    justifyContent: 'center',
-  },
-  iconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    lineHeight: 22,
-  },
-});

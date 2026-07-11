@@ -75,6 +75,19 @@ describe('generateGlobalCssContent', () => {
     assert.match(css, /@tailwind components;/);
     assert.match(css, /@tailwind utilities;/);
   });
+
+  it('includes semantic color CSS variables for light and dark', () => {
+    const css = generateGlobalCssContent();
+    assert.match(css, /--color-surface:/);
+    assert.match(css, /--color-background:/);
+    assert.match(css, /\.dark \{[\s\S]*--color-surface:/);
+  });
+
+  it('includes shadow CSS variables', () => {
+    const css = generateGlobalCssContent();
+    assert.match(css, /--shadow-card:/);
+    assert.match(css, /\.dark \{[\s\S]*--shadow-elevated:/);
+  });
 });
 
 describe('committed global.css', () => {

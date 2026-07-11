@@ -1,29 +1,31 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { AllocationSlice } from '@/core/domain/fund-detail-profile';
 import { TextParagraph } from '@/shared/components/text';
 import { Divider } from '@/shared/components/ui/divider';
 import { useTheme } from '@/shared/hooks/use-theme';
-import { Radius, Spacing } from '@/shared/theme/theme';
+import { cn } from '@/shared/utils/cn';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 export type AllocationBarListProps = {
   slices: AllocationSlice[];
   barColor?: string;
+  className?: string;
 };
 
-export function AllocationBarList({ slices, barColor }: AllocationBarListProps) {
-  const theme = useTheme();
+export function AllocationBarList({ slices, barColor, className }: AllocationBarListProps) {
+  const theme = useTheme(); // tailwind-exception: icon and optional bar fill colors
+
   const fillColor = barColor ?? theme.chartAllocationFill;
 
   return (
-    <View style={styles.list}>
+    <View className={cn('self-stretch', className)}>
       {slices.map((slice, index) => (
         <View key={`${slice.label}-${index}`}>
-          <View style={styles.row}>
+          <View className="mb-xs flex-row items-center gap-sm">
             {slice.icon ? (
               <MaterialCommunityIcons
                 name={slice.icon as IconName}
@@ -33,71 +35,32 @@ export function AllocationBarList({ slices, barColor }: AllocationBarListProps) 
                 importantForAccessibility="no"
               />
             ) : (
-              <View style={styles.iconPlaceholder} />
+              <View className="w-5" />
             )}
-            <TextParagraph variant="default" style={styles.label} numberOfLines={1}>
+            <TextParagraph variant="default" className="min-w-0 flex-1" numberOfLines={1}>
               {slice.label}
             </TextParagraph>
-            <TextParagraph variant="emphasis" style={styles.percent}>
+            <TextParagraph variant="emphasis" className="min-w-[48px] text-right">
               {slice.percent.toFixed(1).replace('.', ',')}%
             </TextParagraph>
           </View>
           <View
-            style={[styles.track, { backgroundColor: theme.surfaceMuted }]}
+            className="mb-sm h-2 overflow-hidden rounded-full bg-surface-muted"
             accessibilityRole="progressbar"
             accessibilityValue={{ min: 0, max: 100, now: slice.percent }}
           >
             <View
-              style={[
-                styles.fill,
-                {
-                  backgroundColor: fillColor,
-                  width: `${Math.min(100, Math.max(4, slice.percent))}%`,
-                },
-              ]}
+              className="h-full rounded-full"
+              // tailwind-exception: dynamic fill width and optional custom color
+              style={{
+                backgroundColor: fillColor,
+                width: `${Math.min(100, Math.max(4, slice.percent))}%`,
+              }}
             />
           </View>
-          {index < slices.length - 1 ? (
-            <Divider spacing={Spacing.sm} style={styles.divider} />
-          ) : null}
+          {index < slices.length - 1 ? <Divider spacing={8} className="my-0" /> : null}
         </View>
       ))}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  list: {
-    alignSelf: 'stretch',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xs,
-  },
-  iconPlaceholder: {
-    width: 20,
-  },
-  label: {
-    flex: 1,
-    minWidth: 0,
-  },
-  percent: {
-    minWidth: 48,
-    textAlign: 'right',
-  },
-  track: {
-    height: 8,
-    borderRadius: Radius.full,
-    overflow: 'hidden',
-    marginBottom: Spacing.sm,
-  },
-  fill: {
-    height: '100%',
-    borderRadius: Radius.full,
-  },
-  divider: {
-    marginVertical: 0,
-  },
-});

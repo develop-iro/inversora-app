@@ -50,10 +50,19 @@ Do not implement in the MVP unless explicitly requested:
 - React 19.
 - TypeScript.
 - Expo Router.
-- Planned backend/database: Supabase.
-- Planned AI explanations: OpenAI API or Vercel AI SDK on the backend.
+- Backend oficial: **inversora-api** (NestJS + PostgreSQL + Prisma). Ver `inversora-api/docs/README.md`.
+- IA explicativa: servicio de asistente en backend (OpenAI / agente Python); nunca API key en cliente.
 - Zustand for client state when needed.
 - Zod for typed validation when needed.
+
+## Documentation source of truth
+
+1. **Documento oficial** (*Documentación de Proyecto: Inversora*, v1.0) — negocio, HUs, reglas RN.
+2. **`docs/product/*`** en este repo — resumen estable alineado al doc oficial (§2, §3, §4…).
+3. **`inversora-api/docs/*`** — propósito backend, contratos HTTP, scoring RN-04, analytics.
+4. **`docs/architecture/*`** — decisiones técnicas y mapa de implementación de la app.
+
+Ante conflicto, prevalece el documento oficial. No implementar Supabase Edge Functions como backend; usar `inversora-api`.
 
 Code structure:
 
@@ -112,6 +121,17 @@ Target routes:
 - Keep `src/app` thin. Add screens and feature logic under `src/features/*`, and place reusable UI/theme/helpers under `src/shared/*` or `src/core/*`.
 - Do not introduce broker flows, account management, real portfolio actions, or personalized financial advice into the MVP.
 - If a change touches Expo, React Native, routing, or native config, consult the exact Expo SDK 56 docs first instead of relying on older assumptions.
+
+## Styling (NativeWind / Tailwind híbrido)
+
+- Default: `className` with semantic tokens (`bg-surface`, `text-text-secondary`, `gap-md`, `rounded-card`, `shadow-card`).
+- **Whitelist:** precision components use `StyleSheet` — see `docs/architecture/tailwind-stylesheet-whitelist.md` and `src/shared/nativewind/stylesheet-whitelist.ts`.
+- Compose classes with `cn()` from `@/shared/utils/cn`.
+- Variant maps live in `src/shared/nativewind/theme-classes.ts`.
+- Do not add `StyleSheet.create` outside the whitelist without documenting it.
+- `useTheme()` for third-party APIs (icon colors, `TextInput`, charts).
+- MVP uses light theme only (`userInterfaceStyle: light`).
+- After token JSON changes, run `npm run generate:theme`.
 
 ## AI And Finance Rules
 
