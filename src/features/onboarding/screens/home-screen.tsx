@@ -1,9 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
-
-import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
-import { getRankingsGrouped } from '@/features/funds/services/get-rankings';
 
 import { HomeEducationalProfileCard } from '@/features/learn/components/home-educational-profile-card';
 import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
@@ -48,7 +45,6 @@ export default function HomeScreen() {
   const { contentWidth } = useMobileLayout();
   const [activeTab, setActiveTab] = useState<HomeContentTab>('explore');
   const [selectedRankingTheme, setSelectedRankingTheme] = useState<string | 'all'>('all');
-  const [rankingGroups, setRankingGroups] = useState<BenchmarkRankingGroup[]>([]);
   const {
     searchQuery,
     hasQuery,
@@ -57,6 +53,7 @@ export default function HomeScreen() {
     featuredState,
     newsItems,
     newsState,
+    rankingGroups,
     activeRanking,
     rankingState,
     isRefreshing,
@@ -119,26 +116,6 @@ export default function HomeScreen() {
 
   const handleOpenRankingTab = useCallback(() => {
     setActiveTab('ranking');
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void getRankingsGrouped()
-      .then((groups) => {
-        if (!cancelled) {
-          setRankingGroups(groups);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setRankingGroups([]);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   const effectiveRankingTheme =

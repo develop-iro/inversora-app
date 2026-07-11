@@ -6,7 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DISCLAIMER_RANKING_EDUCATIONAL } from '@/features/legal/constants/disclaimer-snippets';
 import { HomeRankingRow } from '@/features/onboarding/components/home-ranking-row';
 import { toHomeRankingEntries } from '@/features/onboarding/utils/build-ranking-theme-options';
-import { getRankingsGrouped } from '@/features/funds/services/get-rankings';
+import {
+  getRankingsGrouped,
+  RANKINGS_BENCHMARK_DETAIL_LIMIT,
+} from '@/features/funds/services/get-rankings';
 import {
   filterBeginnerEligibleRankedFunds,
   shouldApplyBeginnerSurfaceGuards,
@@ -24,7 +27,7 @@ import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
 
 type BenchmarkRankingLoadState = 'loading' | 'ready' | 'error' | 'empty';
 
-const BENCHMARK_RANKING_LIMIT = 100;
+const BENCHMARK_RANKING_LIMIT = RANKINGS_BENCHMARK_DETAIL_LIMIT;
 
 /**
  * Dedicated ranking detail for a single benchmark peer group (HU-14).

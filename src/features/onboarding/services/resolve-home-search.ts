@@ -2,7 +2,11 @@ import { explainAssistant } from '@/core/api/assistant-client';
 import { allowsMockFallback } from '@/core/config/app-environment';
 import type { RankedFund } from '@/core/scoring/types';
 import { isQuestionLikeQuery } from '@/features/assistant/utils/search-intent';
-import { getRankings } from '@/features/funds/services/get-rankings';
+import {
+  flattenRankingGroupsToRankedFunds,
+  getRankingsGrouped,
+} from '@/features/funds/services/get-rankings';
+import { RANKINGS_HOME_GROUP_LIMIT } from '@/features/funds/constants/rankings-limits';
 import {
   matchHomeSearchAnswer,
   type HomeSearchAnswer,
@@ -143,7 +147,10 @@ export async function resolveHomeSearch(
   let allRanked: RankedFund[];
 
   try {
-    allRanked = await getRankings();
+    const groups = await getRankingsGrouped({
+      limit: RANKINGS_HOME_GROUP_LIMIT,
+    });
+    allRanked = flattenRankingGroupsToRankedFunds(groups);
   } catch {
     allRanked = [];
   }
