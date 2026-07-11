@@ -85,6 +85,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
       - run: pnpm run security:verify-plugins
 
   # ── Phase 2: Build smoke ───────────────────────────────────────────────────
