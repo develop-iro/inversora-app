@@ -79,6 +79,8 @@
     "test:ci": "pnpm run typecheck && pnpm run lint:ci && pnpm run test:unit && pnpm run test:scripts && pnpm run security:verify-plugins",
     "quality": "pnpm run test:ci",
     "build:web:ci": "node scripts/run-expo-env.mjs qa export --platform android",
+    "build:web:pro": "node scripts/run-expo-env.mjs pro export --platform web --clear",
+    "deploy:web:pro": "pnpm run generate:theme && pnpm run build:web:pro && eas deploy --alias inversora",
     "verify:prebuild": "node scripts/run-expo-env.mjs pro prebuild --no-install",
     "build:preview": "npx eas-cli build --profile preview",
     "eas:login": "npx eas-cli login",
