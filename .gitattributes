@@ -1,0 +1,3 @@
+# Generated theme artifacts must stay LF to match generator output on all platforms.
+src/global.css text eol=lf
+tailwind.config.js text eol=lf
