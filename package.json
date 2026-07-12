@@ -78,7 +78,7 @@
     "test:theme": "node --test scripts/generate-global-css.spec.mjs scripts/generate-tailwind-config.spec.mjs",
     "test:scripts": "pnpm run test:env && pnpm run test:theme",
     "test:unit": "npx tsx --test src/**/*.spec.ts",
-    "e2e:install": "playwright install chromium",
+    "e2e:install": "playwright install --with-deps chromium",
     "e2e:web:serve": "node scripts/run-expo-env.mjs local start --web",
     "test:e2e": "playwright test",
     "security:verify-plugins": "npx expo config --type public",

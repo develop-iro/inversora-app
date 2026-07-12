@@ -113,7 +113,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: cp .env.example .env
-      - run: pnpm run e2e:install -- --with-deps
+      - run: pnpm run e2e:install
       - run: pnpm run generate:theme
       - run: pnpm run test:e2e
 
