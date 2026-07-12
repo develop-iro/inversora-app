@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import { AppError } from '@/core/errors/app-error';
+import { shouldUseInitialProfileGateForPlatform } from '@/core/storage/initial-profile-onboarding-policy';
 import { INITIAL_PROFILE_DISMISSED_STORAGE_KEY } from '@/core/storage/initial-profile-onboarding-storage-key';
 import {
   deleteSecureValue,
@@ -10,9 +11,13 @@ import {
 
 /**
  * Returns whether the initial profile onboarding gate applies on this platform.
+ *
+ * Policy (see docs/product/problem-statement.md §5.2.1):
+ * - iOS / Android: mandatory profiling questionnaire on first launch, with explicit skip.
+ * - Web: no gate; education is invited via home CTAs and banners.
  */
 export function shouldUseInitialProfileGate(): boolean {
-  return Platform.OS === 'ios' || Platform.OS === 'android';
+  return shouldUseInitialProfileGateForPlatform(Platform.OS);
 }
 
 export const initialProfileOnboardingStore = {

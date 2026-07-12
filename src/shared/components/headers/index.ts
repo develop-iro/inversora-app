@@ -5,6 +5,7 @@ export { HeaderApp, type HeaderAppProps } from '@/shared/components/headers/head
 export { HeaderBar, type HeaderBarProps } from '@/shared/components/headers/header-bar';
 export { HeaderBrand } from '@/shared/components/headers/header-brand';
 export { HeaderModal, type HeaderModalProps } from '@/shared/components/headers/header-modal';
+export { HeaderTextAction, type HeaderTextActionProps } from '@/shared/components/headers/header-text-action';
 export {
   HeaderScreen,
   type HeaderScreenProps,

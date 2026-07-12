@@ -11,8 +11,23 @@ Use this checklist before tagging a preview or production mobile build.
 
 ## Functional smoke test
 
-- [ ] Home: destacados, ranking, búsqueda SORA
+### Native (iOS / Android)
+
+- [ ] Primera visita: redirección a `/learn?mode=initial` (gate obligatorio)
+- [ ] Bienvenida initial: «Omitir» visible arriba a la derecha; footer sin botón ghost duplicado
+- [ ] Omitir → home con acceso a tabs; segunda visita sin re-gate
+- [ ] `/legal` accesible durante el gate sin perfil
 - [ ] Learn: cuestionario → perfil → catálogo con filtros sugeridos
+
+### Web
+
+- [ ] Primera visita: aterriza en `/` sin gate
+- [ ] Banner «Aprende con contexto» visible sin perfil; CTA abre `/learn` voluntario
+- [ ] Learn: cuestionario → perfil → catálogo con filtros sugeridos
+
+### Todas las plataformas
+
+- [ ] Home: destacados, ranking, búsqueda SORA
 - [ ] Catálogo: búsqueda, filtros, ordenación (score / TER / rentab. 1 año)
 - [ ] Ficha: score, gráfico, favorito, SORA
 - [ ] Comparar: 2 fondos, banner de homogeneidad, SORA contextual
@@ -34,3 +49,4 @@ Use this checklist before tagging a preview or production mobile build.
 - [ ] `eas build --profile preview` (QA) succeeds
 - [ ] Install preview APK/IPA on physical device and repeat smoke test
 - [ ] Privacy policy URL documented for store metadata (`/legal` in-app)
+- [ ] **Production only:** set `SENTRY_AUTH_TOKEN` (and org/project in app config) in EAS secrets so source maps upload; preview/dev builds skip upload via `SENTRY_DISABLE_AUTO_UPLOAD`

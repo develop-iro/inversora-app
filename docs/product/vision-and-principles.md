@@ -18,6 +18,8 @@ No ejecuta inversiones, no sustituye a un asesor profesional ni conecta con brok
 Implicaciones prácticas:
 
 1. Antes de tablas densas o rankings, ofrecer contexto (modo “Quiero aprender”, explicaciones, perfil orientativo).
+   - **iOS / Android:** primera visita obliga al cuestionario de perfilado (`/learn?mode=initial`); el usuario puede omitir con «Omitir» en el header.
+   - **Web:** mismo principio en copy y jerarquía visual; sin bloqueo de rutas (invitación educativa).
 2. Mostrar métricas con progresión (tarjeta resumida → ficha → comparación).
 3. Dejar claro en todo momento que la información **no es asesoramiento personalizado**.
 4. No usar lenguaje de urgencia ni gamificación de decisiones reales de inversión.

@@ -11,13 +11,15 @@ const ILLUSTRATION_HEIGHT = 220;
 
 export type LearnWelcomeIntroProps = {
   step: LearnInfoStep;
+  /** When true, shows a discreet hint about skipping the orientative profile. */
+  readonly showSkipHint?: boolean;
 };
 
 /**
  * Full-screen orientative welcome before the profiling questionnaire begins.
  * Not counted as a questionnaire step.
  */
-export function LearnWelcomeIntro({ step }: LearnWelcomeIntroProps) {
+export function LearnWelcomeIntro({ step, showSkipHint = false }: LearnWelcomeIntroProps) {
   const gradients = useThemeGradients();
   const illustrationFade = gradients.heroSlideIllustrationFade;
 
@@ -64,6 +66,17 @@ export function LearnWelcomeIntro({ step }: LearnWelcomeIntroProps) {
         >
           {step.body}
         </TextParagraph>
+
+        {showSkipHint ? (
+          <TextParagraph
+            variant="secondary"
+            themeColor="textSecondary"
+            className="w-full text-caption leading-5"
+          >
+            Sin perfil orientativo verás contenido genérico. Puedes completar el cuestionario más
+            tarde desde Inicio o pulsar Omitir arriba a la derecha.
+          </TextParagraph>
+        ) : null}
       </View>
     </View>
   );

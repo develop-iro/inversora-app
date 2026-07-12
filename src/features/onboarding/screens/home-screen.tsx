@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { RefreshControl, View } from 'react-native';
+import { Platform, RefreshControl, View } from 'react-native';
 
+import { HomeLearnInvitationBanner } from '@/features/learn/components/home-learn-invitation-banner';
 import { HomeEducationalProfileCard } from '@/features/learn/components/home-educational-profile-card';
 import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
 import {
@@ -248,6 +249,12 @@ export default function HomeScreen() {
                       onOpenSuggestedCatalog={handleOpenSuggestedCatalog}
                       onRetakeQuestionnaire={handleLearnPress}
                     />
+                  </HomeSectionCard>
+                ) : null}
+
+                {!isProfileLoading && !educationalProfile && Platform.OS === 'web' ? (
+                  <HomeSectionCard title="Aprende con contexto" borderless contentClassName="p-0">
+                    <HomeLearnInvitationBanner onPressLearn={handleLearnPress} />
                   </HomeSectionCard>
                 ) : null}
 

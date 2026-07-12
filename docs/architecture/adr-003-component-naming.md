@@ -152,6 +152,8 @@ Acciones declarativas con `leadingActions` / `trailingActions` y handlers en `on
 
 `HeaderActionId`: `back` | `close` | `learn` | `sora`. `close` y `sora` requieren handler explícito salvo en modales con `onAction.close`.
 
+Acciones textuales en toolbar (p. ej. «Omitir»): `HeaderTextAction` en el slot `trailing` de `HeaderBar`, no como `HeaderActionId`.
+
 ### 7. Inputs (`shared/components/inputs/`)
 
 | Componente | Uso |

@@ -37,8 +37,7 @@ import {
   trackLearnStepViewed,
 } from '@/features/learn/services/learn-questionnaire-analytics';
 import { ScreenShell } from '@/shared/components/layout';
-import { HeaderModal } from '@/shared/components/headers';
-import { LegalNotice } from '@/shared/components/legal/legal-notice';
+import { HeaderBar, HeaderModal, HeaderTextAction } from '@/shared/components/headers';
 import { Button } from '@/shared/components/ui';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { routes } from '@/shared/navigation/routes';
@@ -337,11 +336,28 @@ export default function LearnQuestionnaireScreen() {
   const showPreviousStep =
     phase === 'questionnaire' && progressIndex !== null && progressIndex > 1;
 
-  const showSkipInitialProfile = isInitialMode && isWelcomeStep;
+  const showInitialWelcomeHeader =
+    phase === 'questionnaire' && isWelcomeStep && isInitialMode;
 
-  const showQuestionnaireHeader = phase !== 'questionnaire' || !isWelcomeStep || isInitialMode;
+  const showQuestionnaireHeader =
+    (phase !== 'questionnaire' || !isWelcomeStep || isInitialMode) && !showInitialWelcomeHeader;
 
-  const header = showQuestionnaireHeader ? (
+  const header = showInitialWelcomeHeader ? (
+    <HeaderBar
+      layout="screen"
+      className="bg-surface"
+      trailing={
+        <HeaderTextAction
+          label="Omitir"
+          accessibilityLabel="Explorar sin perfil"
+          onPress={() => {
+            void handleSkipInitialProfile();
+          }}
+          loading={isSkipping}
+        />
+      }
+    />
+  ) : showQuestionnaireHeader ? (
     <HeaderModal
       title={LEARN_QUESTIONNAIRE_SCREEN_TITLE}
       onAction={{ close: handleClose }}
@@ -351,7 +367,7 @@ export default function LearnQuestionnaireScreen() {
   const bodyContent = (() => {
     if (phase === 'questionnaire' && currentStep) {
       if (isWelcomeStep && currentStep.kind === 'info') {
-        return <LearnWelcomeIntro step={currentStep} />;
+        return <LearnWelcomeIntro step={currentStep} showSkipHint={isInitialMode} />;
       }
 
       return (
@@ -414,25 +430,6 @@ export default function LearnQuestionnaireScreen() {
           }}
         >
           <View className="w-full max-w-full gap-sm self-center">
-            {showSkipInitialProfile ? (
-              <>
-                <LegalNotice
-                  title="Explorar sin perfil"
-                  body="Sin perfil orientativo verás contenido genérico. Puedes completar el cuestionario más tarde desde Inicio."
-                />
-                <Button
-                  variant="ghost"
-                  label="Explorar sin perfil"
-                  accessibilityLabel="Explorar la aplicación sin completar el perfil orientativo"
-                  onPress={() => {
-                    void handleSkipInitialProfile();
-                  }}
-                  loading={isSkipping}
-                  fullWidth
-                />
-              </>
-            ) : null}
-
             {phase === 'inconsistency' ? (
               <Button
                 variant="ghost"

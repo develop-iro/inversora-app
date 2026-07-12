@@ -47,7 +47,7 @@ export const LEARN_QUESTIONNAIRE_STEPS: readonly LearnQuestionStep[] = [
     countsTowardProgress: false,
     title: 'Hola, futuro inversor',
     body:
-      'Antes de explorar fondos, ETFs y otros vehículos de inversión, conversemos un momento. Este cuestionario te orienta para encontrar el producto que mejor encaje contigo: comparar, analizar y guardar tus preferencias en el dispositivo. Es orientativo: no sustituye un test de idoneidad ni una recomendación personalizada.',
+      'Antes de explorar fondos indexados, conversemos un momento. Este cuestionario te orienta para comparar con más contexto y guardar tus preferencias en el dispositivo. Es orientativo: no sustituye un test de idoneidad ni una recomendación personalizada.',
   },
   {
     id: 'prerequisites-education',
