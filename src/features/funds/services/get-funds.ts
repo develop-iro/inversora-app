@@ -36,8 +36,16 @@ function buildCatalogCacheKey(filters: FundCatalogFilters | undefined, page: num
 /** Default page size for catalog infinite scroll (`GET /funds`). */
 export const CATALOG_PAGE_SIZE = 20;
 
+/** Page size for lightweight filtered-count reads (`GET /funds?limit=1`). */
+export const CATALOG_FILTER_COUNT_PAGE_SIZE = 1;
+
+/** Page size when loading the full in-memory catalog index (API max is 100). */
+export const CATALOG_INDEX_PAGE_SIZE = 100;
+
 /** Wider slice used only to build category filter cards in the catalog. */
 export const CATALOG_CATEGORY_INDEX_LIMIT = 100;
+
+const CATALOG_FUNDS_INDEX_CACHE_KEY = 'catalog:index:all';
 
 /**
  * Fetches a single page from `GET /funds`.
@@ -123,6 +131,102 @@ function getMockCatalogFunds(filters?: FundCatalogFilters): CatalogFund[] {
   return applyClientOnlyCatalogFilters(CATALOG_FUNDS_MOCK, filters);
 }
 
+function mergeUniqueCatalogFunds(
+  current: readonly CatalogFund[],
+  incoming: readonly CatalogFund[],
+): CatalogFund[] {
+  if (incoming.length === 0) {
+    return [...current];
+  }
+
+  const seen = new Set(current.map((fund) => fund.isin));
+  const merged = [...current];
+
+  for (const fund of incoming) {
+    if (seen.has(fund.isin)) {
+      continue;
+    }
+
+    seen.add(fund.isin);
+    merged.push(fund);
+  }
+
+  return merged;
+}
+
+async function fetchCatalogIndexPage(
+  page: number,
+  signal?: AbortSignal,
+): Promise<FundListResponse> {
+  if (shouldUseMockData()) {
+    return buildMockFundListPage(undefined, page, CATALOG_INDEX_PAGE_SIZE);
+  }
+
+  const loader = async (): Promise<FundListResponse> => {
+    const apiQuery: FundListApiQuery = {
+      sortBy: 'score',
+      sortOrder: 'desc',
+      page,
+      limit: CATALOG_INDEX_PAGE_SIZE,
+    };
+    const response = await fetchFundListPage(apiQuery, signal);
+
+    return {
+      data: applyClientOnlyCatalogFilters(response.data),
+      meta: response.meta,
+    };
+  };
+
+  if (signal) {
+    return loader();
+  }
+
+  return fetchWithCache(`catalog:index:${page}`, CATALOG_CACHE_TTL_MS, loader);
+}
+
+async function loadAllCatalogPages(signal?: AbortSignal): Promise<CatalogFund[]> {
+  const firstPage = await fetchCatalogIndexPage(1, signal);
+  let funds = [...firstPage.data];
+
+  for (let page = 2; page <= firstPage.meta.totalPages; page += 1) {
+    const response = await fetchCatalogIndexPage(page, signal);
+    funds = mergeUniqueCatalogFunds(funds, response.data);
+  }
+
+  return funds;
+}
+
+/**
+ * Returns the total number of funds matching optional catalog filters.
+ *
+ * Uses `meta.total` from `GET /funds` with a minimal page size. Risk level is
+ * reflected accurately in mock mode; in API mode it follows the same client-side
+ * limitation as paginated catalog reads.
+ *
+ * @param filters - Optional catalog filters.
+ * @param signal - Optional abort signal.
+ */
+export async function getFundsFilteredCount(
+  filters: FundCatalogFilters | undefined,
+  signal?: AbortSignal,
+): Promise<number> {
+  if (shouldUseMockData()) {
+    return buildMockFundListPage(filters, 1, CATALOG_FILTER_COUNT_PAGE_SIZE).meta.total;
+  }
+
+  try {
+    const apiQuery: FundListApiQuery = {
+      ...mapCatalogFiltersToApiQuery(filters),
+      page: 1,
+      limit: CATALOG_FILTER_COUNT_PAGE_SIZE,
+    };
+    const response = await fetchFundListPage(apiQuery, signal);
+    return response.meta.total;
+  } catch (error) {
+    throw toFundsFetchError(error);
+  }
+}
+
 /**
  * Loads one paginated slice of the catalog from `GET /funds`.
  *
@@ -173,10 +277,33 @@ async function loadFundsPageFromApi(
 }
 
 /**
+ * Loads the full visible catalog into memory for client-side filter previews.
+ *
+ * Reuses paginated `GET /funds` responses (cached per page) and stores the merged
+ * slice under a single TTL key.
+ *
+ * @param signal - Optional abort signal.
+ */
+export async function getCatalogFundsIndex(signal?: AbortSignal): Promise<CatalogFund[]> {
+  if (shouldUseMockData()) {
+    return getMockCatalogFunds();
+  }
+
+  if (signal) {
+    return loadAllCatalogPages(signal);
+  }
+
+  return fetchWithCache(CATALOG_FUNDS_INDEX_CACHE_KEY, CATALOG_CACHE_TTL_MS, () =>
+    loadAllCatalogPages(),
+  );
+}
+
+/**
  * Loads a wider first page to derive category filter options without coupling
  * them to the paginated results list.
  *
  * @param signal - Optional abort signal.
+ * @deprecated Prefer {@link getCatalogFundsIndex} for filter previews and category cards.
  */
 export async function getCatalogCategoryIndex(signal?: AbortSignal): Promise<CatalogFund[]> {
   if (shouldUseMockData()) {

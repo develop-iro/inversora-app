@@ -75,6 +75,7 @@ export function useCatalogFundsPagination(
 
     if (soft) {
       setStatus('refreshing');
+      setMeta(null);
     } else {
       setStatus('loading');
       setFunds([]);

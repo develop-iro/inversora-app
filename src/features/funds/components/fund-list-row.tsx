@@ -12,7 +12,7 @@ import {
 } from '@/features/funds/utils/fund-summary';
 import { FUND_GLOSSARY } from '@/shared/constants/fund-glossary';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
-import { Badge, InfoHintTrigger, ScorePill, SkeletonBone, SkeletonPanel, SkeletonTextBlock } from '@/shared/components/ui';
+import { Badge, InfoHintTrigger, ScorePill, SkeletonBone, SkeletonPanel, SkeletonShimmerProvider, SkeletonTextBlock } from '@/shared/components/ui';
 import { InfoHintHost } from '@/shared/components/ui/info-hint-host';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { isWeb } from '@/shared/platform/capabilities';
@@ -31,21 +31,23 @@ export type FundListRowProps = WithLoading<FundListRowContentProps>;
 
 function FundListRowLoading() {
   return (
-    <View accessibilityLabel="Cargando fila del catálogo">
-      <SkeletonPanel padded={false}>
-        <View className="flex-row items-center gap-md px-lg py-md">
-          <SkeletonBone width={40} height={40} borderRadius={6} />
-          <SkeletonTextBlock
-            gap={4}
-            lines={[
-              { width: '72%', height: 14 },
-              { width: '48%', height: 10 },
-            ]}
-          />
-          <SkeletonBone width={44} height={28} borderRadius={9999} />
-        </View>
-      </SkeletonPanel>
-    </View>
+    <SkeletonShimmerProvider>
+      <View accessibilityLabel="Cargando fila del catálogo">
+        <SkeletonPanel padded={false}>
+          <View className="flex-row items-center gap-md px-lg py-md">
+            <SkeletonBone width={40} height={40} borderRadius={6} />
+            <SkeletonTextBlock
+              gap={4}
+              lines={[
+                { width: '72%', height: 14 },
+                { width: '48%', height: 10 },
+              ]}
+            />
+            <SkeletonBone width={44} height={28} borderRadius={9999} />
+          </View>
+        </SkeletonPanel>
+      </View>
+    </SkeletonShimmerProvider>
   );
 }
 

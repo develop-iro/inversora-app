@@ -1,4 +1,5 @@
 import type { FundCatalogFiltersState } from '@/features/funds/types/fund-catalog-filters';
+import { toServiceFilters, type FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
 
 export type CatalogActiveFilterChip = {
   readonly id: string;
@@ -92,6 +93,22 @@ export function buildCatalogActiveFilterChips(
   }
 
   return chips;
+}
+
+/**
+ * Maps draft sheet filters plus the active search query to service filters.
+ *
+ * @param draft - In-progress filter selections inside the filters sheet.
+ * @param searchQuery - Debounced catalog search query from the browse screen.
+ */
+export function buildCatalogPreviewServiceFilters(
+  draft: FundCatalogFiltersState,
+  searchQuery: string,
+): FundCatalogFilters {
+  return {
+    ...toServiceFilters(draft),
+    query: searchQuery,
+  };
 }
 
 /**
