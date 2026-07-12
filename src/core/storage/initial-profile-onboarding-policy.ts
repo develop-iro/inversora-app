@@ -18,7 +18,7 @@ export function shouldUseInitialProfileGateForPlatform(platformOs: string): bool
  */
 export function isOnboardingExemptRoute(segments: readonly string[]): boolean {
   const root = segments[0];
-  return root === 'learn' || root === 'legal';
+  return root === 'learn' || root === 'legal' || root === 'feedback';
 }
 
 export type InitialProfileGateRedirectInput = {

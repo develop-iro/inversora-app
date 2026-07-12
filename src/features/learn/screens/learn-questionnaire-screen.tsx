@@ -25,6 +25,7 @@ import {
   type BuildEducationalProfileResult,
   type ProfileInconsistency,
 } from '@/features/learn/services/build-educational-profile';
+import { applyQuestionnaireGraduation } from '@/features/learn/services/educational-profile-graduation';
 import { syncEducationalProfileToServer } from '@/features/learn/services/educational-profile-sync';
 import {
   trackLearnAbandoned,
@@ -227,14 +228,15 @@ export default function LearnQuestionnaireScreen() {
       setIsSaving(true);
 
       try {
-        await saveProfile(result.profile);
-        void syncEducationalProfileToServer(result.profile);
+        const graduatedProfile = applyQuestionnaireGraduation(result.profile);
+        await saveProfile(graduatedProfile);
+        void syncEducationalProfileToServer(graduatedProfile);
         await initialProfileOnboardingStore.clearDismissed();
-        setCompletedProfile(result.profile);
+        setCompletedProfile(graduatedProfile);
         setPhase('result');
         trackLearnCompleted(
-          result.profile.riskOrientation,
-          result.profile.profileVersion,
+          graduatedProfile.riskOrientation,
+          graduatedProfile.profileVersion,
           analyticsMode,
         );
       } finally {

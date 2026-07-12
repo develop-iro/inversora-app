@@ -5,6 +5,7 @@ import { shouldApplyBeginnerSurfaceGuards } from '@/features/funds/utils/beginne
 export type SecondaryTabConfig = {
   readonly mode: SecondaryTabMode;
   readonly label: string;
+  readonly compactLabel: string;
   readonly accessibilityLabel: string;
   readonly activeIcon: 'book-open-page-variant' | 'heart';
   readonly inactiveIcon: 'book-open-page-variant-outline' | 'heart-outline';
@@ -31,6 +32,7 @@ export function resolveSecondaryTabConfig(mode: SecondaryTabMode): SecondaryTabC
     return {
       mode,
       label: 'Aprendizaje',
+      compactLabel: 'Aprende',
       accessibilityLabel: 'Abrir aprendizaje',
       activeIcon: 'book-open-page-variant',
       inactiveIcon: 'book-open-page-variant-outline',
@@ -40,6 +42,7 @@ export function resolveSecondaryTabConfig(mode: SecondaryTabMode): SecondaryTabC
   return {
     mode,
     label: 'Favoritos',
+    compactLabel: 'Favoritos',
     accessibilityLabel: 'Ver favoritos',
     activeIcon: 'heart',
     inactiveIcon: 'heart-outline',

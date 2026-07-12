@@ -1,13 +1,11 @@
 import { useRouter, useSegments } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
-import {
-  initialProfileOnboardingStore,
-  shouldUseInitialProfileGate,
-} from '@/core/storage/initial-profile-onboarding-store';
+import { shouldUseInitialProfileGate } from '@/core/storage/initial-profile-onboarding-store';
 import { shouldRedirectToInitialProfileQuestionnaire } from '@/core/storage/initial-profile-onboarding-policy';
-import { trackLearnGateRedirect } from '@/features/learn/services/learn-questionnaire-analytics';
 import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
+import { useInitialProfileDismissed } from '@/features/learn/hooks/use-initial-profile-dismissed';
+import { trackLearnGateRedirect } from '@/features/learn/services/learn-questionnaire-analytics';
 import { routes } from '@/shared/navigation/routes';
 
 export type InitialProfileGateProps = {
@@ -24,28 +22,8 @@ export function InitialProfileGate({ enabled }: InitialProfileGateProps) {
   const router = useRouter();
   const segments = useSegments();
   const { profile, isLoading: isProfileLoading } = useEducationalProfile();
-  const [isDismissed, setIsDismissed] = useState<boolean | null>(() =>
-    shouldUseInitialProfileGate() ? null : false,
-  );
+  const { isDismissed } = useInitialProfileDismissed();
   const hasRedirectedRef = useRef(false);
-
-  useEffect(() => {
-    if (!shouldUseInitialProfileGate()) {
-      return;
-    }
-
-    let cancelled = false;
-
-    void initialProfileOnboardingStore.getDismissed().then((dismissed) => {
-      if (!cancelled) {
-        setIsDismissed(dismissed);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (
