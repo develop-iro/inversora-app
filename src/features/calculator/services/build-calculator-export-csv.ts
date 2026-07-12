@@ -35,10 +35,6 @@ function buildFrequencyLabel(frequency: CompoundInterestInput['depositFrequency'
   return frequency === 'monthly' ? 'Mensual' : 'Anual';
 }
 
-function buildTimingLabel(timing: CompoundInterestInput['depositTiming']): string {
-  return timing === 'start' ? 'Al inicio del periodo' : 'Al final del periodo';
-}
-
 /**
  * Builds a UTF-8 CSV document for a compound interest simulation.
  * Uses semicolon separators for compatibility with Excel in Spanish locales.
@@ -62,7 +58,6 @@ export function buildCalculatorExportCsv(
     joinCsvRow(['Balance inicial (€)', formatCsvAmount(input.initialBalance)]),
     joinCsvRow(['Aportación periódica (€)', formatCsvAmount(input.periodicDeposit)]),
     joinCsvRow(['Frecuencia de aportación', buildFrequencyLabel(input.depositFrequency)]),
-    joinCsvRow(['Momento del aporte', buildTimingLabel(input.depositTiming)]),
     joinCsvRow(['Tipo de interés anual (%)', formatCsvAmount(input.annualRatePercent)]),
     joinCsvRow(['Duración (años)', String(input.durationYears)]),
     '',

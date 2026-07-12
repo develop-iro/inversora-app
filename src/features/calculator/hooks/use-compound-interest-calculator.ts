@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import type { CatalogFund } from '@/core/domain/catalog';
 import { validateWithSchema } from '@/core/forms/validate-with-schema';
@@ -6,6 +6,7 @@ import { trackEvent } from '@/core/analytics/track-event';
 import {
   calculateCompoundInterest,
   DEFAULT_COMPOUND_INTEREST_INPUT,
+  FIXED_DEPOSIT_TIMING,
   type CompoundInterestInput,
   type CompoundInterestResult,
 } from '@/features/calculator/models/compound-interest.engine';
@@ -41,19 +42,15 @@ export type UseCompoundInterestCalculatorResult = {
   fieldErrors: Readonly<Record<string, string>>;
   calculate: () => boolean;
   reset: () => void;
+  loadFromIsin: (isin: string) => Promise<void>;
 };
 
 /**
  * Manages calculator form state, optional fund-based rate derivation, and results.
- *
- * @param initialIsin - Optional ISIN to pre-load when opening from a fund detail.
+ * Route-level focus lifecycle (reset on blur, hydrate on focus) lives in the screen.
  */
-export function useCompoundInterestCalculator(
-  initialIsin?: string,
-): UseCompoundInterestCalculatorResult {
-  const [mode, setModeState] = useState<CalculatorMode>(
-    initialIsin !== undefined && initialIsin.trim().length > 0 ? 'fund' : 'free',
-  );
+export function useCompoundInterestCalculator(): UseCompoundInterestCalculatorResult {
+  const [mode, setModeState] = useState<CalculatorMode>('free');
   const [input, setInput] = useState<CompoundInterestInput>(DEFAULT_COMPOUND_INTEREST_INPUT);
   const [selectedFund, setSelectedFund] = useState<CatalogFund | null>(null);
   const [fundRate, setFundRate] = useState<IllustrativeFundRate | null>(null);
@@ -82,7 +79,9 @@ export function useCompoundInterestCalculator(
 
       if (derivedRate === null) {
         setFundRate(null);
-        setFundError('Este fondo no tiene histórico suficiente para estimar un tipo ilustrativo.');
+        setFundError(
+          'Este fondo no tiene histórico suficiente en FMP para estimar un tipo ilustrativo. Puedes usar un escenario libre o elegir otro fondo con más trayectoria.',
+        );
         return;
       }
 
@@ -155,7 +154,11 @@ export function useCompoundInterestCalculator(
 
   const updateInput = useCallback((patch: Partial<CompoundInterestInput>) => {
     setInput((current) => {
-      const next = { ...current, ...patch };
+      const next: CompoundInterestInput = {
+        ...current,
+        ...patch,
+        depositTiming: FIXED_DEPOSIT_TIMING,
+      };
 
       if (patch.annualRatePercent !== undefined) {
         setRateScenario(matchEducationalScenario(patch.annualRatePercent));
@@ -205,40 +208,33 @@ export function useCompoundInterestCalculator(
     setModeState('free');
   }, [clearFund]);
 
-  useEffect(() => {
-    const normalizedIsin = initialIsin?.trim().toUpperCase();
+  const loadFromIsin = useCallback(async (isin: string) => {
+    const normalizedIsin = isin.trim().toUpperCase();
 
-    if (normalizedIsin === undefined || normalizedIsin.length === 0) {
+    if (normalizedIsin.length === 0) {
       return;
     }
 
-    let cancelled = false;
+    setModeState('fund');
 
-    void (async () => {
-      try {
-        const detail = await getFundByIsin(normalizedIsin);
+    try {
+      const detail = await getFundByIsin(normalizedIsin);
 
-        if (cancelled || detail === null) {
-          return;
-        }
-
-        await loadFund({
-          ...detail.fund,
-          inversoraScore: detail.inversoraScore,
-          rank: detail.rank,
-          catalogVisibility: 'visible',
-        });
-      } catch {
-        if (!cancelled) {
-          setFundError('No se pudo cargar la información del fondo seleccionado.');
-        }
+      if (detail === null) {
+        setFundError('No se pudo cargar la información del fondo seleccionado.');
+        return;
       }
-    })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [initialIsin, loadFund]);
+      await loadFund({
+        ...detail.fund,
+        inversoraScore: detail.inversoraScore,
+        rank: detail.rank,
+        catalogVisibility: 'visible',
+      });
+    } catch {
+      setFundError('No se pudo cargar la información del fondo seleccionado.');
+    }
+  }, [loadFund]);
 
   return {
     mode,
@@ -258,5 +254,6 @@ export function useCompoundInterestCalculator(
     fieldErrors,
     calculate,
     reset,
+    loadFromIsin,
   };
 }
