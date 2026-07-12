@@ -1,7 +1,11 @@
 /** How often periodic contributions are added. */
 export type DepositFrequency = 'monthly' | 'yearly';
 
-/** Whether deposits happen at the start or end of each period. */
+/**
+ * Whether deposits happen at the start or end of each period.
+ * The MVP UI fixes this to {@link FIXED_DEPOSIT_TIMING} to avoid a confusing control
+ * whose impact is under ~0.5% for typical monthly scenarios.
+ */
 export type DepositTiming = 'start' | 'end';
 
 /** User-editable compound interest scenario. */
@@ -117,21 +121,6 @@ export function calculateCompoundInterest(
   };
 }
 
-/** Default educational scenario for first render. */
-export const DEFAULT_COMPOUND_INTEREST_INPUT: CompoundInterestInput = {
-  initialBalance: 1000,
-  periodicDeposit: 100,
-  depositFrequency: 'monthly',
-  depositTiming: 'start',
-  annualRatePercent: 5,
-  durationYears: 10,
-};
-
-export {
-  formatLocalizedDecimal as formatCalculatorInputNumber,
-  parseLocalizedNumber as parseCalculatorNumber,
-} from '@/shared/components/inputs/input-utils';
-
 /**
  * Formats currency for calculator results.
  *
@@ -145,3 +134,16 @@ export function formatCalculatorCurrency(value: number): string {
     maximumFractionDigits: 2,
   }).format(value);
 }
+
+/** Fixed educational assumption: each periodic deposit is added before period growth. */
+export const FIXED_DEPOSIT_TIMING: DepositTiming = 'start';
+
+/** Default educational scenario for first render. */
+export const DEFAULT_COMPOUND_INTEREST_INPUT: CompoundInterestInput = {
+  initialBalance: 1000,
+  periodicDeposit: 100,
+  depositFrequency: 'monthly',
+  depositTiming: FIXED_DEPOSIT_TIMING,
+  annualRatePercent: 5,
+  durationYears: 10,
+};

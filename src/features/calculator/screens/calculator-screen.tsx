@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { ScrollView, View, type View as ViewType } from 'react-native';
 
@@ -76,7 +76,23 @@ export default function CalculatorScreen() {
     fieldErrors,
     calculate,
     reset,
-  } = useCompoundInterestCalculator(initialIsin);
+    loadFromIsin,
+  } = useCompoundInterestCalculator();
+
+  useFocusEffect(
+    useCallback(() => {
+      reset();
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+
+      if (initialIsin !== undefined) {
+        void loadFromIsin(initialIsin);
+      }
+
+      return () => {
+        reset();
+      };
+    }, [initialIsin, loadFromIsin, reset]),
+  );
 
   const modeTabs = useMemo(
     () => [
@@ -220,9 +236,8 @@ export default function CalculatorScreen() {
         selectedIsins={selectedFund ? [selectedFund.isin] : []}
         canAddMore
         onClose={() => setIsPickerVisible(false)}
-        onSelectFund={(fund) => {
-          void selectFund(fund);
-          setIsPickerVisible(false);
+        onSelectFund={async (fund) => {
+          await selectFund(fund);
         }}
       />
     </>

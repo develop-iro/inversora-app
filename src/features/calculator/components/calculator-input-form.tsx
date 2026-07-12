@@ -1,15 +1,15 @@
 import { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 
-import type { CompoundInterestInput, DepositFrequency, DepositTiming } from '@/features/calculator/models/compound-interest.engine';
+import type { CompoundInterestInput, DepositFrequency } from '@/features/calculator/models/compound-interest.engine';
 import {
   EDUCATIONAL_RATE_SCENARIOS,
   type EducationalRateScenario,
 } from '@/features/calculator/constants/educational-scenarios';
 import {
-  formatCalculatorInputNumber,
-  parseCalculatorNumber,
-} from '@/features/calculator/models/compound-interest.engine';
+  formatLocalizedDecimal as formatCalculatorInputNumber,
+  parseLocalizedNumber as parseCalculatorNumber,
+} from '@/shared/components/inputs/input-utils';
 import { TextParagraph } from '@/shared/components/text';
 import { InputNumeric } from '@/shared/components/inputs';
 import { Button } from '@/shared/components/ui/button';
@@ -36,11 +36,6 @@ type ChipOption<T extends string> = {
 const FREQUENCY_OPTIONS: ChipOption<DepositFrequency>[] = [
   { value: 'monthly', label: 'Mensual' },
   { value: 'yearly', label: 'Anual' },
-];
-
-const TIMING_OPTIONS: ChipOption<DepositTiming>[] = [
-  { value: 'start', label: 'Al inicio del periodo' },
-  { value: 'end', label: 'Al final del periodo' },
 ];
 
 function OptionChip<T extends string>({
@@ -137,22 +132,6 @@ export function CalculatorInputForm({
               option={option}
               selected={input.depositFrequency === option.value}
               onPress={() => onChange({ depositFrequency: option.value })}
-            />
-          ))}
-        </View>
-      </View>
-
-      <View className="gap-sm">
-        <TextParagraph variant="secondary" themeColor="textSecondary">
-          Momento del aporte
-        </TextParagraph>
-        <View className="gap-sm">
-          {TIMING_OPTIONS.map((option) => (
-            <OptionChip
-              key={option.value}
-              option={option}
-              selected={input.depositTiming === option.value}
-              onPress={() => onChange({ depositTiming: option.value })}
             />
           ))}
         </View>

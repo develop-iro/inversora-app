@@ -86,6 +86,9 @@ export function CalculatorFundContextCard({
           <TextParagraph variant="secondary" themeColor="textSecondary">
             Histórico {fundRate.timeframeLabel}: {fundRate.grossRatePercent.toFixed(2).replace('.', ',')}%
             bruto · TER {fundRate.terPercent.toFixed(2).replace('.', ',')}% · {fundRate.sourceLabel}
+            {fundRate.isPartialHistory
+              ? ' · Estimación anualizada con menos de 1 año de cotización'
+              : ''}
           </TextParagraph>
         </View>
       ) : null}
