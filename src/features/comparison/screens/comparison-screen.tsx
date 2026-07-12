@@ -19,11 +19,14 @@ import { useCompareSelection } from '@/features/comparison/hooks/use-compare-sel
 import { useFavoritesList } from '@/features/funds/hooks/use-favorites-list';
 import { buildCompareQuickPrompts } from '@/features/comparison/utils/build-compare-quick-prompts';
 import { buildCompareTableRows } from '@/features/comparison/utils/build-compare-table-rows';
+import { areCompareFundsOutOfSync } from '@/features/comparison/utils/compare-funds-sync';
 import { evaluateCompareFairness } from '@/features/comparison/utils/evaluate-compare-fairness';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { SectionCard, TabScreenScroll } from '@/shared/components/layout';
 import { TextHeading, TextParagraph } from '@/shared/components/text';
+import { SlowRequestReloadState } from '@/shared/components/ui';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
+import { useSlowRequestNotice } from '@/shared/hooks/use-slow-request-notice';
 import { Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
 
 function parseIsinsParam(value: string | string[] | undefined): string[] {
@@ -53,7 +56,7 @@ export default function ComparisonScreen() {
     setFunds,
   } = useCompareSelection();
   const { isins: favoriteIsins } = useFavoritesList();
-  const { entries, loadedDetails, notFoundIsins, isLoading: isFundsLoading } =
+  const { entries, loadedDetails, notFoundIsins, isLoading: isFundsLoading, reloadToken, refetch } =
     useCompareFunds(selectedIsins);
   const [isPickerVisible, setIsPickerVisible] = useState(false);
   const [isSoraVisible, setIsSoraVisible] = useState(false);
@@ -91,8 +94,13 @@ export default function ComparisonScreen() {
 
   const canCompare = loadedDetails.length >= MIN_COMPARE_FUNDS;
   const canAskSora = selectedIsins.length >= MIN_COMPARE_FUNDS;
-  const isLoading = isSelectionLoading || isFundsLoading;
+  const isFundsOutOfSync = areCompareFundsOutOfSync(selectedIsins, entries);
   const isEmpty = selectedIsins.length === 0;
+  const isLoading = isSelectionLoading || isFundsLoading || isFundsOutOfSync;
+  const { isSlow: isCompareLoadSlow } = useSlowRequestNotice({
+    isLoading: !isEmpty && isLoading,
+    loadingKey: reloadToken,
+  });
   const needsSecondFund = selectedIsins.length === 1;
   const hasTrackedCompareRef = useRef(false);
 
@@ -127,7 +135,7 @@ export default function ComparisonScreen() {
 
   return (
     <TabScreenScroll
-      extraBottomPadding={Spacing.lg}
+      extraBottomPadding={Spacing.xl}
       contentContainerClassName="items-center pt-lg"
       showsVerticalScrollIndicator={false}
     >
@@ -157,7 +165,11 @@ export default function ComparisonScreen() {
         ) : null}
 
         {isLoading ? (
-          <CompareLoadingSkeleton />
+          isCompareLoadSlow ? (
+            <SlowRequestReloadState onRetry={refetch} layout="section" className="w-full" />
+          ) : (
+            <CompareLoadingSkeleton />
+          )
         ) : !isEmpty ? (
           <CompareSelectionPanel
             entries={entries}
@@ -214,8 +226,8 @@ export default function ComparisonScreen() {
           selectedIsins={selectedIsins}
           canAddMore={canAddMore}
           onClose={() => setIsPickerVisible(false)}
-          onSelectFund={(fund) => {
-            void addFund(fund.isin);
+          onSelectFund={async (fund) => {
+            await addFund(fund.isin);
           }}
         />
       </View>
