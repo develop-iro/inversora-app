@@ -1,0 +1,27 @@
+---
+description: Catalog filter drafts must use in-memory data, not per-toggle API calls
+globs: src/features/funds/**/*
+alwaysApply: false
+---
+
+# Catalog client-side filtering
+
+The fund catalog loads thousands of funds with paginated `GET /funds` and a short TTL cache (`CATALOG_CACHE_TTL_MS`).
+
+## Rules
+
+1. **Draft / preview UI** (filters sheet, search typeahead counts, chip previews) must filter an **in-memory catalog slice** loaded once via `getCatalogFundsIndex()` / `useCatalogFundsIndex()`.
+2. **Do not** call `GET /funds` on every filter toggle, slider move, or keystroke to refresh preview counts.
+3. **Pure filter model**: map UI state → `FundCatalogFilters`, then `(funds[], filters) => filtered[]` using `filterCatalogFunds()` / `countCatalogFunds()` in `src/features/funds/utils/filter-catalog-funds.ts`.
+4. **HTTP is allowed** only for:
+   - initial paginated catalog results (`useCatalogFundsPagination`)
+   - explicit **Apply** / committed filter changes that refresh the list
+   - pull-to-refresh or cache invalidation
+   - typeahead search when the query is sent to the API intentionally (not for sheet preview counts)
+
+## Implementation checklist
+
+- Add or extend client-side predicates in `filter-catalog-funds.ts`; mirror API filters where possible.
+- Risk level stays client-side (API uses a single numeric risk, not low/medium/high ranges).
+- Reuse `buildCatalogPreviewServiceFilters()` to normalize draft sheet state before counting.
+- If the full index is still loading, show the last known applied count until `catalogFunds.length > 0`.

@@ -120,10 +120,12 @@ Target routes:
 - Verification step for changes: run `pnpm run test:ci` before considering work complete (also enforced by the Husky pre-push hook after `pnpm install`).
 - `pnpm run quality` is an alias for `pnpm run test:ci` (typecheck, lint with zero warnings, unit tests, script tests, Expo config).
 - Pre-commit runs ESLint with `--fix` on staged files via lint-staged.
+- Commit-msg runs commitlint ([Conventional Commits](https://www.conventionalcommits.org/)) via Husky after `pnpm install`.
 - CI also runs `build:web:ci`, `verify:prebuild`, and EAS preview Android when `EXPO_TOKEN` is set in GitHub Actions secrets.
 - Keep `src/app` thin. Add screens and feature logic under `src/features/*`, and place reusable UI/theme/helpers under `src/shared/*` or `src/core/*`.
 - Do not introduce broker flows, account management, real portfolio actions, or personalized financial advice into the MVP.
 - If a change touches Expo, React Native, routing, or native config, consult the exact Expo SDK 57 docs first instead of relying on older assumptions.
+- Catalog filter **draft** UI must use in-memory data (`useCatalogFundsIndex` + `filterCatalogFunds`); do not call `GET /funds` per toggle. See [docs/architecture/catalog-client-side-filtering.md](docs/architecture/catalog-client-side-filtering.md) and `.cursor/rules/catalog-client-side-filtering.mdc`.
 
 ## Styling (NativeWind / Tailwind híbrido)
 
