@@ -1,8 +1,11 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, View } from 'react-native';
+import { useCallback } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { openSafeExternalUrl } from '@/core/security/open-safe-external-url';
 import { LEGAL_SECTIONS } from '@/features/legal/constants/legal-sections';
+import { getPrivacyPolicyUrl } from '@/features/legal/constants/privacy-policy-url';
 import { CollapsibleSection } from '@/shared/components/layout';
 import { ScreenShell } from '@/shared/components/layout/screen-shell';
 import { Header } from '@/shared/components/headers';
@@ -17,6 +20,11 @@ export default function LegalScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { contentWidth } = useMobileLayout();
+  const privacyPolicyUrl = getPrivacyPolicyUrl();
+
+  const handleOpenPrivacyPolicy = useCallback(() => {
+    void openSafeExternalUrl(privacyPolicyUrl);
+  }, [privacyPolicyUrl]);
 
   return (
     <ScreenShell
@@ -62,9 +70,26 @@ export default function LegalScreen() {
             ))}
           </View>
 
-          <TextLegal themeColor="textSecondary" className="pt-sm">
-            Última revisión: junio 2026. Inversora MVP — uso informativo y educativo.
-          </TextLegal>
+          <View className="gap-sm pt-sm">
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel="Abrir política de privacidad completa"
+              onPress={handleOpenPrivacyPolicy}
+              className="self-start active:opacity-75"
+            >
+              <TextLegal themeColor="primary" className="underline">
+                Política de privacidad completa
+              </TextLegal>
+            </Pressable>
+
+            <TextLegal themeColor="textSecondary" className="text-xs">
+              {privacyPolicyUrl}
+            </TextLegal>
+
+            <TextLegal themeColor="textSecondary">
+              Última revisión: julio 2026. Inversora MVP — uso informativo y educativo.
+            </TextLegal>
+          </View>
         </ScrollView>
       }
     />

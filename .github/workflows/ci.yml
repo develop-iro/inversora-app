@@ -14,7 +14,7 @@ concurrency:
 
 env:
   EXPO_PUBLIC_API_URL: https://inversora-api-staging.up.railway.app
-  EXPO_PUBLIC_NEWS_API_ENABLED: 'false'
+  EXPO_PUBLIC_NEWS_API_ENABLED: 'true'
   EXPO_PUBLIC_APP_ENV: qa
 
 jobs:
@@ -45,6 +45,19 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint:ci
+
+  dependency-audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --prod --audit-level high
 
   unit-tests:
     name: Unit tests
@@ -189,6 +202,7 @@ jobs:
     needs:
       - typecheck
       - lint
+      - dependency-audit
       - unit-tests
       - script-tests
       - expo-config
@@ -202,6 +216,7 @@ jobs:
         env:
           TYPECHECK_RESULT: ${{ needs.typecheck.result }}
           LINT_RESULT: ${{ needs.lint.result }}
+          AUDIT_RESULT: ${{ needs.dependency-audit.result }}
           UNIT_RESULT: ${{ needs.unit-tests.result }}
           SCRIPTS_RESULT: ${{ needs.script-tests.result }}
           CONFIG_RESULT: ${{ needs.expo-config.result }}
@@ -216,6 +231,7 @@ jobs:
             echo "| --- | --- |"
             echo "| Typecheck | ${TYPECHECK_RESULT} |"
             echo "| Lint | ${LINT_RESULT} |"
+            echo "| Dependency audit | ${AUDIT_RESULT} |"
             echo "| Unit tests | ${UNIT_RESULT} |"
             echo "| Script tests | ${SCRIPTS_RESULT} |"
             echo "| Expo config | ${CONFIG_RESULT} |"
@@ -229,6 +245,7 @@ jobs:
         if: >-
           needs.typecheck.result != 'success' ||
           needs.lint.result != 'success' ||
+          needs.dependency-audit.result != 'success' ||
           needs.unit-tests.result != 'success' ||
           needs.script-tests.result != 'success' ||
           needs.expo-config.result != 'success' ||

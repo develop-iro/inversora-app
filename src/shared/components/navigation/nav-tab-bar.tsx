@@ -18,6 +18,7 @@ import Animated, {
 
 import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
 import { useTheme } from "@/shared/hooks/use-theme";
+import { useSecondaryTabConfig } from "@/features/learn/hooks/use-secondary-tab-config";
 import {
   createFundsCatalogTabParams,
   FUNDS_TAB_NAME,
@@ -261,6 +262,7 @@ export function NavTabBar({
     { options?: { href?: string | null } }
   >;
   const segments = useSegments();
+  const secondaryTab = useSecondaryTabConfig();
   const hideOnFundDetail = useMemo(() => isFundDetailPath(segments), [segments]);
   const hideOnLearn = useMemo(() => isLearnPath(segments), [segments]);
   const hideOnLegal = useMemo(() => isLegalPath(segments), [segments]);
@@ -288,26 +290,38 @@ export function NavTabBar({
     <View
       pointerEvents="box-none"
       className="absolute inset-x-0 items-center bg-transparent"
-      // tailwind-exception: bottom offset combines safe area and design gap
-      style={{ bottom: bottomInset + NAV_TAB_BAR_BOTTOM_GAP }}
+      // tailwind-exception: bottom offset combines safe area and design gap; zIndex keeps bar above scroll content
+      style={{ bottom: bottomInset + NAV_TAB_BAR_BOTTOM_GAP, zIndex: 1000 }}
     >
       <View
-        className="h-[76px] flex-row items-center justify-between overflow-hidden rounded-tabBar border border-border bg-surface px-lgPlus py-tight shadow-card"
+        pointerEvents="auto"
+        className="h-[76px] flex-row items-stretch justify-between overflow-hidden rounded-tabBar border border-border bg-surface px-lgPlus py-tight shadow-card"
         // tailwind-exception: responsive width cap, native shadowColor, web box model
         style={[
           styles.container,
           {
             width: Math.min(width - 36, 560),
             shadowColor: theme.shadow,
-            elevation: 5,
+            elevation: 10,
+            zIndex: 1000,
           },
         ]}
       >
         {visibleRoutes.map((route) => {
-          const tab = tabs[route.name];
-          if (!tab) {
+          const baseTab = tabs[route.name];
+          if (!baseTab) {
             return null;
           }
+
+          const tab =
+            route.name === 'favorites'
+              ? {
+                  label: secondaryTab.label,
+                  accessibilityLabel: secondaryTab.accessibilityLabel,
+                  activeIcon: secondaryTab.activeIcon,
+                  inactiveIcon: secondaryTab.inactiveIcon,
+                }
+              : baseTab;
 
           const isFocused = activeRoute?.key === route.key;
 
@@ -346,6 +360,7 @@ export function NavTabBar({
               accessibilityLabel={tab.accessibilityLabel}
               accessibilityRole="tab"
               accessibilityState={isFocused ? { selected: true } : undefined}
+              hitSlop={{ top: 8, bottom: 8, left: 2, right: 2 }}
               key={route.key}
               onLongPress={onLongPress}
               onPress={onPress}
@@ -391,9 +406,11 @@ const styles = StyleSheet.create({
   item: {
     flex: 1,
     flexBasis: 0,
+    alignSelf: 'stretch',
     minHeight: Size.tabBarItemMin,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
     backgroundColor: 'transparent',
     ...Platform.select({
       web: {

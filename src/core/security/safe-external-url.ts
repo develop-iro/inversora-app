@@ -3,6 +3,8 @@ const BLOCKED_PROTOCOLS = new Set(['javascript:', 'data:', 'file:', 'blob:']);
 const ALLOWED_HOSTS = new Set([
   'inversora.educa',
   'www.inversora.educa',
+  'inversora.expo.app',
+  'inversora--inversora.expo.app',
   'cdn.brandfetch.io',
   'www.cnmv.es',
   'www.ecb.europa.eu',

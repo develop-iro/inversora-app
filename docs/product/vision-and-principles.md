@@ -57,6 +57,7 @@ Dashboard → Catálogo / Buscador → Ficha de fondo
 
 ## Relación con otras docs
 
+- Propuesta de valor (§6): [value-proposition.md](./value-proposition.md)
 - Problema que resuelve Inversora (§5): [problem-statement.md](./problem-statement.md)
 - Objetivos del documento oficial (§2.1 y §2.2): [objectives.md](./objectives.md)
 - Público objetivo y perfiles (§4): [target-audience-and-profiles.md](./target-audience-and-profiles.md)

@@ -48,5 +48,5 @@ Use this checklist before tagging a preview or production mobile build.
 - [ ] CI job **EAS preview Android** passes on the release branch (or run manually)
 - [ ] `eas build --profile preview` (QA) succeeds
 - [ ] Install preview APK/IPA on physical device and repeat smoke test
-- [ ] Privacy policy URL documented for store metadata (`/legal` in-app)
+- [ ] Privacy policy URL live and reachable: `https://inversora--inversora.expo.app/privacidad.html` (deploy with `pnpm run deploy:web:pro`; override via `EXPO_PUBLIC_PRIVACY_POLICY_URL` if using a custom domain)
 - [ ] **Production only:** set `SENTRY_AUTH_TOKEN` (and org/project in app config) in EAS secrets so source maps upload; preview/dev builds skip upload via `SENTRY_DISABLE_AUTO_UPLOAD`

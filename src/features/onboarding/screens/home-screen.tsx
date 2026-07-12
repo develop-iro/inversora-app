@@ -104,7 +104,7 @@ export default function HomeScreen() {
           router.push(routes.fundsCatalog);
           break;
         case 'compare':
-          router.push(routes.compare);
+    router.push(routes.compare);
           break;
         default: {
           const exhaustiveCheck: never = action;

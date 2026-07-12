@@ -59,21 +59,26 @@ export default function ComparisonScreen() {
   const [isSoraVisible, setIsSoraVisible] = useState(false);
   const [soraSession, setSoraSession] = useState(0);
   const [soraInitialMessage, setSoraInitialMessage] = useState('');
-  const hasSeededRef = useRef(false);
+  const lastSeededIsinsRef = useRef<string>('');
 
   useEffect(() => {
-    if (hasSeededRef.current || isSelectionLoading) {
+    if (isSelectionLoading) {
       return;
     }
 
     const seededIsins = parseIsinsParam(params.isins);
 
-    hasSeededRef.current = true;
-
     if (seededIsins.length === 0) {
       return;
     }
 
+    const seedKey = seededIsins.join(',');
+
+    if (lastSeededIsinsRef.current === seedKey) {
+      return;
+    }
+
+    lastSeededIsinsRef.current = seedKey;
     void setFunds(seededIsins);
   }, [isSelectionLoading, params.isins, setFunds]);
 

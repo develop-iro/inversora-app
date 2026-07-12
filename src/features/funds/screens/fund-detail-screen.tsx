@@ -29,6 +29,7 @@ import { FundDetailScoreSection } from '@/features/funds/components/detail/fund-
 import { FundDetailSheetFreshness } from '@/features/funds/components/detail/fund-detail-sheet-freshness';
 import { useFundLiveMarketSnapshot } from '@/features/funds/hooks/use-fund-live-market-snapshot';
 import { FavoriteToggleButton } from '@/features/funds/components/favorite-toggle-button';
+import { FundCardIcon } from '@/features/funds/components/fund-card-icon';
 import { FundMetricsGrid } from '@/features/funds/components/fund-metrics-grid';
 import { FundPerformanceChart } from '@/features/funds/components/fund-performance-chart';
 import { TabChipFund } from '@/features/funds/components/tabs/tab-chip-fund';
@@ -55,6 +56,7 @@ import { Header } from '@/shared/components/headers';
 import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
 import { Button, Spinner } from '@/shared/components/ui';
 import { routes } from '@/shared/navigation/routes';
+import { useNavigateToTabRoute } from '@/shared/navigation/use-navigate-to-tab-route';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { getDiversificationLabel } from '@/shared/utils/fund-diversification';
@@ -101,6 +103,7 @@ export default function FundDetailScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { contentWidth } = useMobileLayout();
+  const { navigateToCompare, navigateToCalculator } = useNavigateToTabRoute();
 
   useLayoutEffect(() => {
     const tabNavigation = navigation.getParent();
@@ -322,6 +325,13 @@ export default function FundDetailScreen() {
               </TextLabel>
             ) : null}
             <View className="flex-row items-start gap-sm">
+              <FundCardIcon
+                symbol={fund.symbol}
+                logoUrl={fund.logoUrl}
+                size="md"
+                accessibilityLabel={`Logo ${fund.issuer ?? fund.symbol}`}
+                className="mt-half"
+              />
               <View className="min-w-0 flex-1 gap-xs">
                 <TextHeading variant="card" className="tracking-[-0.36px]" numberOfLines={3}>
                   {fund.name}
@@ -390,7 +400,9 @@ export default function FundDetailScreen() {
               variant="primary"
               className="flex-1 bg-deep-ocean"
               accessibilityLabel={`Comparar ${fund.name} con otros fondos`}
-              onPress={() => router.push(routes.compareWithIsins([fund.isin]))}
+              onPress={() => {
+                void navigateToCompare([fund.isin]);
+              }}
             />
           </View>
 
@@ -400,7 +412,7 @@ export default function FundDetailScreen() {
             fullWidth
             accessibilityLabel={`Simular inversión con ${fund.name} en la calculadora`}
             accessibilityHint="Abre la calculadora de interés compuesto con este fondo como referencia"
-            onPress={() => router.push(routes.calculatorWithFund(fund.isin))}
+            onPress={() => navigateToCalculator(fund.isin)}
           />
 
           {showPerformanceHistory ? (

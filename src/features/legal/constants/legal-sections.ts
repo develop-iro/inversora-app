@@ -70,7 +70,11 @@ export const LEGAL_SECTIONS: readonly LegalSection[] = [
     id: 'privacy',
     title: 'Privacidad en el MVP',
     body:
-      'El MVP no requiere registro. Favoritos, perfil educativo y preferencias se guardan de ' +
-      'forma local en tu dispositivo salvo que el producto evolucione con cuentas explícitas.',
+      'El MVP no requiere registro ni recoge nombre, correo ni teléfono. Favoritos, perfil ' +
+      'educativo y preferencias se guardan principalmente en tu dispositivo. La app puede ' +
+      'enviar analytics anónimos, un perfil educativo derivado (sin las respuestas literales ' +
+      'del cuestionario) y los mensajes que escribas al asistente SORA a los servidores de ' +
+      'Inversora para operar el servicio y mejorar la experiencia educativa. Consulta la ' +
+      'política de privacidad completa desde el enlace al final de esta pantalla.',
   },
 ];

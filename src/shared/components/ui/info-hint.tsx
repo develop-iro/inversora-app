@@ -8,6 +8,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import { modal } from '@/core/overlay/modal';
 import { useInfoHintHost } from '@/shared/components/ui/info-hint-host';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { usePlatformCapabilities } from '@/shared/hooks/use-platform-capabilities';
@@ -38,6 +39,21 @@ type PopupPosition = {
   top: number;
   left: number;
 };
+
+/**
+ * Opens the centered glossary dialog with blur scrim (native and narrow web).
+ *
+ * @param term - Glossary term shown as dialog title.
+ * @param explanation - Plain-language definition body.
+ */
+export function openInfoHintExplanationSheet(term: string, explanation: string): void {
+  modal.openAlert({
+    title: term,
+    message: explanation,
+    backdrop: 'blur-scrim',
+    buttons: [{ label: 'Entendido', variant: 'primary' }],
+  });
+}
 
 function InfoHintWebPopup({
   term,
@@ -83,7 +99,7 @@ function InfoHintWebPopup({
   );
 }
 
-/** Compact glossary trigger — hover portal on web desktop, tap-to-expand elsewhere. */
+/** Compact glossary trigger — hover portal on web desktop, centered dialog elsewhere. */
 export function InfoHintTrigger({
   term,
   explanation,
@@ -100,7 +116,6 @@ export function InfoHintTrigger({
   const anchorRef = useRef<View>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [expanded, setExpanded] = useState(false);
   const [focused, setFocused] = useState(false);
   const [localOpen, setLocalOpen] = useState(false);
   const [popupPosition, setPopupPosition] = useState<PopupPosition | null>(null);
@@ -187,9 +202,9 @@ export function InfoHintTrigger({
     onHoverOut: closePopup,
   });
 
-  const toggle = useCallback(() => {
-    setExpanded((current) => !current);
-  }, []);
+  const openSheet = useCallback(() => {
+    openInfoHintExplanationSheet(term, explanation);
+  }, [explanation, term]);
 
   const handleFocus = useCallback(() => {
     if (useHoverPopup) {
@@ -229,29 +244,21 @@ export function InfoHintTrigger({
           accessibilityHint={
             useHoverPopup
               ? 'Pasa el ratón o enfoca para ver la explicación'
-              : expanded
-                ? 'Ocultar explicación'
-                : 'Mostrar explicación sencilla'
+              : 'Mostrar explicación sencilla en un diálogo'
           }
-          accessibilityState={{ expanded: showPopup || expanded }}
+          accessibilityState={{ expanded: showPopup }}
           hitSlop={8}
-          onPress={useHoverPopup ? undefined : toggle}
+          onPress={useHoverPopup ? undefined : openSheet}
           onFocus={handleFocus}
           onBlur={handleBlur}
           className="min-h-6 min-w-6 items-center justify-center rounded-full active:opacity-75"
         >
           <MaterialCommunityIcons
-            name={showPopup || expanded ? 'information' : 'information-outline'}
+            name={showPopup ? 'information' : 'information-outline'}
             size={14}
             color={theme.primary}
           />
         </Pressable>
-
-        {!useHoverPopup && expanded ? (
-          <TextParagraph variant="secondary" themeColor="textSecondary" className="mt-xs leading-[18px]">
-            {explanation}
-          </TextParagraph>
-        ) : null}
       </View>
 
       {showPopup && popupPosition ? (

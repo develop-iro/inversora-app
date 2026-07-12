@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppHeaderWithSora } from '@/features/assistant/components/app-header-with-sora';
 import { NavTabBar, resolveNavTabSafeBottomInset } from '@/shared/components/navigation/nav-tab-bar';
 import {
-  FUNDS_CATALOG_SCREEN,
   isFundDetailPath,
 } from '@/shared/navigation/tab-route-state';
 import { TAB_SCENE_STYLE } from '@/shared/navigation/stack-screen-options';
@@ -46,14 +45,6 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="funds"
-        listeners={({ navigation }) => ({
-          blur: () => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: FUNDS_CATALOG_SCREEN }],
-            });
-          },
-        })}
         options={{
           title: 'Fondos',
           tabBarAccessibilityLabel: 'Explorar fondos',
@@ -64,7 +55,7 @@ export default function TabsLayout() {
         name="favorites"
         options={{
           title: 'Favoritos',
-          tabBarAccessibilityLabel: 'Ver favoritos',
+          tabBarAccessibilityLabel: 'Ver favoritos o aprendizaje',
         }}
       />
       <Tabs.Screen

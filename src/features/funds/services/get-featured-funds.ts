@@ -10,7 +10,11 @@ import {
 import type { FeaturedFund } from '@/core/domain/fund';
 import { AppError } from '@/core/errors/app-error';
 import { FEATURED_FUNDS_MOCK } from '@/features/funds/mocks/featured-funds-mock';
+import { getFundsPage } from '@/features/funds/services/get-funds';
 import { isBeginnerEligibleFeaturedFund } from '@/features/funds/utils/beginner-eligibility';
+
+/** Maximum featured cards shown in the home carousel. */
+const FEATURED_CAROUSEL_LIMIT = 4;
 
 export type GetFeaturedFundsOptions = {
   quarter?: string;
@@ -47,6 +51,33 @@ export function getFeaturedFundsMockFallback(): FeaturedFund[] {
   return FEATURED_FUNDS_MOCK.filter(
     (fund) => fund.isFeatured && isBeginnerEligibleFeaturedFund(fund),
   );
+}
+
+/**
+ * Uses top catalog funds when `GET /featured` has no curated selection yet.
+ * Keeps home cards aligned with real ISINs so fund detail routes resolve.
+ *
+ * @param options - Optional abort signal.
+ */
+async function fetchFeaturedFundsFromCatalog(
+  options?: Pick<GetFeaturedFundsOptions, 'signal'>,
+): Promise<FeaturedFund[]> {
+  try {
+    const response = await getFundsPage(
+      { sortBy: 'score', sortOrder: 'desc' },
+      1,
+      options?.signal,
+    );
+
+    return response.data
+      .filter(
+        (fund) =>
+          fund.catalogVisibility !== 'blocked' && fund.isin.trim().length > 0,
+      )
+      .slice(0, FEATURED_CAROUSEL_LIMIT);
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -91,6 +122,14 @@ export async function getFeaturedFundsForCarousel(
     if (resolved.length > 0) {
       return resolved;
     }
+
+    const fromCatalog = await fetchFeaturedFundsFromCatalog(options);
+
+    if (fromCatalog.length > 0) {
+      return fromCatalog;
+    }
+
+    return [];
   } catch {
     if (allowsMockFallback()) {
       return getFeaturedFundsMockFallback();
@@ -101,10 +140,4 @@ export async function getFeaturedFundsForCarousel(
       'No se pudieron cargar los fondos destacados.',
     );
   }
-
-  if (allowsMockFallback()) {
-    return getFeaturedFundsMockFallback();
-  }
-
-  return [];
 }
