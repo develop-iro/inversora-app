@@ -7,7 +7,7 @@ describe('ssl-pinning', () => {
   it('lists the production and QA API hosts', () => {
     assert.deepEqual(SSL_PINNED_HOSTS, [
       'inversora-api-production.up.railway.app',
-      'inversora-api-qa.up.railway.app',
+      'inversora-api-staging.up.railway.app',
     ]);
   });
 });
