@@ -15,7 +15,7 @@ export type FundCatalogLoadMoreFooterProps = {
 };
 
 /**
- * Footer shown at the bottom of the catalog list for infinite scroll.
+ * Passive footer for the catalog infinite scroll.
  */
 export function FundCatalogLoadMoreFooter({
   loadedCount,
@@ -31,8 +31,8 @@ export function FundCatalogLoadMoreFooter({
       <View className={cn('items-center gap-sm py-lg', className)}>
         <Spinner
           size="sm"
-          label="Cargando más fondos…"
-          accessibilityLabel="Cargando más fondos"
+          label="Cargando mas fondos..."
+          accessibilityLabel="Cargando mas fondos"
         />
       </View>
     );
@@ -73,13 +73,15 @@ export function FundCatalogLoadMoreFooter({
   }
 
   return (
-    <View className={cn('items-center gap-sm py-lg', className)}>
+    <View className={cn('items-center gap-xs py-lg', className)}>
       <TextParagraph variant="secondary" themeColor="textSecondary">
         {totalCount != null
           ? `${loadedCount} de ${totalCount} fondos cargados`
           : `${loadedCount} fondos cargados`}
       </TextParagraph>
-      <Button label="Cargar más" variant="secondary" size="sm" onPress={onLoadMore} />
+      <TextParagraph variant="secondary" themeColor="textSecondary">
+        Sigue desplazando para ver mas fondos.
+      </TextParagraph>
     </View>
   );
 }
