@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { isSafeExternalUrl } from './safe-external-url';
+import { isSafeExternalUrl, isSafeHttpsUrl } from './safe-external-url';
 
 describe('safe-external-url', () => {
   it('allows curated https hosts', () => {
@@ -19,5 +19,18 @@ describe('safe-external-url', () => {
     assert.equal(isSafeExternalUrl('javascript:alert(1)'), false);
     assert.equal(isSafeExternalUrl('http://www.cnmv.es'), false);
     assert.equal(isSafeExternalUrl('https://evil.example/phish'), false);
+  });
+
+  it('allows trusted https URLs from market-news feeds', () => {
+    assert.equal(
+      isSafeHttpsUrl('https://www.marketwatch.com/story/example-headline'),
+      true,
+    );
+    assert.equal(
+      isSafeHttpsUrl('https://seekingalpha.com/article/4921397-example'),
+      true,
+    );
+    assert.equal(isSafeHttpsUrl('http://www.marketwatch.com/story/example'), false);
+    assert.equal(isSafeHttpsUrl('https://localhost/news'), false);
   });
 });

@@ -10,7 +10,9 @@ import { CollapsibleSection } from '@/shared/components/layout';
 import { ScreenShell } from '@/shared/components/layout/screen-shell';
 import { Header } from '@/shared/components/headers';
 import { TextHeading, TextLegal, TextParagraph } from '@/shared/components/text';
+import { Button } from '@/shared/components/ui/button';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
+import { routes } from '@/shared/navigation/routes';
 import { Layout, Spacing } from '@/shared/theme/theme';
 
 /**
@@ -25,6 +27,10 @@ export default function LegalScreen() {
   const handleOpenPrivacyPolicy = useCallback(() => {
     void openSafeExternalUrl(privacyPolicyUrl);
   }, [privacyPolicyUrl]);
+
+  const handleOpenFeedback = useCallback(() => {
+    router.push(routes.feedback);
+  }, [router]);
 
   return (
     <ScreenShell
@@ -71,6 +77,13 @@ export default function LegalScreen() {
           </View>
 
           <View className="gap-sm pt-sm">
+            <Button
+              label="Enviar opinión"
+              variant="outline"
+              onPress={handleOpenFeedback}
+              accessibilityLabel="Abrir formulario de opinión anónima"
+            />
+
             <Pressable
               accessibilityRole="link"
               accessibilityLabel="Abrir política de privacidad completa"
