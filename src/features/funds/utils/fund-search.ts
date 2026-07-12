@@ -1,6 +1,5 @@
 /** Debounce applied before filtering the catalog (keeps perceived latency under 500 ms). */
 export const CATALOG_SEARCH_DEBOUNCE_MS = 150;
-
 /** Minimum characters before predictive suggestions are shown. */
 export const CATALOG_SUGGESTIONS_MIN_QUERY_LENGTH = 2;
 

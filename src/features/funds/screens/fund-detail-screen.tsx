@@ -1,8 +1,9 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
+  BackHandler,
   ScrollView,
   View,
   type StyleProp,
@@ -54,8 +55,14 @@ import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { ScreenShell } from '@/shared/components/layout';
 import { Header } from '@/shared/components/headers';
 import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
-import { Button, Spinner } from '@/shared/components/ui';
+import { Button, Spinner, SlowRequestReloadState } from '@/shared/components/ui';
+import { useSlowRequestNotice } from '@/shared/hooks/use-slow-request-notice';
 import { routes } from '@/shared/navigation/routes';
+import {
+  navigateBackFromFundDetail,
+  parseFundDetailReturnTo,
+  type FundDetailBackNavigation,
+} from '@/shared/navigation/fund-detail-navigation';
 import { useNavigateToTabRoute } from '@/shared/navigation/use-navigate-to-tab-route';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useTheme } from '@/shared/hooks/use-theme';
@@ -69,11 +76,10 @@ type FundDetailShellProps = {
   bodyClassName?: string;
   bodyStyle?: StyleProp<ViewStyle>;
   onSoraPress?: () => void;
+  onBackPress: () => void;
 };
 
-function FundDetailShell({ children, bodyClassName, bodyStyle, onSoraPress }: FundDetailShellProps) {
-  const router = useRouter();
-
+function FundDetailShell({ children, bodyClassName, bodyStyle, onSoraPress, onBackPress }: FundDetailShellProps) {
   return (
     <ScreenShell
       header={
@@ -82,7 +88,7 @@ function FundDetailShell({ children, bodyClassName, bodyStyle, onSoraPress }: Fu
           leadingActions={['back']}
           trailingActions={onSoraPress ? ['sora'] : []}
           onAction={{
-            back: () => router.back(),
+            back: onBackPress,
             ...(onSoraPress ? { sora: onSoraPress } : {}),
           }}
         />
@@ -99,11 +105,44 @@ function FundDetailShell({ children, bodyClassName, bodyStyle, onSoraPress }: Fu
 export default function FundDetailScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const { isin } = useLocalSearchParams<{ isin: string }>();
+  const { isin, returnTo: returnToParam } = useLocalSearchParams<{
+    isin: string;
+    returnTo?: string | string[];
+  }>();
+  const returnTo = parseFundDetailReturnTo(returnToParam);
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { contentWidth } = useMobileLayout();
   const { navigateToCompare, navigateToCalculator } = useNavigateToTabRoute();
+
+  const handleBackPress = useCallback(() => {
+    navigateBackFromFundDetail(
+      navigation as unknown as FundDetailBackNavigation,
+      router,
+      returnTo,
+    );
+  }, [navigation, returnTo, router]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      gestureEnabled: returnTo === undefined,
+    });
+  }, [navigation, returnTo]);
+
+  useEffect(() => {
+    if (returnTo === undefined) {
+      return;
+    }
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBackPress();
+      return true;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handleBackPress, returnTo]);
 
   useLayoutEffect(() => {
     const tabNavigation = navigation.getParent();
@@ -128,6 +167,10 @@ export default function FundDetailScreen() {
   const loadStartedAtRef = useRef(0);
 
   const resolvedIsin = parseOptionalFundIsinParam(isin) ?? '';
+  const { isSlow: isDetailLoadSlow } = useSlowRequestNotice({
+    isLoading,
+    loadingKey: reloadToken,
+  });
 
   useEffect(() => {
     loadStartedAtRef.current = performance.now();
@@ -257,21 +300,25 @@ export default function FundDetailScreen() {
 
   if (isLoading) {
     return (
-      <FundDetailShell bodyClassName="items-center justify-center">
-        <Spinner fullscreen size="lg" accessibilityLabel="Cargando ficha del fondo" />
+      <FundDetailShell bodyClassName="items-center justify-center" onBackPress={handleBackPress}>
+        {isDetailLoadSlow ? (
+          <SlowRequestReloadState onRetry={handleRetryLoad} layout="screen" />
+        ) : (
+          <Spinner fullscreen size="lg" accessibilityLabel="Cargando ficha del fondo" />
+        )}
       </FundDetailShell>
     );
   }
 
   if (loadError) {
     return (
-      <FundDetailShell bodyClassName="min-h-0 flex-1">
+      <FundDetailShell bodyClassName="min-h-0 flex-1" onBackPress={handleBackPress}>
         <FundApiErrorState
           title="No se pudo cargar la ficha"
           message={loadError}
           onRetry={handleRetryLoad}
           secondaryActionLabel="Volver al catálogo"
-          onSecondaryAction={() => router.back()}
+          onSecondaryAction={handleBackPress}
           layout="screen"
           className="flex-1"
         />
@@ -281,13 +328,13 @@ export default function FundDetailScreen() {
 
   if (notFound || !detail) {
     return (
-      <FundDetailShell bodyClassName="min-h-0 flex-1">
+      <FundDetailShell bodyClassName="min-h-0 flex-1" onBackPress={handleBackPress}>
         <FundApiErrorState
           title="Fondo no encontrado"
           message="No encontramos una ficha para este ISIN en el catálogo educativo."
           variant="warning"
           secondaryActionLabel="Volver al catálogo"
-          onSecondaryAction={() => router.back()}
+          onSecondaryAction={handleBackPress}
           layout="screen"
           className="flex-1"
         />
@@ -299,7 +346,7 @@ export default function FundDetailScreen() {
   const showPerformanceHistory = hasPerformanceHistory(detail);
 
   return (
-    <FundDetailShell onSoraPress={handleOpenSora}>
+    <FundDetailShell onBackPress={handleBackPress} onSoraPress={handleOpenSora}>
       <ScrollView
         className="min-h-0 flex-1"
         contentContainerClassName="items-center"

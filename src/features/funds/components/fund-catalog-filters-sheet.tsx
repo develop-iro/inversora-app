@@ -1,6 +1,7 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
+import type { CatalogFund } from '@/core/domain/catalog';
 import type { CatalogCategoryOption } from '@/features/funds/utils/build-catalog-category-options';
 import { FundCatalogCategoryFilterChips } from '@/features/funds/components/fund-catalog-category-filters';
 import {
@@ -8,6 +9,7 @@ import {
   FundCatalogFiltersForm,
   type FundCatalogFiltersState,
 } from '@/features/funds/components/fund-catalog-filters';
+import { useCatalogFilterPreviewCount } from '@/features/funds/hooks/use-catalog-filter-preview-count';
 import { formatCatalogFiltersApplyLabel } from '@/features/funds/utils/catalog-filter-presentation';
 import { ScreenFooter } from '@/shared/components/layout';
 import { AppModalShell } from '@/shared/components/overlay';
@@ -18,9 +20,11 @@ export type FundCatalogFiltersSheetProps = {
   visible: boolean;
   sessionKey: number;
   value: FundCatalogFiltersState;
+  searchQuery: string;
+  catalogFunds: readonly CatalogFund[];
   categories: readonly CatalogCategoryOption[];
   totalFundCount: number;
-  resultCount: number | null;
+  appliedResultCount: number | null;
   onClose: () => void;
   onApply: (next: FundCatalogFiltersState) => void;
 };
@@ -32,9 +36,11 @@ export function FundCatalogFiltersSheet({
   visible,
   sessionKey,
   value,
+  searchQuery,
+  catalogFunds,
   categories,
   totalFundCount,
-  resultCount,
+  appliedResultCount,
   onClose,
   onApply,
 }: FundCatalogFiltersSheetProps) {
@@ -42,9 +48,11 @@ export function FundCatalogFiltersSheet({
     <FundCatalogFiltersSheetInner
       key={sessionKey}
       initialValue={value}
+      searchQuery={searchQuery}
+      catalogFunds={catalogFunds}
       categories={categories}
       totalFundCount={totalFundCount}
-      resultCount={resultCount}
+      appliedResultCount={appliedResultCount}
       onClose={onClose}
       onApply={onApply}
     />
@@ -53,22 +61,30 @@ export function FundCatalogFiltersSheet({
 
 type FundCatalogFiltersSheetInnerProps = {
   initialValue: FundCatalogFiltersState;
+  searchQuery: string;
+  catalogFunds: readonly CatalogFund[];
   categories: readonly CatalogCategoryOption[];
   totalFundCount: number;
-  resultCount: number | null;
+  appliedResultCount: number | null;
   onClose: () => void;
   onApply: (next: FundCatalogFiltersState) => void;
 };
 
 function FundCatalogFiltersSheetInner({
   initialValue,
+  searchQuery,
+  catalogFunds,
   categories,
   totalFundCount,
-  resultCount,
+  appliedResultCount,
   onClose,
   onApply,
 }: FundCatalogFiltersSheetInnerProps) {
   const [draft, setDraft] = useState<FundCatalogFiltersState>(initialValue);
+  const { count: previewCount } = useCatalogFilterPreviewCount(catalogFunds, draft, searchQuery, {
+    enabled: true,
+    initialCount: appliedResultCount,
+  });
 
   const handleApply = useCallback(() => {
     onApply(draft);
@@ -121,7 +137,7 @@ function FundCatalogFiltersSheetInner({
       footer={
         <ScreenFooter>
           <Button
-            label={formatCatalogFiltersApplyLabel(resultCount)}
+            label={formatCatalogFiltersApplyLabel(previewCount)}
             onPress={handleApply}
             fullWidth
           />

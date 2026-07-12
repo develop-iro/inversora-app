@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   NativeScrollEvent,
@@ -28,10 +28,11 @@ import {
 } from '@/features/funds/components/fund-catalog-filters';
 import { FundCatalogFiltersSheet } from '@/features/funds/components/fund-catalog-filters-sheet';
 import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
+import { FundCatalogLoadingGrid } from '@/features/funds/components/fund-catalog-loading-grid';
 import { FundCatalogLoadMoreFooter } from '@/features/funds/components/fund-catalog-load-more-footer';
 import { FundCatalogSearchField } from '@/features/funds/components/fund-catalog-search-field';
 import { FundCatalogToolbar } from '@/features/funds/components/fund-catalog-toolbar';
-import { useCatalogCategoryIndex } from '@/features/funds/hooks/use-catalog-category-index';
+import { useCatalogFundsIndex } from '@/features/funds/hooks/use-catalog-funds-index';
 import { useCatalogFundsPagination } from '@/features/funds/hooks/use-catalog-funds-pagination';
 import { invalidateCatalogCache } from '@/features/funds/services/get-funds';
 import { buildCatalogCategoryOptions } from '@/features/funds/utils/build-catalog-category-options';
@@ -40,16 +41,18 @@ import {
   countActiveCatalogFilters,
   formatCatalogResultsHeadline,
 } from '@/features/funds/utils/catalog-filter-presentation';
+import { resolveCatalogScreenBlurReset } from '@/features/funds/utils/catalog-screen-blur-reset';
+import { formatCatalogLoadProgress } from '@/features/funds/utils/format-catalog-load-progress';
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { TabScreenScroll } from '@/shared/components/layout';
 import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
-import { Spinner } from '@/shared/components/ui';
+import { SlowRequestReloadState } from '@/shared/components/ui';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
+import { useSlowRequestNotice } from '@/shared/hooks/use-slow-request-notice';
 import { routes } from '@/shared/navigation/routes';
 import { Spacing } from '@/shared/theme/theme';
-import { cn } from '@/shared/utils/cn';
 
 const SCROLL_LOAD_MORE_THRESHOLD_PX = 320;
 
@@ -99,6 +102,22 @@ export default function FundsScreen() {
   const [isProfileHintsDismissed, setIsProfileHintsDismissed] = useState(false);
   const catalogLoadStartedAtRef = useRef(0);
 
+  const handleCatalogBlurReset = useCallback(() => {
+    const reset = resolveCatalogScreenBlurReset();
+    setFilters(reset.filters);
+    setIsProfileHintsDismissed(reset.isProfileHintsDismissed);
+    setIsFiltersVisible(reset.isFiltersVisible);
+    setIsSoraVisible(reset.isSoraVisible);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        handleCatalogBlurReset();
+      };
+    }, [handleCatalogBlurReset]),
+  );
+
   useEffect(() => {
     catalogLoadStartedAtRef.current = performance.now();
   }, []);
@@ -147,11 +166,11 @@ export default function FundsScreen() {
   const { funds, meta, status, error, hasMore, loadMore } =
     useCatalogFundsPagination(activeServiceFilters, reloadToken);
 
-  const { funds: categoryIndexFunds } = useCatalogCategoryIndex();
+  const { funds: catalogIndexFunds, reload: reloadCatalogIndex } = useCatalogFundsIndex();
 
   const categoryOptions = useMemo(
-    () => buildCatalogCategoryOptions(categoryIndexFunds),
-    [categoryIndexFunds],
+    () => buildCatalogCategoryOptions(catalogIndexFunds),
+    [catalogIndexFunds],
   );
 
   const categoryLabelById = useMemo(
@@ -176,17 +195,25 @@ export default function FundsScreen() {
   });
 
   const totalCatalogFundCount = useMemo(() => {
+    if (catalogIndexFunds.length > 0) {
+      return catalogIndexFunds.length;
+    }
+
     if (meta?.total != null) {
       return meta.total;
     }
 
     return categoryOptions.reduce((sum, category) => sum + category.fundCount, 0);
-  }, [categoryOptions, meta]);
+  }, [catalogIndexFunds.length, categoryOptions, meta]);
 
   const groupedFunds = useMemo(() => groupFundsByCategory(funds), [funds]);
   const showGrouped = shouldGroupByCategory(filters, debouncedQuery);
   const hasActiveFilters = hasActiveNonSearchFilters(filters);
   const isInitialLoading = (status === 'loading' || status === 'idle') && funds.length === 0;
+  const { isSlow: isCatalogLoadSlow } = useSlowRequestNotice({
+    isLoading: isInitialLoading,
+    loadingKey: reloadToken,
+  });
   const isRefreshing = status === 'refreshing';
   const isLoadingMore = status === 'loading-more';
   const blockingError = error && funds.length === 0 ? error : null;
@@ -253,8 +280,9 @@ export default function FundsScreen() {
 
   const handleRetryLoad = useCallback(() => {
     invalidateCatalogCache();
+    reloadCatalogIndex();
     setReloadToken((current) => current + 1);
-  }, []);
+  }, [reloadCatalogIndex]);
 
   const handleFundPress = useCallback(
     (fund: CatalogFund) => {
@@ -279,6 +307,10 @@ export default function FundsScreen() {
 
   const profileHintsApplied =
     profileHints !== null && areProfileHintsApplied(filters, profileHints.filters);
+
+  const loadProgressLabel = formatCatalogLoadProgress(funds.length, meta?.total ?? null, {
+    isRefreshing,
+  });
 
   return (
     <TabScreenScroll
@@ -343,7 +375,15 @@ export default function FundsScreen() {
         />
 
         {isInitialLoading ? (
-          <Spinner size="lg" accessibilityLabel="Cargando catálogo" style={{ marginVertical: Spacing.xl }} />
+          isCatalogLoadSlow ? (
+            <SlowRequestReloadState
+              onRetry={handleRetryLoad}
+              layout="section"
+              className="w-full"
+            />
+          ) : (
+            <FundCatalogLoadingGrid />
+          )
         ) : blockingError ? (
           <FundApiErrorState
             title="No se pudo cargar el catálogo"
@@ -359,22 +399,13 @@ export default function FundsScreen() {
             onClearSearch={debouncedQuery.trim() ? handleClearSearch : undefined}
             onResetFilters={hasActiveFilters ? handleResetSecondaryFilters : undefined}
           />
+        ) : isRefreshing ? (
+          <FundCatalogLoadingGrid />
         ) : (
-          <View className={cn('gap-md', isRefreshing && 'opacity-[0.72]')}>
-            {isRefreshing ? (
-              <View className="flex-row items-center gap-sm">
-                <Spinner.BarChart size="sm" />
-                <TextLabel variant="meta" themeColor="textSecondary">
-                  Actualizando resultados…
-                </TextLabel>
-              </View>
-            ) : null}
-
-            {!showGrouped ? (
+          <View className="gap-md">
+            {loadProgressLabel ? (
               <TextLabel variant="meta" themeColor="textSecondary">
-                {meta?.total != null
-                  ? `${funds.length} de ${meta.total} cargado${meta.total === 1 ? '' : 's'}`
-                  : `${funds.length} cargado${funds.length === 1 ? '' : 's'}`}
+                {loadProgressLabel}
               </TextLabel>
             ) : null}
 
@@ -409,9 +440,11 @@ export default function FundsScreen() {
         visible={isFiltersVisible}
         sessionKey={filtersSheetSession}
         value={filters}
+        searchQuery={debouncedQuery}
+        catalogFunds={catalogIndexFunds}
         categories={categoryOptions}
         totalFundCount={totalCatalogFundCount}
-        resultCount={meta?.total ?? null}
+        appliedResultCount={meta?.total ?? null}
         onClose={() => setIsFiltersVisible(false)}
         onApply={handleFiltersChange}
       />
