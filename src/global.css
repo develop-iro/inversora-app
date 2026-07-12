@@ -67,13 +67,13 @@
   --color-scrim: rgba(0, 0, 0, 0.2);
   --color-scrim-subtle: rgba(0, 0, 0, 0.22);
   --color-shadow: #0B2E36;
-  --color-skeleton-bone: rgba(11, 46, 54, 0.11);
+  --color-skeleton-bone: #E8E8E8;
   --color-skeleton-bone-muted: rgba(11, 46, 54, 0.07);
   --color-skeleton-panel-border: rgba(11, 46, 54, 0.09);
-  --color-skeleton-shimmer-accent: rgba(11, 46, 54, 0.08);
+  --color-skeleton-shimmer-accent: rgba(255, 255, 255, 0.05);
   --color-skeleton-shimmer-deep: rgba(11, 46, 54, 0.24);
-  --color-skeleton-shimmer-highlight: rgba(255, 255, 255, 0.95);
-  --color-skeleton-shimmer-shadow: rgba(11, 46, 54, 0.16);
+  --color-skeleton-shimmer-highlight: rgba(255, 255, 255, 0.12);
+  --color-skeleton-shimmer-shadow: #D0D0D0;
   --color-skeleton-shimmer-transparent: rgba(255, 255, 255, 0);
   --color-soft-teal-surface: rgba(234, 248, 246, 0.66);
   --color-soft-teal-surface-faint: rgba(234, 248, 246, 0.35);
@@ -168,13 +168,13 @@
   --color-scrim: rgba(0, 0, 0, 0.45);
   --color-scrim-subtle: rgba(0, 0, 0, 0.5);
   --color-shadow: #000000;
-  --color-skeleton-bone: rgba(255, 255, 255, 0.11);
+  --color-skeleton-bone: rgba(255, 255, 255, 0.14);
   --color-skeleton-bone-muted: rgba(255, 255, 255, 0.07);
   --color-skeleton-panel-border: rgba(255, 255, 255, 0.09);
-  --color-skeleton-shimmer-accent: rgba(255, 255, 255, 0.14);
+  --color-skeleton-shimmer-accent: rgba(255, 255, 255, 0.04);
   --color-skeleton-shimmer-deep: rgba(0, 0, 0, 0.5);
-  --color-skeleton-shimmer-highlight: rgba(255, 255, 255, 0.28);
-  --color-skeleton-shimmer-shadow: rgba(0, 0, 0, 0.35);
+  --color-skeleton-shimmer-highlight: rgba(255, 255, 255, 0.1);
+  --color-skeleton-shimmer-shadow: rgba(0, 0, 0, 0.4);
   --color-skeleton-shimmer-transparent: rgba(15, 61, 71, 0);
   --color-soft-teal-surface: rgba(0, 191, 166, 0.14);
   --color-soft-teal-surface-faint: rgba(0, 191, 166, 0.08);
@@ -204,4 +204,31 @@
   --shadow-tooltip: 0 2px 6px rgba(0, 0, 0, 0.08);
   --shadow-segment-selected: 0 1px 4px rgba(0, 0, 0, 0.06);
   --shadow-hero-text: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/*
+ * Skeleton pulse — web only (native uses Animated in skeleton-bone.tsx).
+ * Duration must stay aligned with SKELETON_SHIMMER_DURATION_MS in skeleton-tokens.ts.
+ */
+@keyframes skeleton-bone-pulse {
+  0%,
+  100% {
+    background-color: var(--color-skeleton-bone);
+  }
+
+  50% {
+    background-color: var(--color-skeleton-shimmer-shadow);
+  }
+}
+
+.skeleton-bone-pulse {
+  background-color: var(--color-skeleton-bone);
+  animation: skeleton-bone-pulse 1400ms ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-bone-pulse {
+    animation: none;
+    background-color: var(--color-skeleton-bone);
+  }
 }

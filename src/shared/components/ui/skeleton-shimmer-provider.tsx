@@ -3,6 +3,7 @@ import { Animated, Easing } from 'react-native';
 
 import { SKELETON_SHIMMER_DURATION_MS } from '@/shared/components/ui/skeleton-tokens';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
+import { isWeb } from '@/shared/platform/capabilities';
 
 type SkeletonShimmerContextValue = {
   progress: Animated.Value;
@@ -15,12 +16,13 @@ const SkeletonShimmerContext = createContext<SkeletonShimmerContextValue | null>
 
 export type SkeletonShimmerProviderProps = {
   children: ReactNode;
-  /** Full sweep cycle duration in milliseconds. */
+  /** Full pulse cycle duration in milliseconds. */
   durationMs?: number;
 };
 
 /**
- * Shares one shimmer sweep animation across nested skeleton bones.
+ * Shares one opacity pulse animation across nested skeleton bones (native only).
+ * Web bones use CSS keyframes and do not read this context.
  */
 export function SkeletonShimmerProvider({
   children,
@@ -30,6 +32,10 @@ export function SkeletonShimmerProvider({
   const [progress] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
+    if (isWeb) {
+      return;
+    }
+
     if (reducedMotionEnabled) {
       progress.stopAnimation();
       progress.setValue(0);
@@ -41,9 +47,10 @@ export function SkeletonShimmerProvider({
       Animated.timing(progress, {
         toValue: 1,
         duration: durationMs,
-        easing: Easing.linear,
+        easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
+      { iterations: -1, resetBeforeIteration: true },
     );
 
     loop.start();
@@ -61,7 +68,7 @@ export function SkeletonShimmerProvider({
 }
 
 /**
- * Reads the shared shimmer progress from the nearest provider.
+ * Reads the shared pulse progress from the nearest provider (native SkeletonBone only).
  */
 export function useSkeletonShimmerSweep(): SkeletonShimmerContextValue {
   const context = useContext(SkeletonShimmerContext);
