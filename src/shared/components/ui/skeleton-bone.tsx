@@ -9,7 +9,6 @@ import {
 import { useSkeletonShimmerSweep } from '@/shared/components/ui/skeleton-shimmer-provider';
 import {
   getSkeletonTokens,
-  SKELETON_SHIMMER_DURATION_MS,
 } from '@/shared/components/ui/skeleton-tokens';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { useTheme } from '@/shared/hooks/use-theme';
@@ -49,17 +48,6 @@ function SkeletonBoneWeb({
 }: SkeletonBoneLayoutProps) {
   const reducedMotionEnabled = useReducedMotion();
 
-  const webPulseStyle = reducedMotionEnabled
-    ? { backgroundColor: 'var(--color-skeleton-bone)' }
-    : {
-        backgroundColor: 'var(--color-skeleton-bone)',
-        // Web-only: pairs with @keyframes skeleton-bone-pulse in global.css
-        animationName: 'skeleton-bone-pulse',
-        animationDuration: `${SKELETON_SHIMMER_DURATION_MS}ms`,
-        animationTimingFunction: 'ease-in-out',
-        animationIterationCount: 'infinite',
-      };
-
   return (
     <View
       className={cn(
@@ -67,13 +55,15 @@ function SkeletonBoneWeb({
         !reducedMotionEnabled && 'skeleton-bone-pulse',
         className,
       )}
-      // tailwind-exception: dynamic width, height, border radius, web animation
+      // tailwind-exception: dynamic width, height, border radius; web pulse via global.css class
       style={[
         {
           width,
           height,
           borderRadius: resolvedRadius,
-          ...webPulseStyle,
+          ...(reducedMotionEnabled
+            ? { backgroundColor: 'var(--color-skeleton-bone)' }
+            : null),
         },
         style,
       ]}
