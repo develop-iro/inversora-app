@@ -13,6 +13,8 @@ const ALLOWED_HOSTS = new Set([
   'www.marketwatch.com',
 ]);
 
+const ALLOWED_REMOTE_IMAGE_HOSTS = new Set(['cdn.brandfetch.io']);
+
 /**
  * Returns whether an external URL is safe to open in the system browser.
  *
@@ -103,4 +105,35 @@ export function isSafeHttpsUrl(rawUrl: string): boolean {
   }
 
   return true;
+}
+
+/**
+ * Returns whether a remote image URL can be rendered by the app.
+ *
+ * @param rawUrl - Absolute image URL returned by API content.
+ */
+export function isSafeRemoteImageUrl(rawUrl: string): boolean {
+  const trimmed = rawUrl.trim();
+
+  if (trimmed.length === 0) {
+    return false;
+  }
+
+  let parsed: URL;
+
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return false;
+  }
+
+  if (parsed.protocol !== 'https:') {
+    return false;
+  }
+
+  if (parsed.username.length > 0 || parsed.password.length > 0) {
+    return false;
+  }
+
+  return ALLOWED_REMOTE_IMAGE_HOSTS.has(parsed.hostname.toLowerCase());
 }

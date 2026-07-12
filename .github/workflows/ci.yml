@@ -101,6 +101,22 @@ jobs:
       - run: cp .env.example .env
       - run: pnpm run security:verify-plugins
 
+  e2e-web:
+    name: E2E web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - run: pnpm run e2e:install -- --with-deps
+      - run: pnpm run generate:theme
+      - run: pnpm run test:e2e
+
   # ── Phase 2: Build smoke ───────────────────────────────────────────────────
 
   bundle-export:
@@ -206,6 +222,7 @@ jobs:
       - unit-tests
       - script-tests
       - expo-config
+      - e2e-web
       - bundle-export
       - native-prebuild
       - eas-preview
@@ -220,6 +237,7 @@ jobs:
           UNIT_RESULT: ${{ needs.unit-tests.result }}
           SCRIPTS_RESULT: ${{ needs.script-tests.result }}
           CONFIG_RESULT: ${{ needs.expo-config.result }}
+          E2E_WEB_RESULT: ${{ needs.e2e-web.result }}
           BUNDLE_EXPORT_RESULT: ${{ needs.bundle-export.result }}
           PREBUILD_RESULT: ${{ needs.native-prebuild.result }}
           EAS_RESULT: ${{ needs.eas-preview.outputs.result_label }}
@@ -235,6 +253,7 @@ jobs:
             echo "| Unit tests | ${UNIT_RESULT} |"
             echo "| Script tests | ${SCRIPTS_RESULT} |"
             echo "| Expo config | ${CONFIG_RESULT} |"
+            echo "| E2E web | ${E2E_WEB_RESULT} |"
             echo "| Metro bundle export | ${BUNDLE_EXPORT_RESULT} |"
             echo "| Native prebuild | ${PREBUILD_RESULT} |"
             echo "| EAS preview Android | ${EAS_RESULT} |"
@@ -249,6 +268,7 @@ jobs:
           needs.unit-tests.result != 'success' ||
           needs.script-tests.result != 'success' ||
           needs.expo-config.result != 'success' ||
+          needs.e2e-web.result != 'success' ||
           needs.bundle-export.result != 'success' ||
           needs.native-prebuild.result != 'success' ||
           needs.eas-preview.result != 'success'

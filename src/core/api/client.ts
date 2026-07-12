@@ -1,4 +1,5 @@
 import { AppError } from '@/core/errors/app-error';
+import { resolveSafeApiErrorMessage } from '@/core/api/api-error-message';
 import { getApiBaseUrl } from '@/core/api/config';
 import { deviceIdentityStore } from '@/core/storage/device-identity-store';
 
@@ -16,36 +17,6 @@ type ApiPostOptions<TBody> = ApiRequestOptions & {
 
 type ApiPutOptions<TBody> = ApiPostOptions<TBody>;
 type ApiPatchOptions<TBody> = ApiPostOptions<TBody>;
-
-type ApiErrorPayload = {
-  message?: string | string[];
-};
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function parseApiErrorMessage(payload: unknown): string | null {
-  if (!isRecord(payload)) {
-    return null;
-  }
-
-  const { message } = payload as ApiErrorPayload;
-
-  if (typeof message === 'string' && message.trim().length > 0) {
-    return message;
-  }
-
-  if (Array.isArray(message)) {
-    const joined = message
-      .filter((entry): entry is string => typeof entry === 'string')
-      .join(' ');
-
-    return joined.trim().length > 0 ? joined : null;
-  }
-
-  return null;
-}
 
 function buildRequestUrl(options: ApiRequestOptions): URL {
   const url = new URL(options.path, `${getApiBaseUrl()}/`);
@@ -112,25 +83,18 @@ async function requestJson<T>(
 
 async function parseApiResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    let apiMessage: string | null = null;
-
     try {
-      apiMessage = parseApiErrorMessage(await response.json());
+      await response.json();
     } catch {
-      apiMessage = null;
+      // API error payloads are not trusted for user-facing copy.
     }
 
-    const fallbackMessage =
-      response.status === 404
-        ? 'El recurso solicitado no existe en la API.'
-        : response.status === 503
-          ? 'La API no está disponible temporalmente. Inténtalo de nuevo en unos minutos.'
-          : response.status === 400
-            ? 'La petición no es válida para el asistente SORA.'
-            : `La API respondió con estado ${response.status}.`;
-    const message = apiMessage ?? fallbackMessage;
-
-    throw new AppError('API_REQUEST_FAILED', message, undefined, response.status);
+    throw new AppError(
+      'API_REQUEST_FAILED',
+      resolveSafeApiErrorMessage(response.status),
+      undefined,
+      response.status,
+    );
   }
 
   try {
@@ -138,7 +102,7 @@ async function parseApiResponse<T>(response: Response): Promise<T> {
   } catch (error) {
     throw new AppError(
       'API_INVALID_RESPONSE',
-      'La API devolvió una respuesta JSON inválida.',
+      'La API devolvio una respuesta JSON invalida.',
       error,
     );
   }

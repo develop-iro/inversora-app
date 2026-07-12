@@ -1,5 +1,5 @@
 import { getAppEnvironmentConfig } from '@/core/config/app-environment';
-import { assertSslPinningConfigured } from '@/core/api/ssl-pinning';
+import { assertTransportSecurityConfigured } from '@/core/api/ssl-pinning';
 
 /**
  * Resolves the Inversora API base URL for HTTP clients.
@@ -9,6 +9,6 @@ import { assertSslPinningConfigured } from '@/core/api/ssl-pinning';
  */
 export function getApiBaseUrl(): string {
   const apiBaseUrl = getAppEnvironmentConfig().apiBaseUrl;
-  assertSslPinningConfigured(apiBaseUrl);
+  assertTransportSecurityConfigured(apiBaseUrl);
   return apiBaseUrl;
 }
