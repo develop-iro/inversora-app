@@ -103,6 +103,26 @@ async function mockRankingsApi(page: Page) {
   });
 }
 
+async function mockSuggestedComparisonDetailMisses(page: Page) {
+  const suggestedIsins = ['IE00B4L5Y983', 'IE00B5BMR087'];
+
+  for (const isin of suggestedIsins) {
+    await page.route(`**/funds/${isin}`, async (route) => {
+      await route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        headers: {
+          'access-control-allow-origin': '*',
+        },
+        body: JSON.stringify({
+          statusCode: 404,
+          message: 'Not found',
+        }),
+      });
+    });
+  }
+}
+
 test.describe('Inversora web smoke', () => {
   test('web users land on the educational dashboard without the native onboarding gate', async ({ page }) => {
     await gotoRoute(page, '/');
@@ -205,6 +225,7 @@ test.describe('Inversora web smoke', () => {
   });
 
   test('starts a suggested two-fund comparison and shows comparative results', async ({ page }) => {
+    await mockSuggestedComparisonDetailMisses(page);
     await gotoRoute(page, '/compare');
 
     await expectPageToContain(page, 'Comparar');
@@ -217,7 +238,8 @@ test.describe('Inversora web smoke', () => {
 
     await expectPageToContain(page, 'Fondos seleccionados');
     await expectPageToContain(page, '2 fondos en la comparacion');
-    await expectPageToContain(page, 'Carga incompleta');
+    await expectPageToContain(page, 'Resultados comparativos');
+    await expectPageToContain(page, 'Score Inversora');
     await expectPageToContain(page, 'Aviso educativo');
   });
 
