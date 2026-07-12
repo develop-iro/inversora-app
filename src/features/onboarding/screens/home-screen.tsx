@@ -2,13 +2,14 @@ import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, RefreshControl, View } from 'react-native';
 
-import { HomeLearnInvitationBanner } from '@/features/learn/components/home-learn-invitation-banner';
 import { HomeEducationalProfileCard } from '@/features/learn/components/home-educational-profile-card';
 import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
+import { useInitialProfileDismissed } from '@/features/learn/hooks/use-initial-profile-dismissed';
 import {
   applyBeginnerGuardsToHomeSearchResult,
   filterBeginnerEligibleRankingGroups,
   shouldApplyBeginnerSurfaceGuards,
+  shouldShowHomeStarterSection,
 } from '@/features/funds/utils/beginner-eligibility';
 import { FeaturedFundsCarousel } from '@/features/onboarding/components/featured-funds-carousel';
 import {
@@ -22,6 +23,7 @@ import { HomeSectionCard } from '@/features/onboarding/components/home-section-c
 import { HomeStarterCard } from '@/features/onboarding/components/home-starter-card';
 import {
   HOME_CONTENT_TABS,
+  HOME_HERO_SLIDES,
   type HomeContentTab,
   type HomeHeroSlideAction,
 } from '@/features/onboarding/constants/home-hero-slides';
@@ -29,23 +31,26 @@ import { useHomeScreenData } from '@/features/onboarding/hooks/use-home-screen-d
 import type { HomeSearchResult } from '@/features/onboarding/services/resolve-home-search';
 import {
   buildRankingThemeOptionsFromGroups,
-  formatRankingThemeLabel,
-  getRankingFundsForBenchmark,
+  getRankingFundsForTheme,
   toHomeRankingEntries,
 } from '@/features/onboarding/utils/build-ranking-theme-options';
+import type { InvestmentTheme } from '@/core/domain/investment-theme';
+import { resolveInvestmentThemeLabel } from '@/core/domain/investment-theme';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { TabScreenScroll } from '@/shared/components/layout';
 import { ContentEmptyState, ReloadState, SearchField, TabPill } from '@/shared/components/ui';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
+import { useNavigateToFundDetail } from '@/shared/navigation/use-navigate-to-fund-detail';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const navigateToFundDetail = useNavigateToFundDetail();
   const theme = useTheme();
   const { contentWidth } = useMobileLayout();
   const [activeTab, setActiveTab] = useState<HomeContentTab>('explore');
-  const [selectedRankingTheme, setSelectedRankingTheme] = useState<string | 'all'>('all');
+  const [selectedRankingTheme, setSelectedRankingTheme] = useState<InvestmentTheme | 'all'>('all');
   const {
     searchQuery,
     hasQuery,
@@ -55,6 +60,7 @@ export default function HomeScreen() {
     newsItems,
     newsState,
     rankingGroups,
+    rankingEligibleTotal,
     activeRanking,
     rankingState,
     isRefreshing,
@@ -64,7 +70,24 @@ export default function HomeScreen() {
     retryActiveRanking,
   } = useHomeScreenData();
   const { profile: educationalProfile, isLoading: isProfileLoading } = useEducationalProfile();
+  const { isDismissed: hasSkippedInitialProfiling, isLoading: isDismissedLoading } =
+    useInitialProfileDismissed();
   const applyBeginnerGuards = shouldApplyBeginnerSurfaceGuards(educationalProfile);
+  const preferLearnTabEntry = applyBeginnerGuards;
+  const showHomeStarterSection = shouldShowHomeStarterSection({
+    platformOs: Platform.OS,
+    hasSkippedInitialProfiling: hasSkippedInitialProfiling === true,
+    profile: educationalProfile,
+    isProfileLoading: isProfileLoading || isDismissedLoading,
+  });
+
+  const heroSlides = useMemo(
+    () =>
+      preferLearnTabEntry
+        ? HOME_HERO_SLIDES.filter((slide) => slide.action !== 'learn')
+        : HOME_HERO_SLIDES,
+    [preferLearnTabEntry],
+  );
 
   const guardedRankingGroups = useMemo(
     () =>
@@ -85,6 +108,13 @@ export default function HomeScreen() {
   const handleOpenSuggestedCatalog = useCallback(() => {
     router.push(routes.fundsCatalogWithProfileHints);
   }, [router]);
+
+  const handleFeaturedFundPress = useCallback(
+    (isin: string) => {
+      navigateToFundDetail(isin, { returnTo: 'home' });
+    },
+    [navigateToFundDetail],
+  );
 
   const handleOpenLegal = useCallback(() => {
     router.push(routes.legal);
@@ -127,6 +157,20 @@ export default function HomeScreen() {
     [guardedRankingGroups],
   );
 
+  const displayRankingEligibleTotal = useMemo(() => {
+    const groupTotal = guardedRankingGroups.reduce((sum, group) => sum + group.total, 0);
+
+    if (applyBeginnerGuards) {
+      return groupTotal;
+    }
+
+    if (rankingEligibleTotal > 0) {
+      return rankingEligibleTotal;
+    }
+
+    return groupTotal;
+  }, [applyBeginnerGuards, guardedRankingGroups, rankingEligibleTotal]);
+
   const filteredRankingResult = useMemo((): HomeSearchResult | null => {
     if (!guardedActiveRanking) {
       return null;
@@ -136,19 +180,16 @@ export default function HomeScreen() {
       return guardedActiveRanking;
     }
 
-    const selectedGroup = guardedRankingGroups.find(
-      (group) => group.benchmarkKey === effectiveRankingTheme,
-    );
+    const selectedTheme =
+      effectiveRankingTheme === 'all' ? null : resolveInvestmentThemeLabel(effectiveRankingTheme);
     const filteredFunds = toHomeRankingEntries(
-      getRankingFundsForBenchmark(guardedRankingGroups, effectiveRankingTheme),
+      getRankingFundsForTheme(guardedRankingGroups, effectiveRankingTheme),
     );
 
     return {
       ...guardedActiveRanking,
       funds: filteredFunds,
-      subtitle: selectedGroup
-        ? `Observa el ranking de ${selectedGroup.benchmark} (${selectedGroup.total} comparables) según el Score Inversora.`
-        : `Observa el ranking de ${formatRankingThemeLabel(effectiveRankingTheme)} según el Score Inversora.`,
+      subtitle: `Observa fondos de ${selectedTheme} según el Score Inversora.`,
     };
   }, [guardedActiveRanking, effectiveRankingTheme, hasQuery, guardedRankingGroups]);
 
@@ -178,7 +219,7 @@ export default function HomeScreen() {
         />
       }
     >
-        <HomeHeroCarousel onSlideAction={handleHeroAction} />
+        <HomeHeroCarousel slides={heroSlides} onSlideAction={handleHeroAction} />
 
         <HomeSectionCard contentClassName="py-md">
           <SearchField
@@ -252,30 +293,26 @@ export default function HomeScreen() {
                   </HomeSectionCard>
                 ) : null}
 
-                {!isProfileLoading && !educationalProfile && Platform.OS === 'web' ? (
-                  <HomeSectionCard title="Aprende con contexto" borderless contentClassName="p-0">
-                    <HomeLearnInvitationBanner onPressLearn={handleLearnPress} />
+                {showHomeStarterSection ? (
+                  <HomeSectionCard title="Para empezar" borderless contentClassName="p-0">
+                    <View className="w-full flex-row items-stretch gap-md">
+                      <HomeStarterCard
+                        variant="learn"
+                        title="Conceptos básicos"
+                        accessibilityLabel="Conceptos básicos, abrir guía educativa"
+                        accessibilityHint="Inicia el cuestionario para aprender sobre fondos indexados"
+                        onPress={handleLearnPress}
+                      />
+                      <HomeStarterCard
+                        variant="ranking"
+                        title="Ver ranking educativo"
+                        accessibilityLabel="Ver ranking educativo, abrir pestaña Ranking"
+                        accessibilityHint="Muestra el ranking observacional del Score Inversora"
+                        onPress={handleOpenRankingTab}
+                      />
+                    </View>
                   </HomeSectionCard>
                 ) : null}
-
-                <HomeSectionCard title="Para empezar" borderless contentClassName="p-0">
-                  <View className="w-full flex-row items-stretch gap-md">
-                    <HomeStarterCard
-                      title="Conceptos básicos"
-                      iconName="book-open-page-variant-outline"
-                      accessibilityLabel="Conceptos básicos, abrir guía educativa"
-                      accessibilityHint="Inicia el cuestionario para aprender sobre fondos indexados"
-                      onPress={handleLearnPress}
-                    />
-                    <HomeStarterCard
-                      title="Ver ranking educativo"
-                      iconName="chart-line"
-                      accessibilityLabel="Ver ranking educativo, abrir pestaña Ranking"
-                      accessibilityHint="Muestra el ranking observacional del Score Inversora"
-                      onPress={handleOpenRankingTab}
-                    />
-                  </View>
-                </HomeSectionCard>
 
                 <HomeSectionCard
                   title="Fondos destacados"
@@ -306,7 +343,7 @@ export default function HomeScreen() {
                     <FeaturedFundsCarousel
                       funds={featuredFunds}
                       onFundPress={(fund) => {
-                        router.push(routes.fundDetail(fund.isin));
+                        handleFeaturedFundPress(fund.isin);
                       }}
                     />
                   )}
@@ -330,7 +367,9 @@ export default function HomeScreen() {
             isFullRanking
             rankingThemes={rankingThemeOptions}
             selectedRankingTheme={effectiveRankingTheme}
+            rankingEligibleTotal={displayRankingEligibleTotal}
             onRankingThemeChange={setSelectedRankingTheme}
+            onFundPress={handleFeaturedFundPress}
             onRetry={() => {
               void retryActiveRanking();
             }}

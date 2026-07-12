@@ -22,6 +22,7 @@ import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { ContentEmptyState, ReloadState, Spinner } from '@/shared/components/ui';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { routes } from '@/shared/navigation/routes';
+import { useNavigateToFundDetail } from '@/shared/navigation/use-navigate-to-fund-detail';
 import { Layout, Spacing } from '@/shared/theme/theme';
 import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
 
@@ -34,6 +35,7 @@ const BENCHMARK_RANKING_LIMIT = RANKINGS_BENCHMARK_DETAIL_LIMIT;
  */
 export default function RankingBenchmarkScreen() {
   const router = useRouter();
+  const navigateToFundDetail = useNavigateToFundDetail();
   const insets = useSafeAreaInsets();
   const { contentWidth } = useMobileLayout();
   const { profile: educationalProfile } = useEducationalProfile();
@@ -182,7 +184,7 @@ export default function RankingBenchmarkScreen() {
                   key={fund.isin}
                   fund={fund}
                   onPress={() => {
-                    router.push(routes.fundDetail(fund.isin));
+                    navigateToFundDetail(fund.isin, { returnTo: 'rankings' });
                   }}
                 />
               ))}

@@ -8,7 +8,10 @@ import {
   BEGINNER_MIN_SCORE,
   applyBeginnerGuardsToHomeSearchResult,
   filterBeginnerEligibleRankingGroups,
+  hasCompletedBeginnerProfile,
   shouldApplyBeginnerSurfaceGuards,
+  shouldPreferLearnTabEntryPoint,
+  shouldShowHomeStarterSection,
 } from './beginner-eligibility';
 
 function buildRankedFund(score: number, rank: number): RankedFund {
@@ -43,6 +46,72 @@ describe('beginner-eligibility', () => {
     );
     assert.equal(
       shouldApplyBeginnerSurfaceGuards({ knowledgeLevel: 'advanced' }),
+      false,
+    );
+  });
+
+  it('detects completed beginner profiles for redundant learn entry points', () => {
+    assert.equal(hasCompletedBeginnerProfile(null), false);
+    assert.equal(hasCompletedBeginnerProfile(undefined), false);
+    assert.equal(hasCompletedBeginnerProfile({ knowledgeLevel: 'beginner' }), true);
+    assert.equal(hasCompletedBeginnerProfile({ knowledgeLevel: 'intermediate' }), false);
+    assert.equal(hasCompletedBeginnerProfile({ knowledgeLevel: 'advanced' }), false);
+  });
+
+  it('prefers the Aprendizaje tab when profile is missing or beginner', () => {
+    assert.equal(shouldPreferLearnTabEntryPoint(null), true);
+    assert.equal(shouldPreferLearnTabEntryPoint(undefined), true);
+    assert.equal(shouldPreferLearnTabEntryPoint({ knowledgeLevel: 'beginner' }), true);
+    assert.equal(shouldPreferLearnTabEntryPoint({ knowledgeLevel: 'intermediate' }), false);
+    assert.equal(shouldPreferLearnTabEntryPoint({ knowledgeLevel: 'advanced' }), false);
+  });
+
+  it('never shows the home starter section on web', () => {
+    assert.equal(
+      shouldShowHomeStarterSection({
+        platformOs: 'web',
+        hasSkippedInitialProfiling: true,
+        profile: null,
+      }),
+      false,
+    );
+  });
+
+  it('shows the home starter section only for native users who skipped initial profiling', () => {
+    const skippedWithoutProfile = {
+      platformOs: 'ios',
+      hasSkippedInitialProfiling: true,
+      profile: null,
+    } as const;
+
+    assert.equal(shouldShowHomeStarterSection(skippedWithoutProfile), true);
+    assert.equal(
+      shouldShowHomeStarterSection({ ...skippedWithoutProfile, platformOs: 'android' }),
+      true,
+    );
+    assert.equal(
+      shouldShowHomeStarterSection({ ...skippedWithoutProfile, hasSkippedInitialProfiling: false }),
+      false,
+    );
+    assert.equal(
+      shouldShowHomeStarterSection({
+        ...skippedWithoutProfile,
+        profile: { knowledgeLevel: 'intermediate' },
+      }),
+      false,
+    );
+    assert.equal(
+      shouldShowHomeStarterSection({
+        ...skippedWithoutProfile,
+        profile: { knowledgeLevel: 'beginner' },
+      }),
+      false,
+    );
+    assert.equal(
+      shouldShowHomeStarterSection({
+        ...skippedWithoutProfile,
+        isProfileLoading: true,
+      }),
       false,
     );
   });
