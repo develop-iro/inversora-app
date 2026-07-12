@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import type { CurriculumProgress } from '@/features/learn/entities/learn-curriculum.schema';
+import {
+  educationalProfileStore,
+} from '@/core/storage/educational-profile-store';
 import {
   learnCurriculumProgressStore,
   subscribeLearnCurriculumProgress,
 } from '@/core/storage/learn-curriculum-progress-store';
+import type { CurriculumProgress } from '@/features/learn/entities/learn-curriculum.schema';
+import { syncEducationalProfileToServer } from '@/features/learn/services/educational-profile-sync';
+import {
+  resolveCurriculumGraduatedProfile,
+  shouldPersistGraduatedProfile,
+} from '@/features/learn/services/educational-profile-graduation';
 
 type UseLearnCurriculumProgressResult = {
   progress: CurriculumProgress | null;
@@ -39,6 +47,17 @@ export function useLearnCurriculumProgress(): UseLearnCurriculumProgressResult {
   const markLessonCompleted = useCallback(async (lessonId: string) => {
     const next = await learnCurriculumProgressStore.markLessonCompleted(lessonId);
     setProgress(next);
+
+    const currentProfile = await educationalProfileStore.getProfile();
+    const graduatedProfile = resolveCurriculumGraduatedProfile(currentProfile, next);
+
+    if (
+      graduatedProfile !== null &&
+      shouldPersistGraduatedProfile(currentProfile, graduatedProfile)
+    ) {
+      await educationalProfileStore.saveProfile(graduatedProfile);
+      void syncEducationalProfileToServer(graduatedProfile);
+    }
   }, []);
 
   const isLessonCompleted = useCallback(

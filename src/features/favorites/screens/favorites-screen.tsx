@@ -13,10 +13,12 @@ import { ScreenQuickAction, ScreenQuickActionsRow, TabScreenScroll } from '@/sha
 import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { Button, Spinner } from '@/shared/components/ui';
 import { routes } from '@/shared/navigation/routes';
+import { useNavigateToFundDetail } from '@/shared/navigation/use-navigate-to-fund-detail';
 import { Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
 
 export default function FavoritesScreen() {
   const router = useRouter();
+  const navigateToFundDetail = useNavigateToFundDetail();
   const { isins, isLoading: isFavoritesLoading } = useFavoritesList();
   const [funds, setFunds] = useState<CatalogFund[]>([]);
   const [isCatalogLoading, setIsCatalogLoading] = useState(false);
@@ -167,7 +169,7 @@ export default function FavoritesScreen() {
                 <FundListRow
                   key={fund.isin}
                   fund={fund}
-                  onPress={() => router.push(routes.fundDetail(fund.isin))}
+                  onPress={() => navigateToFundDetail(fund.isin, { returnTo: 'favorites' })}
                 />
               ))}
             </View>

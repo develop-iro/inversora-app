@@ -18,6 +18,7 @@ describe('initial-profile-onboarding-policy', () => {
   it('treats learn and legal as exempt routes', () => {
     assert.equal(isOnboardingExemptRoute(['learn']), true);
     assert.equal(isOnboardingExemptRoute(['legal']), true);
+    assert.equal(isOnboardingExemptRoute(['feedback']), true);
     assert.equal(isOnboardingExemptRoute(['(tabs)']), false);
     assert.equal(isOnboardingExemptRoute(['rankings']), false);
   });

@@ -35,12 +35,14 @@ describe('resolveSecondaryTabConfig', () => {
   it('returns Aprendizaje labels for learn mode', () => {
     const config = resolveSecondaryTabConfig('learn');
     assert.equal(config.label, 'Aprendizaje');
+    assert.equal(config.compactLabel, 'Aprende');
     assert.equal(config.activeIcon, 'book-open-page-variant');
   });
 
   it('returns Favoritos labels for favorites mode', () => {
     const config = resolveSecondaryTabConfig('favorites');
     assert.equal(config.label, 'Favoritos');
+    assert.equal(config.compactLabel, 'Favoritos');
     assert.equal(config.activeIcon, 'heart');
   });
 });
