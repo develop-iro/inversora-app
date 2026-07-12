@@ -31,7 +31,7 @@
       "env": {
         "EXPO_PUBLIC_APP_ENV": "qa",
         "EXPO_PUBLIC_API_URL": "https://inversora-api-staging.up.railway.app",
-        "EXPO_PUBLIC_NEWS_API_ENABLED": "false",
+        "EXPO_PUBLIC_NEWS_API_ENABLED": "true",
         "NODE_ENV": "production",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
@@ -41,7 +41,7 @@
       "env": {
         "EXPO_PUBLIC_APP_ENV": "pro",
         "EXPO_PUBLIC_API_URL": "https://inversora-api-production.up.railway.app",
-        "EXPO_PUBLIC_NEWS_API_ENABLED": "false",
+        "EXPO_PUBLIC_NEWS_API_ENABLED": "true",
         "EXPO_PUBLIC_SSL_PINNING_ENABLED": "true",
         "NODE_ENV": "production"
       }

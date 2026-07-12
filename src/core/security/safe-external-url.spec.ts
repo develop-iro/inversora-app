@@ -9,6 +9,10 @@ describe('safe-external-url', () => {
       isSafeExternalUrl('https://www.cnmv.es/Portal/Consultas/DatosEmpresa'),
       true,
     );
+    assert.equal(
+      isSafeExternalUrl('https://inversora--inversora.expo.app/privacidad.html'),
+      true,
+    );
   });
 
   it('blocks javascript and non-https URLs', () => {

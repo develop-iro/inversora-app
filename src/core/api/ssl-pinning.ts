@@ -19,9 +19,12 @@ export function isSslPinningEnabled(): boolean {
 }
 
 /**
- * Validates that SSL pinning is configured before production native API calls.
+ * Validates that the API host is in the transport-security allowlist before
+ * production native API calls.
  *
- * Runtime pinning is enforced by the Expo config plugin during EAS builds.
+ * Note: the Expo config plugin enforces strict transport security (ATS on iOS,
+ * no cleartext traffic on Android), not SPKI certificate pinning. See
+ * `plugins/with-ssl-pinning.js`.
  */
 export function assertSslPinningConfigured(apiBaseUrl: string): void {
   if (!isSslPinningEnabled()) {

@@ -2,6 +2,8 @@
 
 Resumen alineado con el documento oficial y con `README.md` / `AGENTS.md`. Ante duda, prevalece el documento oficial; este archivo es la referencia rápida en el repo.
 
+Propuesta de valor (§6): [value-proposition.md](./value-proposition.md).
+
 El **objetivo de validación del MVP** y los **requisitos mínimos** del documento oficial (§2.2) están detallados con estado de implementación en [objectives.md](./objectives.md).
 
 Leyenda de cumplimiento (§3.1):

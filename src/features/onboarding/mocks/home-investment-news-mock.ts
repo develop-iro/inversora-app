@@ -1,6 +1,6 @@
 import type { InvestmentNewsItem } from '@/core/domain/investment-news';
 
-/** Curated educational headlines until `GET /news` is available. */
+/** Curated educational headlines used as a local fallback for `GET /news`. */
 export const HOME_INVESTMENT_NEWS_MOCK: readonly InvestmentNewsItem[] = [
   {
     id: 'news-ter-basics',

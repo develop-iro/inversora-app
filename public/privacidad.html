@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Política de privacidad de Inversora — aplicación educativa sobre fondos indexados."
+    />
+    <title>Política de privacidad — Inversora</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7f8;
+        --surface: #ffffff;
+        --text: #0b2e36;
+        --text-secondary: #4a5f66;
+        --border: #d7e2e6;
+        --accent: #0b6e7c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      main {
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 3rem;
+      }
+
+      header {
+        margin-bottom: 2rem;
+      }
+
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.75rem;
+        line-height: 1.25;
+      }
+
+      .meta {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      article {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+      }
+
+      h2 {
+        margin: 1.75rem 0 0.5rem;
+        font-size: 1.125rem;
+        line-height: 1.35;
+      }
+
+      h2:first-child {
+        margin-top: 0;
+      }
+
+      p,
+      li {
+        color: var(--text-secondary);
+      }
+
+      ul {
+        padding-left: 1.25rem;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.75rem 0 1rem;
+        font-size: 0.92rem;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 0.5rem 0.65rem;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #eef4f6;
+        color: var(--text);
+      }
+
+      footer {
+        margin-top: 1.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Política de privacidad</h1>
+        <p class="meta">
+          Inversora — aplicación informativa y educativa sobre fondos indexados.<br />
+          Última actualización: 12 de julio de 2026.
+        </p>
+      </header>
+
+      <article>
+        <h2>1. Responsable del tratamiento</h2>
+        <p>
+          El responsable del tratamiento de los datos descritos en esta política es
+          <strong>Ivan Romero</strong> (proyecto <strong>Inversora</strong>).
+        </p>
+        <p>
+          Contacto para privacidad:
+          <a href="mailto:iro.developer@hotmail.com">iro.developer@hotmail.com</a>.
+        </p>
+
+        <h2>2. Ámbito de esta política</h2>
+        <p>
+          Esta política se aplica a la aplicación móvil Inversora (iOS y Android), a su
+          versión web y a los servicios de backend que la aplicación utiliza para mostrar
+          catálogo, rankings, explicaciones educativas y el asistente SORA.
+        </p>
+        <p>
+          Inversora es un producto en fase <strong>MVP / beta</strong>. No exige registro,
+          no solicita nombre, correo electrónico ni teléfono para usar las funciones
+          principales.
+        </p>
+
+        <h2>3. Datos que no recogemos</h2>
+        <p>En el MVP, Inversora <strong>no</strong> recoge ni trata:</p>
+        <ul>
+          <li>Nombre, apellidos, DNI/NIE ni documento de identidad.</li>
+          <li>Correo electrónico, teléfono ni dirección postal.</li>
+          <li>Credenciales de acceso (no hay cuentas de usuario).</li>
+          <li>Datos bancarios, IBAN, operaciones de compra o venta.</li>
+          <li>Geolocalización precisa ni contactos del dispositivo.</li>
+        </ul>
+
+        <h2>4. Datos almacenados en tu dispositivo</h2>
+        <p>
+          Parte de la información permanece solo en tu teléfono, tablet o navegador, mediante
+          almacenamiento local seguro (por ejemplo, Expo Secure Store o almacenamiento local del
+          navegador):
+        </p>
+        <ul>
+          <li>
+            <strong>Favoritos:</strong> identificadores ISIN de fondos que marques como
+            favoritos.
+          </li>
+          <li>
+            <strong>Perfil educativo:</strong> resultado orientativo del cuestionario «Quiero
+            aprender» (nivel de conocimiento, horizonte, orientación al riesgo, etc.) y, en el
+            dispositivo, las respuestas del cuestionario asociadas a ese perfil.
+          </li>
+          <li>
+            <strong>Preferencias de uso:</strong> selección de fondos para comparar, progreso del
+            currículo educativo y estado del onboarding inicial.
+          </li>
+          <li>
+            <strong>Identificadores técnicos locales:</strong> token opaco de instalación,
+            identificador anónimo de dispositivo y sesión de analytics, generados por la propia
+            app.
+          </li>
+        </ul>
+        <p>
+          Puedes eliminar estos datos desinstalando la aplicación o borrando los datos del sitio
+          en tu navegador. En web, también puedes borrar el almacenamiento local desde la
+          configuración del navegador.
+        </p>
+
+        <h2>5. Datos enviados a nuestros servidores</h2>
+        <p>
+          Para ofrecer catálogo, rankings, sincronización anónima y mejora del producto, la app
+          se comunica con la API oficial de Inversora alojada en
+          <strong>Railway</strong>, que persiste información en <strong>PostgreSQL</strong>
+          (proveedor de base de datos, por ejemplo <strong>Neon</strong> en entornos de
+          despliegue).
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Qué incluye</th>
+              <th>Finalidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dispositivo anónimo</td>
+              <td>
+                Identificador opaco, hash de token, plataforma (iOS/Android/web), versión de la
+                app y marcas de primera/última actividad.
+              </td>
+              <td>
+                Vincular de forma anónima analytics y perfil educativo derivado sin crear una
+                cuenta.
+              </td>
+            </tr>
+            <tr>
+              <td>Perfil educativo derivado</td>
+              <td>
+                Solo dimensiones agregadas del cuestionario (por ejemplo, nivel de
+                conocimiento, orientación al riesgo, horizonte, objetivo de aprendizaje). No se
+                envían las respuestas literales del cuestionario.
+              </td>
+              <td>
+                Mejorar la experiencia educativa y analizar de forma agregada el uso del
+                perfilado.
+              </td>
+            </tr>
+            <tr>
+              <td>Analytics de producto</td>
+              <td>
+                Nombre del evento, pantalla visitada, identificador de sesión anónimo,
+                identificador de dispositivo opcional, versión de la app y metadatos no
+                identificativos (por ejemplo, paso del cuestionario o ISIN de un fondo
+                consultado).
+              </td>
+              <td>
+                Medir uso del MVP, embudos educativos y rendimiento de pantallas sin publicidad
+                ni perfilado comercial.
+              </td>
+            </tr>
+            <tr>
+              <td>Asistente SORA</td>
+              <td>
+                Texto que escribes al asistente, superficie desde la que preguntas, ISIN de
+                fondos en contexto, respuesta generada, intención detectada y metadatos técnicos
+                de la conversación.
+              </td>
+              <td>
+                Ofrecer explicaciones educativas, aplicar salvaguardas legales y mejorar la
+                calidad del asistente.
+              </td>
+            </tr>
+            <tr>
+              <td>Consultas de catálogo</td>
+              <td>
+                Parámetros de búsqueda y filtros (categoría, comisiones, etc.) necesarios para
+                devolver resultados.
+              </td>
+              <td>
+                Mostrar fondos indexados, rankings y fichas con datos actualizados.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          Las comunicaciones con la API viajan siempre <strong>cifradas mediante HTTPS
+          (TLS)</strong>. En builds nativos de producción, la app exige transporte seguro:
+          App Transport Security en iOS y bloqueo de tráfico sin cifrar
+          (<code>usesCleartextTraffic: false</code>) en Android.
+        </p>
+
+        <h2>6. Datos de mercado y proveedores externos</h2>
+        <p>
+          Inversora muestra métricas, precios y composiciones de fondos indexados obtenidos a
+          través de proveedores de datos de mercado. En el backend utilizamos principalmente
+          <strong>Financial Modeling Prep (FMP)</strong> para sincronizar catálogo y series
+          históricas.
+        </p>
+        <p>
+          Tú no te conectas directamente a FMP desde la app: la API de Inversora actúa como
+          intermediaria. FMP no recibe tus favoritos, tu perfil educativo ni tus mensajes al
+          asistente.
+        </p>
+        <p>
+          Para logotipos o metadatos de gestoras puede utilizarse
+          <strong>Brandfetch</strong> cuando está configurado en el cliente.
+        </p>
+
+        <h2>7. Inteligencia artificial (asistente SORA)</h2>
+        <p>
+          El asistente SORA genera explicaciones educativas. Según la petición, el backend
+          puede resolverla con reglas deterministas, glosario interno, caché o modelos de
+          lenguaje alojados por terceros (por ejemplo, <strong>OpenAI</strong> u otros
+          proveedores configurados en el servidor).
+        </p>
+        <ul>
+          <li>
+            No envíes datos personales en tus mensajes al asistente (nombre, email, DNI,
+            situación patrimonial identificable, etc.).
+          </li>
+          <li>
+            SORA no debe usarse como única base para decisiones de inversión; es una capa
+            explicativa, no asesoramiento financiero personalizado.
+          </li>
+          <li>
+            Los mensajes pueden almacenarse en la base de datos del backend para auditoría,
+            trazabilidad y mejora del servicio.
+          </li>
+        </ul>
+
+        <h2>8. Observabilidad técnica (Sentry)</h2>
+        <p>
+          En builds de producción, si está configurado, la app puede enviar informes de errores
+          y métricas de rendimiento a <strong>Sentry</strong>. Estos informes pueden incluir
+          tipo de dispositivo, versión de la app, trazas de error y contexto técnico limitado.
+          No incluyen deliberadamente datos personales identificables.
+        </p>
+
+        <h2>9. Base legal (RGPD)</h2>
+        <p>Tratamos los datos anteriores con las siguientes bases:</p>
+        <ul>
+          <li>
+            <strong>Interés legítimo (art. 6.1.f RGPD):</strong> mantener la seguridad,
+            estabilidad y mejora de un servicio educativo gratuito; medir uso anónimo del MVP;
+            prevenir abuso de la API.
+          </li>
+          <li>
+            <strong>Ejecución de medidas precontractuales / servicio solicitado (art. 6.1.b):</strong>
+            responder a tus consultas al asistente y mostrar el catálogo que solicitas al usar
+            la app.
+          </li>
+          <li>
+            <strong>Consentimiento (art. 6.1.a), cuando aplique:</strong> si en el futuro se
+            añaden funciones opcionales que requieran consentimiento explícito, se solicitará de
+            forma separada.
+          </li>
+        </ul>
+
+        <h2>10. Conservación</h2>
+        <ul>
+          <li>
+            <strong>Datos locales del dispositivo:</strong> mientras no los borres o
+            desinstales la app.
+          </li>
+          <li>
+            <strong>Analytics anónimos:</strong> el tiempo necesario para analizar el MVP; el
+            objetivo operativo es no superar <strong>90 días</strong> salvo obligación legal.
+          </li>
+          <li>
+            <strong>Perfil educativo derivado y dispositivo anónimo:</strong> mientras la
+            instalación siga activa y un periodo razonable posterior para estadísticas
+            agregadas.
+          </li>
+          <li>
+            <strong>Conversaciones del asistente:</strong> el tiempo necesario para auditoría,
+            cumplimiento de guardrails y mejora del servicio.
+          </li>
+          <li>
+            <strong>Logs técnicos (Sentry):</strong> según la configuración del proveedor y
+            nuestras necesidades de diagnóstico.
+          </li>
+        </ul>
+
+        <h2>11. Encargados y transferencias</h2>
+        <p>Podemos apoyarnos en proveedores que tratan datos por nuestra cuenta, entre otros:</p>
+        <ul>
+          <li><strong>Railway</strong> — alojamiento de la API.</li>
+          <li><strong>Neon</strong> (u otro PostgreSQL gestionado) — base de datos.</li>
+          <li><strong>Expo / EAS</strong> — builds y hosting web estático de esta política.</li>
+          <li><strong>OpenAI</strong> u otros proveedores de IA — procesamiento de mensajes del asistente.</li>
+          <li><strong>Sentry</strong> — monitorización de errores.</li>
+          <li><strong>Financial Modeling Prep</strong> — datos de mercado.</li>
+        </ul>
+        <p>
+          Algunos proveedores pueden estar ubicados fuera del Espacio Económico Europeo. En esos
+          casos aplicamos garantías adecuadas cuando el proveedor las ofrece (por ejemplo,
+          cláusulas contractuales tipo o decisiones de adecuación).
+        </p>
+
+        <h2>12. Tus derechos</h2>
+        <p>
+          Puedes ejercer los derechos de acceso, rectificación, supresión, oposición, limitación
+          y portabilidad reconocidos por el RGPD escribiendo a
+          <a href="mailto:iro.developer@hotmail.com">iro.developer@hotmail.com</a>.
+        </p>
+        <p>
+          Dado que no creamos cuentas personales, puede ser difícil asociar peticiones a un
+          dispositivo concreto sin que nos facilites información técnica adicional (por ejemplo,
+          identificador de dispositivo mostrado en diagnósticos de la app, si está disponible).
+          Borrar los datos locales desinstalando la app elimina la información almacenada en tu
+          terminal.
+        </p>
+        <p>
+          También puedes presentar una reclamación ante la
+          <a href="https://www.aepd.es" rel="noopener noreferrer">Agencia Española de Protección de Datos (AEPD)</a>.
+        </p>
+
+        <h2>13. Menores de edad</h2>
+        <p>
+          Inversora está pensada para adultos que desean aprender sobre fondos indexados. No
+          recopilamos deliberadamente datos de menores de 14 años. Si crees que un menor nos ha
+          facilitado datos, contacta con nosotros para solicitar su eliminación.
+        </p>
+
+        <h2>14. Seguridad</h2>
+        <p>
+          Aplicamos medidas técnicas y organizativas razonables: comunicaciones cifradas (HTTPS),
+          tokens opacos en lugar de identificadores personales, almacenamiento seguro en el
+          cliente, validación de entradas en la API y minimización de datos en analytics.
+        </p>
+
+        <h2>15. Cambios en esta política</h2>
+        <p>
+          Podemos actualizar esta política para reflejar cambios del producto o requisitos legales.
+          Publicaremos la versión vigente en esta misma URL e indicaremos la fecha de
+          actualización. Si los cambios son relevantes, los comunicaremos de forma visible en la
+          app.
+        </p>
+
+        <h2>16. Información legal complementaria</h2>
+        <p>
+          Los avisos sobre riesgo, rendimiento pasado y ausencia de asesoramiento financiero
+          personalizado están disponibles dentro de la aplicación, en la sección
+          <em>Información legal</em>.
+        </p>
+      </article>
+
+      <footer>
+        <p>
+          © 2026 Inversora. Uso informativo y educativo. Esta política no constituye asesoramiento
+          financiero.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

@@ -7,6 +7,7 @@ Resumen de la sección **5. Problema que resuelve Inversora** del documento ofic
 Para alcance, objetivos, perfiles y principios, ver también:
 
 - [vision-and-principles.md](./vision-and-principles.md)
+- [value-proposition.md](./value-proposition.md)
 - [objectives.md](./objectives.md)
 - [target-audience-and-profiles.md](./target-audience-and-profiles.md)
 - [mvp-scope.md](./mvp-scope.md)
