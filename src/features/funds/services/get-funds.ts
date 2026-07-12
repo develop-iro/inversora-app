@@ -1,7 +1,10 @@
 import type { CatalogFund } from '@/core/domain/catalog';
 
 import { apiGet } from '@/core/api/client';
-import { shouldUseMockData } from '@/core/config/app-environment';
+import {
+  allowsMockFallback,
+  shouldUseMockData,
+} from '@/core/config/app-environment';
 import {
   mapCatalogFiltersToApiQuery,
   type FundListApiQuery,
@@ -20,6 +23,7 @@ import {
 } from '@/core/query/query-cache';
 import type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
 import { filterCatalogVisible } from '@/features/funds/utils/catalog-visibility';
+import { filterCatalogFunds } from '@/features/funds/utils/filter-catalog-funds';
 import { CATALOG_SUGGESTIONS_LIMIT } from '@/features/funds/utils/fund-search';
 
 export type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
@@ -36,8 +40,8 @@ function buildCatalogCacheKey(filters: FundCatalogFilters | undefined, page: num
 /** Default page size for catalog infinite scroll (`GET /funds`). */
 export const CATALOG_PAGE_SIZE = 20;
 
-/** Wider slice used only to build category filter cards in the catalog. */
-export const CATALOG_CATEGORY_INDEX_LIMIT = 100;
+/** Wider in-memory slice used for category cards and filter preview counts. */
+export const CATALOG_FUNDS_INDEX_LIMIT = 1000;
 
 /**
  * Fetches a single page from `GET /funds`.
@@ -68,7 +72,7 @@ function buildMockFundListPage(
   page: number,
   limit: number,
 ): FundListResponse {
-  const allFunds = applyClientOnlyCatalogFilters(CATALOG_FUNDS_MOCK, filters);
+  const allFunds = filterCatalogFunds(CATALOG_FUNDS_MOCK, filters ?? {});
   const start = (page - 1) * limit;
   const data = allFunds.slice(start, start + limit);
   const total = allFunds.length;
@@ -120,7 +124,15 @@ export function applyClientOnlyCatalogFilters(
 }
 
 function getMockCatalogFunds(filters?: FundCatalogFilters): CatalogFund[] {
-  return applyClientOnlyCatalogFilters(CATALOG_FUNDS_MOCK, filters);
+  return filterCatalogFunds(CATALOG_FUNDS_MOCK, filters ?? {});
+}
+
+function isAbortError(error: unknown): boolean {
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    return true;
+  }
+
+  return error instanceof Error && error.name === 'AbortError';
 }
 
 /**
@@ -168,6 +180,10 @@ async function loadFundsPageFromApi(
       meta: response.meta,
     };
   } catch (error) {
+    if (allowsMockFallback() && !isAbortError(error)) {
+      return buildMockFundListPage(filters, page, CATALOG_PAGE_SIZE);
+    }
+
     throw toFundsFetchError(error);
   }
 }
@@ -179,8 +195,17 @@ async function loadFundsPageFromApi(
  * @param signal - Optional abort signal.
  */
 export async function getCatalogCategoryIndex(signal?: AbortSignal): Promise<CatalogFund[]> {
+  return getCatalogFundsIndex(signal);
+}
+
+/**
+ * Loads the in-memory catalog slice used by draft previews and category cards.
+ *
+ * @param signal - Optional abort signal.
+ */
+export async function getCatalogFundsIndex(signal?: AbortSignal): Promise<CatalogFund[]> {
   if (shouldUseMockData()) {
-    return applyClientOnlyCatalogFilters(CATALOG_FUNDS_MOCK);
+    return filterCatalogFunds(CATALOG_FUNDS_MOCK, {});
   }
 
   try {
@@ -188,11 +213,15 @@ export async function getCatalogCategoryIndex(signal?: AbortSignal): Promise<Cat
       sortBy: 'score',
       sortOrder: 'desc',
       page: 1,
-      limit: CATALOG_CATEGORY_INDEX_LIMIT,
+      limit: CATALOG_FUNDS_INDEX_LIMIT,
     };
     const response = await fetchFundListPage(apiQuery, signal);
     return response.data;
   } catch (error) {
+    if (allowsMockFallback() && !isAbortError(error)) {
+      return filterCatalogFunds(CATALOG_FUNDS_MOCK, {});
+    }
+
     throw toFundsFetchError(error);
   }
 }
@@ -257,18 +286,7 @@ export async function searchCatalogFunds(
   }
 
   if (shouldUseMockData()) {
-    const normalized = trimmedQuery.toLowerCase();
-
-    return getMockCatalogFunds({ query: trimmedQuery })
-      .filter(
-        (fund) =>
-          fund.name.toLowerCase().includes(normalized) ||
-          fund.isin.toLowerCase().includes(normalized) ||
-          fund.categoryLabel.toLowerCase().includes(normalized) ||
-          fund.themeLabel.toLowerCase().includes(normalized) ||
-          fund.symbol.toLowerCase().includes(normalized),
-      )
-      .slice(0, limit);
+    return getMockCatalogFunds({ query: trimmedQuery }).slice(0, limit);
   }
 
   try {

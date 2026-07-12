@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import type { CatalogFund } from '@/core/domain/catalog';
-import { getCatalogCategoryIndex } from '@/features/funds/services/get-funds';
+import { getCatalogFundsIndex } from '@/features/funds/services/get-funds';
 import { resolveFundApiErrorMessage } from '@/features/funds/utils/resolve-fund-api-error-message';
 
 export type CatalogCategoryIndexStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -16,7 +16,7 @@ export type UseCatalogCategoryIndexResult = {
 /**
  * Loads a lightweight fund slice used only to derive category filter cards.
  */
-export function useCatalogCategoryIndex(): UseCatalogCategoryIndexResult {
+export function useCatalogFundsIndex(): UseCatalogCategoryIndexResult {
   const [funds, setFunds] = useState<CatalogFund[]>([]);
   const [status, setStatus] = useState<CatalogCategoryIndexStatus>('loading');
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export function useCatalogCategoryIndex(): UseCatalogCategoryIndexResult {
 
     void (async () => {
       try {
-        const results = await getCatalogCategoryIndex(controller.signal);
+        const results = await getCatalogFundsIndex(controller.signal);
 
         if (cancelled) {
           return;
@@ -64,3 +64,6 @@ export function useCatalogCategoryIndex(): UseCatalogCategoryIndexResult {
     },
   };
 }
+
+/** @deprecated Use useCatalogFundsIndex for filter previews and category cards. */
+export const useCatalogCategoryIndex = useCatalogFundsIndex;

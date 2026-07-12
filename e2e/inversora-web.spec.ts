@@ -177,6 +177,7 @@ test.describe('Inversora web smoke', () => {
     await expectPageToContain(page, 'Filtros');
 
     await page.getByRole('tab', { name: /Riesgo Bajo/i }).click();
+    await expect(page.getByRole('button', { name: /Ver \d+ fondos?/i })).toBeVisible();
     await page.getByRole('tab', { name: /Score .*80/i }).click();
     await page.getByRole('button', { name: /Mostrar solo fondos recomendados para empezar/i }).click();
     await page.getByRole('button', { name: /Ver fondos|Ver \d+ fondos/i }).click();

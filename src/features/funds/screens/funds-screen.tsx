@@ -31,7 +31,7 @@ import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
 import { FundCatalogLoadMoreFooter } from '@/features/funds/components/fund-catalog-load-more-footer';
 import { FundCatalogSearchField } from '@/features/funds/components/fund-catalog-search-field';
 import { FundCatalogToolbar } from '@/features/funds/components/fund-catalog-toolbar';
-import { useCatalogCategoryIndex } from '@/features/funds/hooks/use-catalog-category-index';
+import { useCatalogFundsIndex } from '@/features/funds/hooks/use-catalog-category-index';
 import { useCatalogFundsPagination } from '@/features/funds/hooks/use-catalog-funds-pagination';
 import { invalidateCatalogCache } from '@/features/funds/services/get-funds';
 import { buildCatalogCategoryOptions } from '@/features/funds/utils/build-catalog-category-options';
@@ -40,6 +40,7 @@ import {
   countActiveCatalogFilters,
   formatCatalogResultsHeadline,
 } from '@/features/funds/utils/catalog-filter-presentation';
+import { countCatalogFunds } from '@/features/funds/utils/filter-catalog-funds';
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
@@ -147,11 +148,11 @@ export default function FundsScreen() {
   const { funds, meta, status, error, hasMore, loadMore } =
     useCatalogFundsPagination(activeServiceFilters, reloadToken);
 
-  const { funds: categoryIndexFunds } = useCatalogCategoryIndex();
+  const { funds: catalogFundsIndex } = useCatalogFundsIndex();
 
   const categoryOptions = useMemo(
-    () => buildCatalogCategoryOptions(categoryIndexFunds),
-    [categoryIndexFunds],
+    () => buildCatalogCategoryOptions(catalogFundsIndex),
+    [catalogFundsIndex],
   );
 
   const categoryLabelById = useMemo(
@@ -169,19 +170,24 @@ export default function FundsScreen() {
     filters.categoryLabel === 'all'
       ? undefined
       : categoryLabelById.get(filters.categoryLabel) ?? filters.categoryLabel;
+  const appliedPreviewResultCount = useMemo(() => {
+    if (catalogFundsIndex.length === 0) {
+      return null;
+    }
 
-  const resultsHeadline = formatCatalogResultsHeadline(meta?.total ?? null, funds.length, {
+    return countCatalogFunds(catalogFundsIndex, activeServiceFilters);
+  }, [activeServiceFilters, catalogFundsIndex]);
+  const resolvedResultCount = appliedPreviewResultCount ?? meta?.total ?? null;
+  const loadedTotalCount = resolvedResultCount ?? meta?.total ?? null;
+
+  const resultsHeadline = formatCatalogResultsHeadline(resolvedResultCount, funds.length, {
     categoryLabel: selectedCategoryLabel,
     query: debouncedQuery,
   });
 
   const totalCatalogFundCount = useMemo(() => {
-    if (meta?.total != null) {
-      return meta.total;
-    }
-
     return categoryOptions.reduce((sum, category) => sum + category.fundCount, 0);
-  }, [categoryOptions, meta]);
+  }, [categoryOptions]);
 
   const groupedFunds = useMemo(() => groupFundsByCategory(funds), [funds]);
   const showGrouped = shouldGroupByCategory(filters, debouncedQuery);
@@ -372,8 +378,8 @@ export default function FundsScreen() {
 
             {!showGrouped ? (
               <TextLabel variant="meta" themeColor="textSecondary">
-                {meta?.total != null
-                  ? `${funds.length} de ${meta.total} cargado${meta.total === 1 ? '' : 's'}`
+                {loadedTotalCount != null
+                  ? `${funds.length} de ${loadedTotalCount} cargado${loadedTotalCount === 1 ? '' : 's'}`
                   : `${funds.length} cargado${funds.length === 1 ? '' : 's'}`}
               </TextLabel>
             ) : null}
@@ -410,8 +416,9 @@ export default function FundsScreen() {
         sessionKey={filtersSheetSession}
         value={filters}
         categories={categoryOptions}
+        catalogFundsIndex={catalogFundsIndex}
         totalFundCount={totalCatalogFundCount}
-        resultCount={meta?.total ?? null}
+        resultCount={resolvedResultCount}
         onClose={() => setIsFiltersVisible(false)}
         onApply={handleFiltersChange}
       />

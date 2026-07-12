@@ -69,7 +69,7 @@ export function useCatalogFundsPagination(
   const hasLoadedOnceRef = useRef(false);
   const lastReloadTokenRef = useRef(reloadToken);
 
-  const loadInitialPage = useCallback(async (options?: { soft?: boolean }) => {
+  const loadInitialPage = useCallback(async (options?: { signal?: AbortSignal; soft?: boolean }) => {
     const requestId = ++requestIdRef.current;
     const soft = options?.soft === true && hasLoadedOnceRef.current;
 
@@ -85,7 +85,7 @@ export function useCatalogFundsPagination(
     setError(null);
 
     try {
-      const response = await getFundsPage(filters, 1);
+      const response = await getFundsPage(filters, 1, options?.signal);
 
       if (requestId !== requestIdRef.current) {
         return;
@@ -114,6 +114,7 @@ export function useCatalogFundsPagination(
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
     const forceHard = reloadToken !== lastReloadTokenRef.current;
     lastReloadTokenRef.current = reloadToken;
     const soft = !forceHard && hasLoadedOnceRef.current;
@@ -124,12 +125,13 @@ export function useCatalogFundsPagination(
         return;
       }
 
-      await loadInitialPage({ soft });
+      await loadInitialPage({ signal: controller.signal, soft });
     })();
 
     return () => {
       cancelled = true;
       requestIdRef.current += 1;
+      controller.abort();
     };
   }, [loadInitialPage, reloadToken]);
 
