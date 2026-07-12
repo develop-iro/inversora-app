@@ -90,7 +90,7 @@ export async function loadComparePickerFunds(
             limit,
             signal: options?.signal,
           })
-        : (await getFundsPage(undefined, 1, options?.signal)).data;
+        : (await getFundsPage(undefined, 1)).data.slice(0, limit);
 
     if (loaded.length > 0) {
       return loaded;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { FundDetail } from '@/core/domain/catalog';
 import type { CompareFundEntry } from '@/features/comparison/models/compare-fund-entry';
@@ -12,6 +12,8 @@ export type UseCompareFundsResult = {
   readonly notFoundIsins: readonly string[];
   readonly isLoading: boolean;
   readonly hasPartialErrors: boolean;
+  readonly reloadToken: number;
+  readonly refetch: () => void;
 };
 
 /**
@@ -19,9 +21,53 @@ export type UseCompareFundsResult = {
  *
  * @param selectedIsins - ISINs selected for comparison, in display order.
  */
+function mergeCompareEntries(
+  selectedIsins: readonly string[],
+  currentEntries: readonly CompareFundEntry[],
+): CompareFundEntry[] {
+  return selectedIsins.map((isin) => {
+    const existing = currentEntries.find((entry) => entry.isin === isin);
+
+    return existing ?? { isin, detail: null, errorMessage: null };
+  });
+}
+
+function resolveIsinsToFetch(entries: readonly CompareFundEntry[]): string[] {
+  return entries
+    .filter((entry) => entry.detail === null && entry.errorMessage === null)
+    .map((entry) => entry.isin);
+}
+
+async function loadCompareFundEntry(isin: string): Promise<CompareFundEntry> {
+  try {
+    const detail = await getFundByIsin(isin);
+
+    if (detail === null) {
+      return {
+        isin,
+        detail: null,
+        errorMessage: LOAD_ERROR_MESSAGE,
+      } satisfies CompareFundEntry;
+    }
+
+    return {
+      isin,
+      detail,
+      errorMessage: null,
+    } satisfies CompareFundEntry;
+  } catch {
+    return {
+      isin,
+      detail: null,
+      errorMessage: LOAD_ERROR_MESSAGE,
+    } satisfies CompareFundEntry;
+  }
+}
+
 export function useCompareFunds(selectedIsins: readonly string[]): UseCompareFundsResult {
   const [entries, setEntries] = useState<readonly CompareFundEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,57 +81,56 @@ export function useCompareFunds(selectedIsins: readonly string[]): UseCompareFun
         return;
       }
 
+      let mergedEntries: CompareFundEntry[] = [];
+
+      setEntries((current) => {
+        mergedEntries = mergeCompareEntries(selectedIsins, current);
+        return mergedEntries;
+      });
+
+      const isinsToFetch = resolveIsinsToFetch(mergedEntries);
+
       if (!cancelled) {
-        setIsLoading(true);
-        setEntries(
-          selectedIsins.map((isin) => ({
-            isin,
-            detail: null,
-            errorMessage: null,
-          })),
-        );
+        setEntries(mergedEntries);
       }
 
-      const results = await Promise.all(
-        selectedIsins.map(async (isin) => {
-          try {
-            const detail = await getFundByIsin(isin);
+      if (isinsToFetch.length === 0) {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+        return;
+      }
 
-            if (detail === null) {
-              return {
-                isin,
-                detail: null,
-                errorMessage: LOAD_ERROR_MESSAGE,
-              } satisfies CompareFundEntry;
-            }
+      if (!cancelled) {
+        setIsLoading(true);
+      }
 
-            return {
-              isin,
-              detail,
-              errorMessage: null,
-            } satisfies CompareFundEntry;
-          } catch {
-            return {
-              isin,
-              detail: null,
-              errorMessage: LOAD_ERROR_MESSAGE,
-            } satisfies CompareFundEntry;
-          }
-        }),
+      const fetchedEntries = await Promise.all(
+        isinsToFetch.map((isin) => loadCompareFundEntry(isin)),
       );
 
       if (cancelled) {
         return;
       }
 
-      setEntries(results);
+      const fetchedByIsin = new Map(
+        fetchedEntries.map((entry) => [entry.isin, entry] as const),
+      );
+
+      setEntries(
+        mergedEntries.map((entry) => fetchedByIsin.get(entry.isin) ?? entry),
+      );
       setIsLoading(false);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [selectedIsins]);
+  }, [selectedIsins, reloadToken]);
+
+  const refetch = useCallback(() => {
+    setReloadToken((current) => current + 1);
+  }, []);
 
   const loadedDetails = useMemo(
     () =>
@@ -108,5 +153,7 @@ export function useCompareFunds(selectedIsins: readonly string[]): UseCompareFun
     notFoundIsins,
     isLoading,
     hasPartialErrors,
+    reloadToken,
+    refetch,
   };
 }

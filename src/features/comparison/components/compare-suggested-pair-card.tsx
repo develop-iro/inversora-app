@@ -31,24 +31,31 @@ export function CompareSuggestedPairCard({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Comparar ${pair.label}: ${pair.description}`}
-      className={cn('w-full min-w-[200px]', className)}
-      contentClassName="min-h-[118px] justify-between gap-sm p-md"
+      className={cn('w-full min-w-[200px] self-stretch', className)}
+      contentClassName="min-h-[132px] flex-1 flex-col gap-sm p-md"
       style={style}
     >
-      <View className="h-9 w-9 items-center justify-center rounded-full bg-background-soft">
+      <View className="h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background-soft">
         <MaterialCommunityIcons name={pair.icon} size={20} color={theme.deepOcean} />
       </View>
 
-      <View className="flex-1 gap-xs">
-        <TextParagraph variant="emphasis" numberOfLines={1}>
-          {pair.label}
-        </TextParagraph>
-        <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={2}>
-          {pair.description}
-        </TextParagraph>
+      <View className="min-h-0 min-w-0 flex-1 overflow-hidden">
+        <View className="gap-xs">
+          <TextParagraph variant="emphasis" numberOfLines={1}>
+            {pair.label}
+          </TextParagraph>
+          <TextParagraph variant="secondary" themeColor="textSecondary" numberOfLines={2}>
+            {pair.description}
+          </TextParagraph>
+        </View>
       </View>
 
-      <TextParagraph variant="secondary" themeColor="primary">
+      <TextParagraph
+        variant="secondary"
+        themeColor="primary"
+        numberOfLines={1}
+        className="shrink-0 pt-xs"
+      >
         Comparar
       </TextParagraph>
     </Card>

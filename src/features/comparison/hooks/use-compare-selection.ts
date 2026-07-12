@@ -30,6 +30,16 @@ export function useCompareSelection() {
   }, []);
 
   const addFund = useCallback(async (isin: string) => {
+    const normalized = isin.trim().toUpperCase();
+
+    setSelectedIsins((current) => {
+      if (current.includes(normalized)) {
+        return current;
+      }
+
+      return [...current, normalized].slice(0, MAX_COMPARE_FUNDS);
+    });
+
     const next = await compareSelectionStore.addFund(isin);
     setSelectedIsins(next);
     return next;
