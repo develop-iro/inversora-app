@@ -18,6 +18,10 @@ export function resolveAnalyticsSurface(pathname: string): string {
     return 'legal';
   }
 
+  if (pathname === '/feedback') {
+    return 'feedback';
+  }
+
   if (pathname === '/funds') {
     return 'funds_catalog';
   }

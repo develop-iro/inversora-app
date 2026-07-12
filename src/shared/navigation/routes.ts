@@ -35,6 +35,7 @@ export const routes = {
     } as Href;
   },
   legal: '/legal' as Href,
+  feedback: '/feedback' as Href,
   rankings: '/rankings' as Href,
   rankingBenchmark: (benchmarkKey: string): Href =>
     ({
