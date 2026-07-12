@@ -9,7 +9,8 @@
       "distribution": "internal",
       "node": "22.14.0",
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "local"
+        "EXPO_PUBLIC_APP_ENV": "local",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "development-simulator": {
@@ -20,7 +21,8 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "local"
+        "EXPO_PUBLIC_APP_ENV": "local",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "preview": {
@@ -28,9 +30,10 @@
       "node": "22.14.0",
       "env": {
         "EXPO_PUBLIC_APP_ENV": "qa",
-        "EXPO_PUBLIC_API_URL": "https://inversora-api-production.up.railway.app",
+        "EXPO_PUBLIC_API_URL": "https://inversora-api-qa.up.railway.app",
         "EXPO_PUBLIC_NEWS_API_ENABLED": "false",
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "production": {
