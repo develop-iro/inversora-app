@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { FIXED_DEPOSIT_TIMING } from '@/features/calculator/models/compound-interest.engine';
+
 /**
  * Zod schema for compound-interest calculator form values.
  */
@@ -13,7 +15,7 @@ export const compoundInterestInputSchema = z.object({
     .min(0, 'La aportación no puede ser negativa.')
     .max(100_000, 'Introduce una aportación más realista.'),
   depositFrequency: z.enum(['monthly', 'yearly']),
-  depositTiming: z.enum(['start', 'end']),
+  depositTiming: z.literal(FIXED_DEPOSIT_TIMING).default(FIXED_DEPOSIT_TIMING),
   annualRatePercent: z
     .number()
     .min(-20, 'El tipo anual parece demasiado bajo para una simulación educativa.')

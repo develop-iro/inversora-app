@@ -1,10 +1,12 @@
-import { Linking, View, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { View, Alert } from 'react-native';
 
 import type { InvestmentNewsItem } from '@/core/domain/investment-news';
-import { isSafeExternalUrl } from '@/core/security/safe-external-url';
+import { openSafeExternalUrl } from '@/core/security/open-safe-external-url';
 import { HomeNewsCard } from '@/features/onboarding/components/home-news-card';
 import { HomeSectionCard } from '@/features/onboarding/components/home-section-card';
 import type { HomeSectionLoadState } from '@/features/onboarding/hooks/use-home-screen-data';
+import { resolveInvestmentNewsPressAction } from '@/features/onboarding/services/resolve-investment-news-press';
 import { ContentEmptyState, ReloadState } from '@/shared/components/ui';
 
 export type HomeNewsSectionProps = {
@@ -17,20 +19,28 @@ export type HomeNewsSectionProps = {
  * Educational investment news block at the bottom of the home screen.
  */
 export function HomeNewsSection({ items, loadState, onRetry }: HomeNewsSectionProps) {
+  const router = useRouter();
+
   const handleNewsPress = (item: InvestmentNewsItem) => {
-    if (!item.url) {
+    const action = resolveInvestmentNewsPressAction(item);
+
+    if (!action) {
       return;
     }
 
-    if (!isSafeExternalUrl(item.url)) {
-      Alert.alert(
-        'Enlace no disponible',
-        'Este enlace no se puede abrir de forma segura desde la app.',
-      );
+    if (action.kind === 'internal') {
+      router.push(action.href);
       return;
     }
 
-    void Linking.openURL(item.url);
+    void openSafeExternalUrl(action.url).then((opened: boolean) => {
+      if (!opened) {
+        Alert.alert(
+          'Enlace no disponible',
+          'No pudimos abrir la fuente de la noticia. Inténtalo de nuevo más tarde.',
+        );
+      }
+    });
   };
 
   return (

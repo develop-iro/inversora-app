@@ -5,7 +5,7 @@ import { shouldApplyBeginnerSurfaceGuards } from '@/features/funds/utils/beginne
 export type SecondaryTabConfig = {
   readonly mode: SecondaryTabMode;
   readonly label: string;
-  readonly compactLabel?: string;
+  readonly compactLabel: string;
   readonly accessibilityLabel: string;
   readonly activeIcon: 'book-open-page-variant' | 'heart';
   readonly inactiveIcon: 'book-open-page-variant-outline' | 'heart-outline';

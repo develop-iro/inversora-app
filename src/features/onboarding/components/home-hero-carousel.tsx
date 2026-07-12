@@ -7,15 +7,17 @@ import {
 import { CarouselShell } from '@/shared/components/carousels';
 
 export type HomeHeroCarouselProps = {
+  slides?: readonly HomeHeroSlide[];
   onSlideAction?: (action: HomeHeroSlideAction) => void;
 };
 
 /**
  * Auto-advancing hero carousel for the minimal home layout.
  */
-export function HomeHeroCarousel({ onSlideAction }: HomeHeroCarouselProps) {
-  const slides = HOME_HERO_SLIDES;
-
+export function HomeHeroCarousel({
+  slides = HOME_HERO_SLIDES,
+  onSlideAction,
+}: HomeHeroCarouselProps) {
   return (
     <CarouselShell<HomeHeroSlide>
       data={slides}

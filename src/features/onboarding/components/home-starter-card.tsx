@@ -1,13 +1,18 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import type { ComponentProps } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { HomeStarterIllustration } from '@/features/onboarding/components/home-starter-illustration';
+import {
+  HOME_STARTER_CARD_ILLUSTRATION_LABELS,
+  type HomeStarterCardVariant,
+} from '@/features/onboarding/constants/home-starter-cards';
 import { TextParagraph } from '@/shared/components/text';
-import { useTheme } from '@/shared/hooks/use-theme';
+
+const ILLUSTRATION_PANEL_HEIGHT = 112;
+const CARD_MIN_HEIGHT = 168;
 
 export type HomeStarterCardProps = {
+  variant: HomeStarterCardVariant;
   title: string;
-  iconName: ComponentProps<typeof MaterialCommunityIcons>['name'];
   accessibilityLabel: string;
   accessibilityHint?: string;
   onPress?: () => void;
@@ -15,31 +20,49 @@ export type HomeStarterCardProps = {
 
 /**
  * Compact entry card for the minimal home "Para empezar" section.
- * Solid brand teal surface with white typography (promotional / educational).
+ * Soft illustration panel with surface card styling (educational / welcoming).
  */
 export function HomeStarterCard({
+  variant,
   title,
-  iconName,
   accessibilityLabel,
   accessibilityHint,
   onPress,
 }: HomeStarterCardProps) {
-  const theme = useTheme();
-
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       onPress={onPress}
-      className="min-h-[88px] min-w-0 flex-1 justify-center gap-sm rounded-card bg-primary px-md py-md active:bg-deep-ocean"
+      className="min-w-0 flex-1 gap-sm overflow-hidden rounded-card border border-border bg-surface p-md active:opacity-90"
+      // tailwind-exception: portrait card min height for illustration + title stack
+      style={styles.card}
     >
-      <View className="h-8 w-8 items-center justify-center rounded-full bg-on-primary-surface">
-        <MaterialCommunityIcons name={iconName} size={18} color={theme.textOnPrimary} />
+      <View
+        className="w-full items-center justify-center overflow-hidden rounded-card bg-background-soft"
+        // tailwind-exception: fixed illustration panel height from design spec
+        style={styles.illustrationPanel}
+      >
+        <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <HomeStarterIllustration
+            variant={variant}
+            accessibilityLabel={HOME_STARTER_CARD_ILLUSTRATION_LABELS[variant]}
+          />
+        </View>
       </View>
-      <TextParagraph variant="emphasis" themeColor="textOnPrimary" className="leading-[22px]">
+      <TextParagraph variant="emphasis" className="leading-[22px]">
         {title}
       </TextParagraph>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    minHeight: CARD_MIN_HEIGHT,
+  },
+  illustrationPanel: {
+    height: ILLUSTRATION_PANEL_HEIGHT,
+  },
+});

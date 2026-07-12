@@ -1,5 +1,6 @@
 import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
 import type { EducationalProfile } from '@/core/domain/educational-profile';
+import { shouldUseInitialProfileGateForPlatform } from '@/core/storage/initial-profile-onboarding-policy';
 import type { CatalogFund } from '@/core/domain/catalog';
 import type { FeaturedFund } from '@/core/domain/fund';
 import type { RankedFund, ScoringStatus } from '@/core/scoring/types';
@@ -28,6 +29,63 @@ export function shouldApplyBeginnerSurfaceGuards(
   }
 
   return profile.knowledgeLevel === 'beginner';
+}
+
+/**
+ * Returns true when the Aprendizaje tab is the primary learn entry point.
+ * Matches {@link shouldApplyBeginnerSurfaceGuards} (no profile or beginner level).
+ *
+ * @param profile - Stored educational profile, if any.
+ */
+export function shouldPreferLearnTabEntryPoint(
+  profile: Pick<EducationalProfile, 'knowledgeLevel'> | null | undefined,
+): boolean {
+  return shouldApplyBeginnerSurfaceGuards(profile);
+}
+
+/**
+ * Returns true when the user finished the questionnaire with a beginner profile.
+ *
+ * @param profile - Stored educational profile, if any.
+ */
+export function hasCompletedBeginnerProfile(
+  profile: Pick<EducationalProfile, 'knowledgeLevel'> | null | undefined,
+): boolean {
+  return profile?.knowledgeLevel === 'beginner';
+}
+
+export type HomeStarterSectionVisibilityInput = {
+  readonly platformOs: string;
+  readonly hasSkippedInitialProfiling: boolean;
+  readonly profile: Pick<EducationalProfile, 'knowledgeLevel'> | null | undefined;
+  readonly isProfileLoading?: boolean;
+};
+
+/**
+ * Returns true when the home "Para empezar" section should render.
+ *
+ * Web never shows this section. On native, it appears only after the user skips
+ * the initial profiling gate and has not yet completed the questionnaire or
+ * graduated to intermediate via the learn curriculum.
+ *
+ * @param input - Platform, skip state, and educational profile context.
+ */
+export function shouldShowHomeStarterSection(
+  input: HomeStarterSectionVisibilityInput,
+): boolean {
+  if (!shouldUseInitialProfileGateForPlatform(input.platformOs)) {
+    return false;
+  }
+
+  if (input.isProfileLoading) {
+    return false;
+  }
+
+  if (input.profile !== null && input.profile !== undefined) {
+    return false;
+  }
+
+  return input.hasSkippedInitialProfiling;
 }
 
 /**

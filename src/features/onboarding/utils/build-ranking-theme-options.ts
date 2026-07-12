@@ -2,19 +2,37 @@ import type { ComponentProps } from 'react';
 
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
+import type { ApiRankingsMeta, BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
+import {
+  resolveInvestmentThemeLabel,
+  type InvestmentTheme,
+} from '@/core/domain/investment-theme';
 import type { HomeRankingEntry } from '@/features/onboarding/services/resolve-home-search';
-import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
+import { inferInvestmentThemeFromRankedFund } from '@/features/funds/utils/infer-investment-theme';
 import type { RankedFund } from '@/core/scoring/types';
 
 type ThemeIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 export type RankingThemeOption = {
-  readonly id: string;
+  readonly id: InvestmentTheme;
   readonly label: string;
   readonly icon: ThemeIconName;
   readonly fundCount: number;
   readonly topScore: number;
 };
+
+const THEME_SORT_ORDER: readonly InvestmentTheme[] = [
+  'global-equity',
+  'us-equity',
+  'europe-equity',
+  'emerging-equity',
+  'fixed-income',
+  'multi-asset',
+  'technology',
+  'esg',
+  'sector-other',
+  'unclassified',
+];
 
 /**
  * Maps a ranking category label to a thematic icon for filter cards.
@@ -50,6 +68,10 @@ export function resolveRankingThemeIcon(categoryLabel: string): ThemeIconName {
     return 'earth';
   }
 
+  if (normalized.includes('emergent') || normalized.includes('sectorial') || normalized.includes('sin clasificar')) {
+    return 'chart-line';
+  }
+
   return 'chart-line';
 }
 
@@ -60,21 +82,77 @@ export function formatRankingThemeLabel(categoryLabel: string): string {
   return categoryLabel.replace(/^Índice\s+/i, '').trim();
 }
 
+function flattenRankingFunds(groups: readonly BenchmarkRankingGroup[]): RankedFund[] {
+  return groups.flatMap((group) => group.funds);
+}
+
+function compareThemeOptions(left: RankingThemeOption, right: RankingThemeOption): number {
+  const leftIndex = THEME_SORT_ORDER.indexOf(left.id);
+  const rightIndex = THEME_SORT_ORDER.indexOf(right.id);
+
+  if (leftIndex !== rightIndex) {
+    return leftIndex - rightIndex;
+  }
+
+  return left.label.localeCompare(right.label, 'es');
+}
+
 /**
- * Builds thematic filter options from benchmark ranking groups (RN-02).
+ * Builds thematic filter options grouped by investment theme (not benchmark peer group).
  */
 export function buildRankingThemeOptionsFromGroups(
   groups: readonly BenchmarkRankingGroup[],
 ): RankingThemeOption[] {
-  return groups
-    .map((group) => ({
-      id: group.benchmarkKey,
-      label: group.benchmark,
-      icon: resolveRankingThemeIcon(group.benchmark),
-      fundCount: group.total,
-      topScore: Math.max(...group.funds.map((entry) => entry.score), 0),
+  const themeTotals = new Map<InvestmentTheme, number>();
+
+  for (const group of groups) {
+    const representativeFund = group.funds[0];
+
+    if (!representativeFund) {
+      continue;
+    }
+
+    const theme = inferInvestmentThemeFromRankedFund(representativeFund);
+    themeTotals.set(theme, (themeTotals.get(theme) ?? 0) + group.total);
+  }
+
+  return [...themeTotals.entries()]
+    .map(([theme, fundCount]) => ({
+      id: theme,
+      label: resolveInvestmentThemeLabel(theme),
+      icon: resolveRankingThemeIcon(resolveInvestmentThemeLabel(theme)),
+      fundCount,
+      topScore: Math.max(
+        ...groups
+          .filter((group) => {
+            const representativeFund = group.funds[0];
+            return (
+              representativeFund !== undefined &&
+              inferInvestmentThemeFromRankedFund(representativeFund) === theme
+            );
+          })
+          .flatMap((group) => group.funds.map((fund) => fund.score)),
+        0,
+      ),
     }))
-    .sort((left, right) => left.label.localeCompare(right.label, 'es'));
+    .sort(compareThemeOptions);
+}
+
+/**
+ * Resolves how many funds are eligible for public rankings.
+ *
+ * @param groups - Benchmark groups returned by the API.
+ * @param meta - Optional rankings metadata from `GET /rankings`.
+ */
+export function resolveRankingEligibleFundTotal(
+  groups: readonly BenchmarkRankingGroup[],
+  meta?: ApiRankingsMeta | null,
+): number {
+  if (meta?.totalEligibleFunds !== undefined) {
+    return meta.totalEligibleFunds;
+  }
+
+  return groups.reduce((sum, group) => sum + group.total, 0);
 }
 
 /**
@@ -86,13 +164,47 @@ export function getRankingFundsForBenchmark(
   limit?: number,
 ): RankedFund[] {
   if (benchmarkKey === 'all') {
-    const flattened = groups.flatMap((group) => group.funds);
+    const flattened = flattenRankingFunds(groups);
     return limit === undefined ? flattened : flattened.slice(0, limit);
   }
 
   const group = groups.find((entry) => entry.benchmarkKey === benchmarkKey);
   const funds = group?.funds ?? [];
   return limit === undefined ? funds : funds.slice(0, limit);
+}
+
+/**
+ * Returns ranked funds for an investment theme, sorted by score across benchmarks.
+ */
+export function getRankingFundsForTheme(
+  groups: readonly BenchmarkRankingGroup[],
+  themeId: InvestmentTheme | 'all',
+  limit?: number,
+): RankedFund[] {
+  if (themeId === 'all') {
+    return getRankingFundsForBenchmark(groups, 'all', limit);
+  }
+
+  const filtered = flattenRankingFunds(groups).filter(
+    (fund) => inferInvestmentThemeFromRankedFund(fund) === themeId,
+  );
+
+  const sorted = [...filtered].sort((left, right) => {
+    const scoreDifference = right.score - left.score;
+
+    if (scoreDifference !== 0) {
+      return scoreDifference;
+    }
+
+    return left.name.localeCompare(right.name, 'es');
+  });
+
+  const ranked = sorted.map((fund, index) => ({
+    ...fund,
+    rank: index + 1,
+  }));
+
+  return limit === undefined ? ranked : ranked.slice(0, limit);
 }
 
 /**
@@ -113,23 +225,24 @@ export function toHomeRankingEntries(
  * Builds thematic filter options from a ranked fund list grouped by category label.
  */
 export function buildRankingThemeOptions(funds: readonly HomeRankingEntry[]): RankingThemeOption[] {
-  const groups = new Map<string, HomeRankingEntry[]>();
+  const groups = new Map<InvestmentTheme, HomeRankingEntry[]>();
 
   for (const fund of funds) {
-    const existing = groups.get(fund.categoryLabel) ?? [];
+    const theme = inferInvestmentThemeFromRankedFund(fund);
+    const existing = groups.get(theme) ?? [];
     existing.push(fund);
-    groups.set(fund.categoryLabel, existing);
+    groups.set(theme, existing);
   }
 
   return [...groups.entries()]
-    .map(([categoryLabel, entries]) => ({
-      id: categoryLabel,
-      label: formatRankingThemeLabel(categoryLabel),
-      icon: resolveRankingThemeIcon(categoryLabel),
+    .map(([theme, entries]) => ({
+      id: theme,
+      label: resolveInvestmentThemeLabel(theme),
+      icon: resolveRankingThemeIcon(resolveInvestmentThemeLabel(theme)),
       fundCount: entries.length,
       topScore: Math.max(...entries.map((entry) => entry.score)),
     }))
-    .sort((left, right) => left.label.localeCompare(right.label, 'es'));
+    .sort(compareThemeOptions);
 }
 
 /**
@@ -137,11 +250,11 @@ export function buildRankingThemeOptions(funds: readonly HomeRankingEntry[]): Ra
  */
 export function filterRankingByTheme(
   funds: readonly HomeRankingEntry[],
-  themeId: string | 'all',
+  themeId: InvestmentTheme | 'all',
 ): HomeRankingEntry[] {
   if (themeId === 'all') {
     return [...funds];
   }
 
-  return funds.filter((fund) => fund.categoryLabel === themeId);
+  return funds.filter((fund) => inferInvestmentThemeFromRankedFund(fund) === themeId);
 }

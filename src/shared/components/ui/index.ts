@@ -136,6 +136,10 @@ export {
     type ReloadStateProps
 } from '@/shared/components/ui/reload-state';
 export {
+    SlowRequestReloadState,
+    type SlowRequestReloadStateProps
+} from '@/shared/components/ui/slow-request-reload-state';
+export {
     StatusIcon,
     type StatusIconProps,
     type StatusIconSize

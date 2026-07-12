@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Pressable,
@@ -10,6 +10,14 @@ import {
 
 import { modal } from '@/core/overlay/modal';
 import { useInfoHintHost } from '@/shared/components/ui/info-hint-host';
+import {
+  INFO_HINT_POPUP_ESTIMATED_HEIGHT,
+  INFO_HINT_POPUP_MAX_WIDTH,
+  resolveInfoHintPopupPosition,
+  type InfoHintPlacement,
+  type InfoHintPopupPosition,
+  type InfoHintPopupSize,
+} from '@/shared/components/ui/info-hint-popup-position';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { usePlatformCapabilities } from '@/shared/hooks/use-platform-capabilities';
 import { useWebHover, type WebHoverProps } from '@/shared/hooks/use-web-hover';
@@ -19,12 +27,11 @@ import {
   shouldShowInfoHint,
   type InfoHintSurface,
 } from '@/shared/platform/capabilities';
-import { Spacing, webElevationShadow } from '@/shared/theme/theme';
+import { webElevationShadow } from '@/shared/theme/theme';
 import { cn } from '@/shared/utils/cn';
 
 export type { InfoHintSurface } from '@/shared/platform/capabilities';
-
-export type InfoHintPlacement = 'below' | 'beside';
+export type { InfoHintPlacement } from '@/shared/components/ui/info-hint-popup-position';
 
 export type InfoHintTriggerProps = {
   term: string;
@@ -35,10 +42,39 @@ export type InfoHintTriggerProps = {
   surface?: InfoHintSurface;
 };
 
-type PopupPosition = {
-  top: number;
-  left: number;
-};
+type PopupPosition = InfoHintPopupPosition;
+
+function getWebViewportSize(): { width: number; height: number } {
+  if (typeof window === 'undefined') {
+    return { width: 0, height: 0 };
+  }
+
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+}
+
+function getPopupDomRect(node: View | null): InfoHintPopupSize | null {
+  if (!node || typeof document === 'undefined') {
+    return null;
+  }
+
+  const element = node as unknown as HTMLElement;
+  if (typeof element.getBoundingClientRect !== 'function') {
+    return null;
+  }
+
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    return null;
+  }
+
+  return {
+    width: rect.width,
+    height: rect.height,
+  };
+}
 
 /**
  * Opens the centered glossary dialog with blur scrim (native and narrow web).
@@ -61,12 +97,16 @@ function InfoHintWebPopup({
   position,
   theme,
   hoverProps,
+  popupRef,
+  onPopupLayout,
 }: {
   term: string;
   explanation: string;
   position: PopupPosition;
   theme: ReturnType<typeof useTheme>;
   hoverProps: WebHoverProps;
+  popupRef: RefObject<View | null>;
+  onPopupLayout: () => void;
 }) {
   if (typeof document === 'undefined') {
     return null;
@@ -74,6 +114,8 @@ function InfoHintWebPopup({
 
   return createPortal(
     <View
+      ref={popupRef}
+      onLayout={onPopupLayout}
       {...hoverProps}
       accessibilityRole="text"
       accessibilityLabel={`${term}. ${explanation}`}
@@ -114,6 +156,7 @@ export function InfoHintTrigger({
   const { supportsInfoHintPopover } = usePlatformCapabilities();
   const useHoverPopup = supportsInfoHintPopover;
   const anchorRef = useRef<View>(null);
+  const popupRef = useRef<View>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [focused, setFocused] = useState(false);
@@ -123,22 +166,36 @@ export function InfoHintTrigger({
   const isOpenInHost = host ? host.openId === hintId : localOpen;
   const showPopup = useHoverPopup && (isOpenInHost || focused);
 
-  const updatePopupPosition = useCallback(() => {
-    anchorRef.current?.measureInWindow((x, y, width, height) => {
-      if (placement === 'beside') {
-        setPopupPosition({
-          top: y - Spacing.xs,
-          left: x + width + Spacing.sm,
-        });
-        return;
-      }
+  const updatePopupPosition = useCallback(
+    (measuredPopupSize?: InfoHintPopupSize) => {
+      anchorRef.current?.measureInWindow((x, y, width, height) => {
+        const measuredSize =
+          measuredPopupSize ??
+          getPopupDomRect(popupRef.current) ?? {
+            width: INFO_HINT_POPUP_MAX_WIDTH,
+            height: INFO_HINT_POPUP_ESTIMATED_HEIGHT,
+          };
+        const viewport = getWebViewportSize();
 
-      setPopupPosition({
-        top: y + height + Spacing.xs,
-        left: x,
+        setPopupPosition(
+          resolveInfoHintPopupPosition({
+            anchor: { x, y, width, height },
+            viewport,
+            placement,
+            popupSize: measuredSize,
+          }),
+        );
       });
-    });
-  }, [placement]);
+    },
+    [placement],
+  );
+
+  const handlePopupLayout = useCallback(() => {
+    const measuredSize = getPopupDomRect(popupRef.current);
+    if (measuredSize) {
+      updatePopupPosition(measuredSize);
+    }
+  }, [updatePopupPosition]);
 
   useEffect(() => {
     if (!showPopup) {
@@ -268,6 +325,8 @@ export function InfoHintTrigger({
           position={popupPosition}
           theme={theme}
           hoverProps={popupHoverProps}
+          popupRef={popupRef}
+          onPopupLayout={handlePopupLayout}
         />
       ) : null}
     </>

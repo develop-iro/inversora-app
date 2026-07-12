@@ -80,13 +80,14 @@ const lightSemanticColors = {
 
   shadow: palette.deepOcean,
 
-  skeletonBone: withAlpha(palette.deepOcean, 0.11),
+  skeletonBone: '#E8E8E8',
   skeletonBoneMuted: withAlpha(palette.deepOcean, 0.07),
   skeletonPanelBorder: withAlpha(palette.deepOcean, 0.09),
   skeletonShimmerTransparent: withAlpha(palette.white, 0),
-  skeletonShimmerHighlight: withAlpha(palette.white, 0.95),
-  skeletonShimmerAccent: withAlpha(palette.deepOcean, 0.08),
-  skeletonShimmerShadow: withAlpha(palette.deepOcean, 0.16),
+  skeletonShimmerHighlight: withAlpha(palette.white, 0.12),
+  skeletonShimmerAccent: withAlpha(palette.white, 0.05),
+  /** Darker gray revealed during the loading pulse (pairs with skeletonBone). */
+  skeletonShimmerShadow: '#D0D0D0',
   skeletonShimmerDeep: withAlpha(palette.deepOcean, 0.24),
 } as const;
 
@@ -161,13 +162,14 @@ const darkSemanticColors = {
 
   shadow: palette.black,
 
-  skeletonBone: withAlpha(palette.white, 0.11),
+  skeletonBone: withAlpha(palette.white, 0.14),
   skeletonBoneMuted: withAlpha(palette.white, 0.07),
   skeletonPanelBorder: withAlpha(palette.white, 0.09),
   skeletonShimmerTransparent: withAlpha(palette.darkOceanSurface, 0),
-  skeletonShimmerHighlight: withAlpha(palette.white, 0.28),
-  skeletonShimmerAccent: withAlpha(palette.white, 0.14),
-  skeletonShimmerShadow: withAlpha(palette.black, 0.35),
+  skeletonShimmerHighlight: withAlpha(palette.white, 0.1),
+  skeletonShimmerAccent: withAlpha(palette.white, 0.04),
+  /** Darker tone revealed during the loading pulse on dark surfaces. */
+  skeletonShimmerShadow: withAlpha(palette.black, 0.4),
   skeletonShimmerDeep: withAlpha(palette.black, 0.5),
 } as const;
 

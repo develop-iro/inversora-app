@@ -4,6 +4,7 @@ import {
   flattenRankingsToRankedFunds,
   mapRankingsResponseToGroups,
   parseRankingsResponse,
+  type ApiRankingsMeta,
   type BenchmarkRankingGroup,
 } from '@/core/api/parse-rankings-response';
 import { AppError } from '@/core/errors/app-error';
@@ -21,7 +22,7 @@ export {
   RANKINGS_HOME_GROUP_LIMIT,
 } from '@/features/funds/constants/rankings-limits';
 
-export type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
+export type { ApiRankingsMeta, BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
 
 export type GetRankingsOptions = {
   benchmark?: string;
@@ -32,6 +33,7 @@ export type GetRankingsOptions = {
 
 let rankingsCache: RankedFund[] | null = null;
 let rankingsGroupedCache: BenchmarkRankingGroup[] | null = null;
+let rankingsMetaCache: ApiRankingsMeta | null = null;
 let sharedRankingsPayloadPromise: Promise<
   ReturnType<typeof parseRankingsResponse>
 > | null = null;
@@ -104,6 +106,7 @@ async function fetchRankingsGroupedFromApi(
   options?: GetRankingsOptions,
 ): Promise<BenchmarkRankingGroup[]> {
   const response = await fetchSharedUnfilteredRankingsPayload(options);
+  rankingsMetaCache = response.meta ?? null;
   return mapRankingsResponseToGroups(response);
 }
 
@@ -151,7 +154,15 @@ export function flattenRankingGroupsToRankedFunds(
 export function resetRankingsCache(): void {
   rankingsCache = null;
   rankingsGroupedCache = null;
+  rankingsMetaCache = null;
   sharedRankingsPayloadPromise = null;
+}
+
+/**
+ * Returns cached rankings metadata from the latest unfiltered `GET /rankings` call.
+ */
+export function getCachedRankingsMeta(): ApiRankingsMeta | null {
+  return rankingsMetaCache;
 }
 
 /**

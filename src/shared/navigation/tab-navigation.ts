@@ -1,10 +1,14 @@
 import type { useNavigation } from 'expo-router';
 
+type NavigationState = {
+  routeNames?: readonly string[];
+};
+
 export type TabNavigation = {
-  getState?: () => { routeNames?: readonly string[] };
+  getState?: () => NavigationState;
   getParent?: () => TabNavigation | undefined;
-  navigate: (name: string, params?: Record<string, unknown>) => void;
-  reset: (state: {
+  navigate: (name: string, params?: unknown) => void;
+  reset?: (state: {
     index: number;
     routes: { name: string; params?: Record<string, unknown> }[];
   }) => void;
@@ -21,7 +25,11 @@ export function getTabNavigation(
   while (navigator) {
     const routeNames = navigator.getState?.().routeNames;
 
-    if (Array.isArray(routeNames) && routeNames.includes('compare')) {
+    if (
+      Array.isArray(routeNames) &&
+      routeNames.includes('funds') &&
+      routeNames.includes('compare')
+    ) {
       return navigator;
     }
 

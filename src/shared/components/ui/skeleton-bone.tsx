@@ -1,17 +1,19 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   Animated,
-  StyleSheet,
   View,
-  type LayoutChangeEvent,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 
 import { useSkeletonShimmerSweep } from '@/shared/components/ui/skeleton-shimmer-provider';
-import { getSkeletonShimmerGradient, getSkeletonTokens } from '@/shared/components/ui/skeleton-tokens';
+import {
+  getSkeletonTokens,
+  SKELETON_SHIMMER_DURATION_MS,
+} from '@/shared/components/ui/skeleton-tokens';
+import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { useTheme } from '@/shared/hooks/use-theme';
+import { isWeb } from '@/shared/platform/capabilities';
 import { Radius } from '@/shared/theme/theme';
 import { cn } from '@/shared/utils/cn';
 
@@ -23,9 +25,6 @@ export type SkeletonBoneProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-const SHIMMER_STREAK_WIDTH_RATIO = 0.5;
-const MIN_SHIMMER_STREAK_WIDTH = 40;
-
 function resolveBorderRadius(height: number, borderRadius?: number): number {
   if (borderRadius !== undefined) {
     return borderRadius;
@@ -34,55 +33,89 @@ function resolveBorderRadius(height: number, borderRadius?: number): number {
   return height <= 20 ? height / 2 : Radius.chip;
 }
 
-function resolveShimmerStreakWidth(layoutWidth: number): number {
-  return Math.max(layoutWidth * SHIMMER_STREAK_WIDTH_RATIO, MIN_SHIMMER_STREAK_WIDTH);
-}
+type SkeletonBoneLayoutProps = SkeletonBoneProps & {
+  resolvedRadius: number;
+};
+
+type WebSkeletonAnimationStyle = ViewStyle & {
+  animationName?: string;
+  animationDuration?: string;
+  animationTimingFunction?: string;
+  animationIterationCount?: string;
+};
 
 /**
- * Animated placeholder block with a sweeping shimmer highlight.
+ * Web: CSS `@keyframes skeleton-bone-pulse` in global.css (RN Animated native driver is unsupported).
  */
-export function SkeletonBone({
+function SkeletonBoneWeb({
   width = '100%',
   height = 16,
-  borderRadius,
   className,
   style,
-}: SkeletonBoneProps) {
-  const theme = useTheme(); // tailwind-exception: skeleton shimmer gradient colors
-  const skeletonTokens = useMemo(() => getSkeletonTokens(theme), [theme]);
-  const shimmerGradient = useMemo(() => getSkeletonShimmerGradient(theme), [theme]);
-  const { progress, reducedMotionEnabled } = useSkeletonShimmerSweep();
-  const [layoutWidth, setLayoutWidth] = useState(0);
-  const resolvedRadius = resolveBorderRadius(height, borderRadius);
-  const shimmerStreakWidth = resolveShimmerStreakWidth(layoutWidth);
+  resolvedRadius,
+}: SkeletonBoneLayoutProps) {
+  const reducedMotionEnabled = useReducedMotion();
 
-  const handleLayout = (event: LayoutChangeEvent) => {
-    const nextWidth = event.nativeEvent.layout.width;
-    if (nextWidth > 0 && nextWidth !== layoutWidth) {
-      setLayoutWidth(nextWidth);
-    }
-  };
-
-  const shimmerTranslateX = useMemo(() => {
-    if (layoutWidth <= 0) {
-      return progress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 0],
-      });
-    }
-
-    return progress.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-shimmerStreakWidth, layoutWidth],
-    });
-  }, [layoutWidth, progress, shimmerStreakWidth]);
-
-  const showShimmer = layoutWidth > 0 && !reducedMotionEnabled;
+  const webPulseStyle: WebSkeletonAnimationStyle = reducedMotionEnabled
+    ? { backgroundColor: 'var(--color-skeleton-bone)' }
+    : {
+        backgroundColor: 'var(--color-skeleton-bone)',
+        // Web-only: pairs with @keyframes skeleton-bone-pulse in global.css
+        animationName: 'skeleton-bone-pulse',
+        animationDuration: `${SKELETON_SHIMMER_DURATION_MS}ms`,
+        animationTimingFunction: 'ease-in-out',
+        animationIterationCount: 'infinite',
+      };
 
   return (
     <View
-      onLayout={handleLayout}
-      className={cn('relative overflow-hidden', className)}
+      className={cn(
+        'overflow-hidden',
+        !reducedMotionEnabled && 'skeleton-bone-pulse',
+        className,
+      )}
+      // tailwind-exception: dynamic width, height, border radius, web animation
+      style={[
+        {
+          width,
+          height,
+          borderRadius: resolvedRadius,
+          ...webPulseStyle,
+        } as ViewStyle,
+        style,
+      ]}
+      accessibilityElementsHidden
+      importantForAccessibility="no"
+    />
+  );
+}
+
+/**
+ * Native: shared Animated opacity loop crossfades base over pulseDark.
+ */
+function SkeletonBoneNative({
+  width = '100%',
+  height = 16,
+  className,
+  style,
+  resolvedRadius,
+}: SkeletonBoneLayoutProps) {
+  const theme = useTheme(); // tailwind-exception: skeleton pulse colors
+  const skeletonTokens = useMemo(() => getSkeletonTokens(theme), [theme]);
+  const { progress, reducedMotionEnabled } = useSkeletonShimmerSweep();
+
+  const pulseOverlayOpacity = useMemo(
+    () =>
+      progress.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [1, 0, 1],
+      }),
+    [progress],
+  );
+
+  return (
+    <View
+      className={cn('overflow-hidden', className)}
       // tailwind-exception: dynamic width, height, and border radius
       style={[{ width, height, borderRadius: resolvedRadius }, style]}
       accessibilityElementsHidden
@@ -90,44 +123,45 @@ export function SkeletonBone({
     >
       <View
         className="absolute inset-0"
-        style={{ borderRadius: resolvedRadius, backgroundColor: skeletonTokens.base }}
+        style={{
+          borderRadius: resolvedRadius,
+          backgroundColor: skeletonTokens.pulseDark,
+        }}
       />
 
-      {showShimmer ? (
+      {reducedMotionEnabled ? (
+        <View
+          className="absolute inset-0"
+          style={{
+            borderRadius: resolvedRadius,
+            backgroundColor: skeletonTokens.base,
+          }}
+        />
+      ) : (
         <Animated.View
-          pointerEvents="none"
-          // tailwind-exception: shimmer sweep uses native-driver transform
-          style={[
-            styles.shimmerStreak,
-            {
-              width: shimmerStreakWidth,
-              borderRadius: resolvedRadius,
-              transform: [{ translateX: shimmerTranslateX }],
-            },
-          ]}
-        >
-          <LinearGradient
-            colors={[...shimmerGradient.colors]}
-            locations={[...shimmerGradient.locations]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            // tailwind-exception: gradient must fill the animated streak
-            style={styles.shimmerGradient}
-          />
-        </Animated.View>
-      ) : null}
+          className="absolute inset-0"
+          // tailwind-exception: opacity pulse uses native driver on iOS/Android
+          style={{
+            borderRadius: resolvedRadius,
+            backgroundColor: skeletonTokens.base,
+            opacity: pulseOverlayOpacity,
+          }}
+        />
+      )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  shimmerStreak: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-  },
-  shimmerGradient: {
-    flex: 1,
-  },
-});
+/**
+ * Animated placeholder block with a visible darker-tone loading pulse.
+ */
+export function SkeletonBone(props: SkeletonBoneProps) {
+  const resolvedRadius = resolveBorderRadius(props.height ?? 16, props.borderRadius);
+  const layoutProps: SkeletonBoneLayoutProps = { ...props, resolvedRadius };
+
+  if (isWeb) {
+    return <SkeletonBoneWeb {...layoutProps} />;
+  }
+
+  return <SkeletonBoneNative {...layoutProps} />;
+}

@@ -9,10 +9,12 @@ import {
 } from '@/features/funds/services/get-featured-funds';
 import {
   getRankingsGrouped,
+  getCachedRankingsMeta,
   resetRankingsCache,
 } from '@/features/funds/services/get-rankings';
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { allowsMockFallback } from '@/core/config/app-environment';
+import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { HOME_INVESTMENT_NEWS_MOCK } from '@/features/onboarding/mocks/home-investment-news-mock';
 import {
   resolveHomeSearch,
@@ -23,7 +25,9 @@ import {
   getInvestmentNews,
   type GetInvestmentNewsOptions,
 } from '@/features/onboarding/services/get-investment-news';
-import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
+import {
+  resolveRankingEligibleFundTotal,
+} from '@/features/onboarding/utils/build-ranking-theme-options';
 
 export type HomeSectionLoadState = 'loading' | 'ready' | 'error' | 'empty';
 
@@ -36,6 +40,7 @@ export type UseHomeScreenDataResult = {
   newsItems: InvestmentNewsItem[];
   newsState: HomeSectionLoadState;
   rankingGroups: BenchmarkRankingGroup[];
+  rankingEligibleTotal: number;
   activeRanking: HomeSearchResult | null;
   rankingState: HomeSectionLoadState;
   isRefreshing: boolean;
@@ -142,6 +147,7 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
   const [searchState, setSearchState] = useState<HomeSectionLoadState>('ready');
   const [defaultRanking, setDefaultRanking] = useState<HomeSearchResult | null>(null);
   const [rankingGroups, setRankingGroups] = useState<BenchmarkRankingGroup[]>([]);
+  const [rankingEligibleTotal, setRankingEligibleTotal] = useState(0);
   const [rankingState, setRankingState] = useState<HomeSectionLoadState>('loading');
   const [featuredFunds, setFeaturedFunds] = useState<FeaturedFund[]>([]);
   const [featuredState, setFeaturedState] = useState<HomeSectionLoadState>('loading');
@@ -174,6 +180,9 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
       loadDefaultRanking(),
     ]);
     setRankingGroups(groups);
+    setRankingEligibleTotal(
+      resolveRankingEligibleFundTotal(groups, getCachedRankingsMeta()),
+    );
     setDefaultRanking(ranking.result);
     setRankingState(
       groupsState === 'error' || ranking.state === 'error'
@@ -211,6 +220,9 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
 
       if (!cancelled) {
         setRankingGroups(groups);
+        setRankingEligibleTotal(
+          resolveRankingEligibleFundTotal(groups, getCachedRankingsMeta()),
+        );
         setDefaultRanking(ranking.result);
         setRankingState(
           groupsState === 'error' || ranking.state === 'error'
@@ -319,6 +331,7 @@ export function useHomeScreenData(): UseHomeScreenDataResult {
     newsItems,
     newsState,
     rankingGroups,
+    rankingEligibleTotal,
     activeRanking,
     rankingState: activeRankingState,
     isRefreshing,

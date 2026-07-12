@@ -177,6 +177,33 @@ ${darkSemanticLines.join('\n')}
   /* Shadows (dark) */
 ${darkShadowLines.join('\n')}
 }
+
+/*
+ * Skeleton pulse — web only (native uses Animated in skeleton-bone.tsx).
+ * Duration must stay aligned with SKELETON_SHIMMER_DURATION_MS in skeleton-tokens.ts.
+ */
+@keyframes skeleton-bone-pulse {
+  0%,
+  100% {
+    background-color: var(--color-skeleton-bone);
+  }
+
+  50% {
+    background-color: var(--color-skeleton-shimmer-shadow);
+  }
+}
+
+.skeleton-bone-pulse {
+  background-color: var(--color-skeleton-bone);
+  animation: skeleton-bone-pulse 1400ms ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-bone-pulse {
+    animation: none;
+    background-color: var(--color-skeleton-bone);
+  }
+}
 `;
 }
 
