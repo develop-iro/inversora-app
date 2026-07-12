@@ -2,6 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Pressable, View } from 'react-native';
 
 import type { InvestmentNewsCategory, InvestmentNewsItem } from '@/core/domain/investment-news';
+import { canOpenInvestmentNewsItem } from '@/features/onboarding/services/resolve-investment-news-press';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { SkeletonBone, SkeletonShimmerProvider } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
@@ -68,13 +69,14 @@ export function HomeNewsCard(props: HomeNewsCardProps) {
 function HomeNewsCardContent({ item, onPress }: HomeNewsCardContentProps) {
   const theme = useTheme();
   const categoryLabel = CATEGORY_LABELS[item.category];
+  const isOpenable = canOpenInvestmentNewsItem(item);
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${item.title}. ${item.summary}`}
       accessibilityHint={
-        item.url ? 'Abre la fuente de la noticia' : 'Noticia informativa educativa'
+        isOpenable ? 'Abre la fuente de la noticia' : 'Noticia informativa educativa'
       }
       onPress={() => {
         onPress?.(item);
@@ -104,7 +106,7 @@ function HomeNewsCardContent({ item, onPress }: HomeNewsCardContentProps) {
         <TextParagraph variant="secondary" themeColor="textSecondary">
           {item.source}
         </TextParagraph>
-        {item.url ? (
+        {isOpenable ? (
           <MaterialCommunityIcons name="open-in-new" size={14} color={theme.primary} />
         ) : null}
       </View>

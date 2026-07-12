@@ -8,6 +8,7 @@ import { HomeSearchAnswerCard } from '@/features/onboarding/components/home-sear
 import { HomeSectionCard } from '@/features/onboarding/components/home-section-card';
 import type { HomeSectionLoadState } from '@/features/onboarding/hooks/use-home-screen-data';
 import type { HomeSearchResult } from '@/features/onboarding/services/resolve-home-search';
+import type { InvestmentTheme } from '@/core/domain/investment-theme';
 import type { RankingThemeOption } from '@/features/onboarding/utils/build-ranking-theme-options';
 import { DISCLAIMER_RANKING_EDUCATIONAL } from '@/features/legal/constants/disclaimer-snippets';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
@@ -24,8 +25,10 @@ export type HomeDynamicRankingSectionProps = {
   /** When true, shows the observational full ranking (home Ranking tab). */
   isFullRanking?: boolean;
   rankingThemes?: readonly RankingThemeOption[];
-  selectedRankingTheme?: string | 'all';
-  onRankingThemeChange?: (themeId: string | 'all') => void;
+  selectedRankingTheme?: InvestmentTheme | 'all';
+  rankingEligibleTotal?: number;
+  onRankingThemeChange?: (themeId: InvestmentTheme | 'all') => void;
+  onFundPress?: (isin: string) => void;
 };
 
 function resolveRankingSectionCopy(
@@ -43,7 +46,7 @@ function resolveRankingSectionCopy(
   const summary =
     result?.subtitle ??
     (isFullRanking
-      ? 'Observa el orden educativo del Score Inversora. No es una recomendación personalizada.'
+      ? 'Observa el orden educativo del Score Inversora dentro de cada índice comparable. El catálogo completo incluye miles de productos; aquí solo aparecen fondos con score y datos mínimos para compararse.'
       : 'Descubre los fondos mejor puntuados según el Score Inversora.');
 
   if (hasQuery && result?.kind === 'fund-match') {
@@ -64,7 +67,9 @@ export function HomeDynamicRankingSection({
   isFullRanking = false,
   rankingThemes = [],
   selectedRankingTheme = 'all',
+  rankingEligibleTotal = 0,
   onRankingThemeChange,
+  onFundPress,
 }: HomeDynamicRankingSectionProps) {
   const router = useRouter();
   const theme = useTheme();
@@ -112,6 +117,7 @@ export function HomeDynamicRankingSection({
         <HomeRankingThemeFilters
           themes={rankingThemes}
           selectedThemeId={selectedRankingTheme}
+          totalEligibleFunds={rankingEligibleTotal}
           onThemeChange={onRankingThemeChange}
         />
       ) : null}
@@ -123,7 +129,7 @@ export function HomeDynamicRankingSection({
             hasQuery
               ? 'Prueba con el nombre completo, el ISIN o formula una pregunta educativa.'
               : selectedRankingTheme !== 'all'
-                ? 'Prueba otra temática o vuelve a «Todos» para ver el ranking completo.'
+                ? 'Prueba otra categoría o vuelve a «Todos» para ver el ranking completo.'
                 : 'Aún no hay fondos disponibles para mostrar en esta sección.'
           }
           actionLabel={hasQuery ? undefined : selectedRankingTheme !== 'all' ? 'Ver todas' : 'Explorar catálogo'}
@@ -148,6 +154,11 @@ export function HomeDynamicRankingSection({
               fund={fund}
               highlightLabel={highlightLabel}
               onPress={() => {
+                if (onFundPress) {
+                  onFundPress(fund.isin);
+                  return;
+                }
+
                 router.push(routes.fundDetail(fund.isin));
               }}
             />

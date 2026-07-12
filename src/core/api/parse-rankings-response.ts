@@ -46,6 +46,7 @@ export type ApiRankingsMeta = {
   groupsLimit: number;
   limit: number;
   hasMoreGroups: boolean;
+  totalEligibleFunds?: number;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -152,6 +153,7 @@ function parseRankingsMeta(value: unknown): ApiRankingsMeta | undefined {
     groupsLimit,
     limit,
     hasMoreGroups,
+    totalEligibleFunds,
   } = value;
 
   if (
@@ -170,6 +172,7 @@ function parseRankingsMeta(value: unknown): ApiRankingsMeta | undefined {
     groupsLimit,
     limit,
     hasMoreGroups,
+    ...(typeof totalEligibleFunds === 'number' ? { totalEligibleFunds } : {}),
   };
 }
 
