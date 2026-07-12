@@ -36,10 +36,13 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#0B2E36"
+          "backgroundColor": "#0B2E36",
+          "ios": {
+            "backgroundColor": "#0B2E36"
+          },
+          "android": {
+            "backgroundColor": "#0B2E36"
+          }
         }
       ],
       "expo-status-bar",

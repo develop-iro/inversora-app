@@ -1,0 +1,38 @@
+---
+description: Reuse shared design-system components before building new UI
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# UX system — reuse before you create
+
+Before implementing UI, **search and reuse** pieces in `src/shared/components/`:
+
+| Need | Start with |
+|------|------------|
+| Screen layout | `ScreenShell`, `ScreenBody`, `SectionCard` |
+| Text and titles | `TextParagraph`, `TextHeading`, `TextLabel`, `TextLegal` |
+| Actions and forms | `Button`, `InputField`, `InputNumeric`, `SearchField` |
+| Empty / error / loading | `ContentEmptyState`, `ReloadState`, `SkeletonBone` |
+| Headers and tabs | `HeaderScreen`, `HeaderSection`, `TabHeader`, `TabPill` |
+| Feedback | `InfoHint`, `Badge`, `StatusIcon`, toasts via overlay |
+
+## Required workflow
+
+1. Check `@/shared/components/ui/index.ts` and the component family folder (`headers/`, `layout/`, `inputs/`, …).
+2. If an equivalent exists, **use it** (extend props or add a `variant` for minor gaps).
+3. Create a new component only when nothing reusable fits; place it per [ADR-003](../../docs/architecture/adr-003-component-naming.md):
+   - generic → `shared/components/<family>/`
+   - feature-specific → `features/<feature>/components/`
+
+```tsx
+// ❌ BAD — ad hoc empty state
+<View className="rounded-card bg-surface p-md">
+  <Text>No funds found</Text>
+</View>
+
+// ✅ GOOD — existing design system
+<ContentEmptyState title="No funds found" description="Try another filter." />
+```
+
+Do not duplicate styles for tokenized atoms. Use `cn()` and semantic tokens (`bg-surface`, `rounded-card`, `text-text-secondary`).
