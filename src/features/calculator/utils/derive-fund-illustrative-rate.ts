@@ -28,11 +28,11 @@ const TIMEFRAME_PRIORITY: readonly FundPerformanceTimeframe[] = [
   'max',
 ];
 
-const RETURN_SNAPSHOT_PRIORITY: ReadonlyArray<{
+const RETURN_SNAPSHOT_PRIORITY: readonly {
   key: keyof Pick<FundHistoricalReturns, 'oneYear' | 'threeYear' | 'ytd'>;
   timeframe: FundPerformanceTimeframe;
   years: number | null;
-}> = [
+}[] = [
   { key: 'oneYear', timeframe: '1y', years: 1 },
   { key: 'threeYear', timeframe: '3y', years: 3 },
   { key: 'ytd', timeframe: 'ytd', years: null },
@@ -202,11 +202,11 @@ function deriveFromReturnSnapshot(detail: FundDetail, terPercent: number): Illus
 
 function deriveFromReturnsByPeriod(detail: FundDetail, terPercent: number): IllustrativeFundRate | null {
   const sourceLabel = detail.profile.sourceLabel;
-  const periodPriority: ReadonlyArray<{
+  const periodPriority: readonly {
     id: string;
     timeframe: FundPerformanceTimeframe;
     years: number | null;
-  }> = [
+  }[] = [
     { id: '1y', timeframe: '1y', years: 1 },
     { id: '3y', timeframe: '3y', years: 3 },
     { id: '5y', timeframe: '5y', years: 5 },
@@ -216,7 +216,7 @@ function deriveFromReturnsByPeriod(detail: FundDetail, terPercent: number): Illu
   for (const candidate of periodPriority) {
     const row = detail.profile.returnsByPeriod.find((entry) => entry.id === candidate.id);
 
-    if (row?.percent === null || row.percent === undefined) {
+    if (row === undefined || row.percent === null) {
       continue;
     }
 
