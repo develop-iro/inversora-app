@@ -4,6 +4,25 @@
 export type InputVariant = 'default' | 'error';
 
 /**
+ * Keeps only digits and a single decimal comma for localized numeric fields.
+ *
+ * @param raw - Raw user input.
+ */
+export function sanitizeLocalizedDecimalInput(raw: string): string {
+  const cleaned = raw.replace(/[^\d,]/g, '');
+  const commaIndex = cleaned.indexOf(',');
+
+  if (commaIndex === -1) {
+    return cleaned;
+  }
+
+  const integerPart = cleaned.slice(0, commaIndex);
+  const fractionalPart = cleaned.slice(commaIndex + 1).replace(/,/g, '');
+
+  return `${integerPart},${fractionalPart}`;
+}
+
+/**
  * Parses a localized numeric string (`1.234,56` or `1234.56`) into a number.
  */
 export function parseLocalizedNumber(raw: string): number {

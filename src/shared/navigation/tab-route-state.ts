@@ -11,6 +11,9 @@ type TabRoute = {
 /** Nested stack screen name for the fund catalog (`/funds`). */
 export const FUNDS_CATALOG_SCREEN = 'index';
 
+/** Nested stack screen name for fund detail (`/funds/[isin]`). */
+export const FUNDS_DETAIL_SCREEN = '[isin]';
+
 /** Top-level tab route name for the funds stack. */
 export const FUNDS_TAB_NAME = 'funds';
 

@@ -11,6 +11,7 @@ export type CarouselNavButtonProps = {
   accessibilityLabel: string;
   accessibilityHint: string;
   onPress: () => void;
+  disabled?: boolean;
   onHoverIn?: () => void;
   onHoverOut?: () => void;
   onFocus?: () => void;
@@ -32,6 +33,7 @@ export function CarouselNavButton({
   accessibilityLabel,
   accessibilityHint,
   onPress,
+  disabled = false,
   onHoverIn,
   onHoverOut,
   onFocus,
@@ -46,6 +48,8 @@ export function CarouselNavButton({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onHoverIn={onHoverIn}
       onHoverOut={onHoverOut}
       onFocus={onFocus}
@@ -53,6 +57,7 @@ export function CarouselNavButton({
       onPress={onPress}
       className={cn(
         'h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-accent-mint bg-background-soft shadow-tooltip active:scale-[0.96] active:opacity-85',
+        disabled && 'opacity-35',
         className,
       )}
       style={style}
