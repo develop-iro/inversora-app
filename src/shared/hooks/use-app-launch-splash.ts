@@ -6,7 +6,7 @@ import { getLaunchSplashMinimumDisplayMs } from '@/shared/components/brand/app-l
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 
 /** Fade-out duration when reduced motion is off. */
-const FADE_OUT_MS = 320;
+export const LAUNCH_SPLASH_FADE_OUT_MS = 320;
 
 interface UseAppLaunchSplashResult {
   /** Whether the branded overlay should remain mounted. */
@@ -42,7 +42,7 @@ export function useAppLaunchSplash(fontsLoaded: boolean): UseAppLaunchSplashResu
 
       Animated.timing(launchSplashOpacity, {
         toValue: 0,
-        duration: FADE_OUT_MS,
+        duration: LAUNCH_SPLASH_FADE_OUT_MS,
         useNativeDriver: true,
       }).start(({ finished }) => {
         if (finished) {

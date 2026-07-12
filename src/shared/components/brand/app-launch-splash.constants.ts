@@ -1,3 +1,11 @@
+import { palette } from '@/shared/theme/palette';
+
+/**
+ * Solid brand background shared by the native Expo splash and the in-app launch overlay.
+ * Keep in sync with `expo-splash-screen` `backgroundColor` in `app.json`.
+ */
+export const LAUNCH_SPLASH_BACKGROUND = palette.deepOcean;
+
 /** Wordmark shown on the branded launch splash. */
 export const LAUNCH_SPLASH_WORDMARK = 'Inversora' as const;
 
