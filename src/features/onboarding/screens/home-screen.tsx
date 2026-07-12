@@ -2,15 +2,17 @@ import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, RefreshControl, View } from 'react-native';
 
-import { HomeEducationalProfileCard } from '@/features/learn/components/home-educational-profile-card';
-import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
-import { useInitialProfileDismissed } from '@/features/learn/hooks/use-initial-profile-dismissed';
+import type { InvestmentTheme } from '@/core/domain/investment-theme';
+import { resolveInvestmentThemeLabel } from '@/core/domain/investment-theme';
 import {
   applyBeginnerGuardsToHomeSearchResult,
   filterBeginnerEligibleRankingGroups,
   shouldApplyBeginnerSurfaceGuards,
   shouldShowHomeStarterSection,
 } from '@/features/funds/utils/beginner-eligibility';
+import { HomeEducationalProfileCard } from '@/features/learn/components/home-educational-profile-card';
+import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
+import { useInitialProfileDismissed } from '@/features/learn/hooks/use-initial-profile-dismissed';
 import { FeaturedFundsCarousel } from '@/features/onboarding/components/featured-funds-carousel';
 import {
   HomeExploreAnswerSection,
@@ -34,8 +36,6 @@ import {
   getRankingFundsForTheme,
   toHomeRankingEntries,
 } from '@/features/onboarding/utils/build-ranking-theme-options';
-import type { InvestmentTheme } from '@/core/domain/investment-theme';
-import { resolveInvestmentThemeLabel } from '@/core/domain/investment-theme';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { TabScreenScroll } from '@/shared/components/layout';
 import { ContentEmptyState, ReloadState, SearchField, TabPill } from '@/shared/components/ui';
@@ -134,7 +134,7 @@ export default function HomeScreen() {
           router.push(routes.fundsCatalog);
           break;
         case 'compare':
-    router.push(routes.compare);
+          router.push(routes.compare);
           break;
         default: {
           const exhaustiveCheck: never = action;
@@ -180,8 +180,7 @@ export default function HomeScreen() {
       return guardedActiveRanking;
     }
 
-    const selectedTheme =
-      effectiveRankingTheme === 'all' ? null : resolveInvestmentThemeLabel(effectiveRankingTheme);
+    const selectedTheme = resolveInvestmentThemeLabel(effectiveRankingTheme);
     const filteredFunds = toHomeRankingEntries(
       getRankingFundsForTheme(guardedRankingGroups, effectiveRankingTheme),
     );

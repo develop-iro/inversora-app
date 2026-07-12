@@ -4,15 +4,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
 import { DISCLAIMER_RANKING_EDUCATIONAL } from '@/features/legal/constants/disclaimer-snippets';
 import { getRankingsGrouped, getCachedRankingsMeta, RANKINGS_GROUP_INDEX_LIMIT } from '@/features/funds/services/get-rankings';
-import { resolveRankingEligibleFundTotal } from '@/features/onboarding/utils/build-ranking-theme-options';
 import {
   filterBeginnerEligibleRankingGroups,
   shouldApplyBeginnerSurfaceGuards,
 } from '@/features/funds/utils/beginner-eligibility';
 import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
-import { resolveRankingThemeIcon } from '@/features/onboarding/utils/build-ranking-theme-options';
+import {
+  resolveRankingEligibleFundTotal,
+  resolveRankingThemeIcon,
+} from '@/features/onboarding/utils/build-ranking-theme-options';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { ScreenShell } from '@/shared/components/layout/screen-shell';
 import { Header } from '@/shared/components/headers';
@@ -22,7 +25,6 @@ import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { routes } from '@/shared/navigation/routes';
 import { Layout, Spacing } from '@/shared/theme/theme';
-import type { BenchmarkRankingGroup } from '@/core/api/parse-rankings-response';
 
 type RankingsLoadState = 'loading' | 'ready' | 'error' | 'empty';
 

@@ -1,7 +1,7 @@
 import type { Href } from 'expo-router';
 
 import type { InvestmentNewsItem } from '@/core/domain/investment-news';
-import { isSafeHttpsUrl } from '@/core/security/safe-external-url';
+import { isSafeExternalUrl } from '@/core/security/safe-external-url';
 import { routes } from '@/shared/navigation/routes';
 
 export type InvestmentNewsPressAction =
@@ -26,7 +26,7 @@ const CURATED_NEWS_FALLBACKS: Readonly<Record<string, InvestmentNewsPressAction>
 export function resolveInvestmentNewsPressAction(
   item: InvestmentNewsItem,
 ): InvestmentNewsPressAction | null {
-  if (item.url && isSafeHttpsUrl(item.url)) {
+  if (item.url && isSafeExternalUrl(item.url)) {
     return { kind: 'external', url: item.url };
   }
 

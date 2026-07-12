@@ -1,5 +1,4 @@
-import type { Href } from 'expo-router';
-import type { useNavigation, useRouter } from 'expo-router';
+import type { Href, useNavigation, useRouter } from 'expo-router';
 
 import {
   FUNDS_CATALOG_SCREEN,

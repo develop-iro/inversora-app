@@ -8,7 +8,6 @@ import {
   buildRankingThemeOptionsFromGroups,
   getRankingFundsForTheme,
   resolveRankingEligibleFundTotal,
-  toHomeRankingEntries,
 } from './build-ranking-theme-options';
 
 function buildFund(name: string, benchmark: string, score: number, rank: number): RankedFund {

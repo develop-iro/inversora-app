@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { View, Alert } from 'react-native';
 
 import type { InvestmentNewsItem } from '@/core/domain/investment-news';
-import { openTrustedHttpsUrl } from '@/core/security/open-safe-external-url';
+import { openSafeExternalUrl } from '@/core/security/open-safe-external-url';
 import { HomeNewsCard } from '@/features/onboarding/components/home-news-card';
 import { HomeSectionCard } from '@/features/onboarding/components/home-section-card';
 import type { HomeSectionLoadState } from '@/features/onboarding/hooks/use-home-screen-data';
@@ -33,7 +33,7 @@ export function HomeNewsSection({ items, loadState, onRetry }: HomeNewsSectionPr
       return;
     }
 
-    void openTrustedHttpsUrl(action.url).then((opened) => {
+    void openSafeExternalUrl(action.url).then((opened: boolean) => {
       if (!opened) {
         Alert.alert(
           'Enlace no disponible',

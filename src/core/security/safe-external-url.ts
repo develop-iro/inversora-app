@@ -10,6 +10,7 @@ const ALLOWED_HOSTS = new Set([
   'www.ecb.europa.eu',
   'www.esma.europa.eu',
   'www.investopedia.com',
+  'www.marketwatch.com',
 ]);
 
 /**
