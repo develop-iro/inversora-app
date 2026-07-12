@@ -118,7 +118,7 @@ jobs:
       - run: cp .env.example .env
       - run: pnpm run generate:theme
       - run: pnpm run build:web:ci
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: metro-bundle-export
           path: dist/
