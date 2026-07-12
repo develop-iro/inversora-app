@@ -29,36 +29,6 @@
       "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [
-      "expo-dev-client",
-      "@sentry/react-native",
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#0B2E36",
-          "ios": {
-            "backgroundColor": "#0B2E36"
-          },
-          "android": {
-            "backgroundColor": "#0B2E36"
-          }
-        }
-      ],
-      "expo-status-bar",
-      "expo-font",
-      "expo-secure-store",
-      "expo-sharing",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": false
-          }
-        }
-      ],
-      "./plugins/with-ssl-pinning.js"
-    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

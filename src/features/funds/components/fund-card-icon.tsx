@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Image, View, type ImageProps, type ViewProps } from 'react-native';
 
+import { isSafeRemoteImageUrl } from '@/core/security/safe-external-url';
 import { ThemedText } from '@/shared/components/themed-text';
 import { cn } from '@/shared/utils/cn';
 import type { TypographyToken } from '@/shared/theme/theme';
@@ -47,7 +48,9 @@ export function FundCardIcon({
   ...viewProps
 }: FundCardIconProps) {
   const [imageFailed, setImageFailed] = useState(false);
-  const showRemoteLogo = logoUrl !== null && logoUrl.length > 0 && !imageFailed;
+  const safeLogoUrl =
+    logoUrl !== null && isSafeRemoteImageUrl(logoUrl) ? logoUrl : null;
+  const showRemoteLogo = safeLogoUrl !== null && !imageFailed;
   const label = accessibilityLabel ?? `Logo gestora ${symbol}`;
   const layout = ICON_LAYOUT[size];
 
@@ -69,7 +72,7 @@ export function FundCardIcon({
     >
       {showRemoteLogo ? (
         <Image
-          source={{ uri: logoUrl }}
+          source={{ uri: safeLogoUrl }}
           // tailwind-exception: logo dimensions depend on icon size variant
           style={{ width: layout.logoSize, height: layout.logoSize }}
           resizeMode="contain"

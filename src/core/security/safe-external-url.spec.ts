@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { isSafeExternalUrl, isSafeHttpsUrl } from './safe-external-url';
+import {
+  isSafeExternalUrl,
+  isSafeHttpsUrl,
+  isSafeRemoteImageUrl,
+} from './safe-external-url';
 
 describe('safe-external-url', () => {
   it('allows curated https hosts', () => {
@@ -32,5 +36,18 @@ describe('safe-external-url', () => {
     );
     assert.equal(isSafeHttpsUrl('http://www.marketwatch.com/story/example'), false);
     assert.equal(isSafeHttpsUrl('https://localhost/news'), false);
+  });
+
+  it('allows only trusted remote image hosts', () => {
+    assert.equal(
+      isSafeRemoteImageUrl('https://cdn.brandfetch.io/domain/vanguard.com/w/64/h/64'),
+      true,
+    );
+    assert.equal(
+      isSafeRemoteImageUrl('https://user:pass@cdn.brandfetch.io/domain/vanguard.com'),
+      false,
+    );
+    assert.equal(isSafeRemoteImageUrl('http://cdn.brandfetch.io/domain/vanguard.com'), false);
+    assert.equal(isSafeRemoteImageUrl('https://evil.example/logo.png'), false);
   });
 });

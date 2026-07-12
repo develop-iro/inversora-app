@@ -6,7 +6,8 @@ const PINNED_HOSTS = [
 ];
 
 /**
- * Enables ATS hardening and disables cleartext traffic when SSL pinning is active.
+ * Enables ATS hardening and disables cleartext traffic when strict transport
+ * security is active. This does not implement SPKI certificate pinning.
  *
  * @param {import('expo/config-plugins').ExpoConfig} config
  * @returns {import('expo/config-plugins').ExpoConfig}

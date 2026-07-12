@@ -149,6 +149,18 @@ Run lint:
 pnpm run lint
 ```
 
+Install the local browser used by E2E tests:
+
+```bash
+pnpm run e2e:install
+```
+
+Run E2E web smoke tests:
+
+```bash
+pnpm run test:e2e
+```
+
 ## Local API (development)
 
 To load real catalog and fund detail data from `inversora-api`, copy `.env.example` to `.env`, set `EXPO_PUBLIC_API_URL` for your emulator or device, start the backend on port 3000, then restart Expo.

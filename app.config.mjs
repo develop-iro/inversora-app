@@ -6,5 +6,42 @@ import { loadEnv, resolveProfile } from './scripts/load-env.mjs';
  */
 loadEnv({ profile: resolveProfile() });
 
+const appEnv = process.env.EXPO_PUBLIC_APP_ENV?.trim() ?? 'local';
+const includeDevClient = appEnv !== 'pro';
+
+const plugins = [
+  ...(includeDevClient ? ['expo-dev-client'] : []),
+  '@sentry/react-native',
+  'expo-router',
+  [
+    'expo-splash-screen',
+    {
+      backgroundColor: '#0B2E36',
+      ios: {
+        backgroundColor: '#0B2E36',
+      },
+      android: {
+        backgroundColor: '#0B2E36',
+      },
+    },
+  ],
+  'expo-status-bar',
+  'expo-font',
+  'expo-secure-store',
+  'expo-sharing',
+  [
+    'expo-build-properties',
+    {
+      android: {
+        usesCleartextTraffic: false,
+      },
+    },
+  ],
+  './plugins/with-ssl-pinning.js',
+];
+
 /** @param {{ config: import('@expo/config-types').ExpoConfig }} param0 */
-export default ({ config }) => config;
+export default ({ config }) => ({
+  ...config,
+  plugins,
+});

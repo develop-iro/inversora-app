@@ -18,7 +18,7 @@ Qué usa **este repositorio** frente a opciones mencionadas en el documento ofic
 | Base de datos | PostgreSQL (gestionada o Docker local) | Vía Prisma en `inversora-api` |
 | IA | OpenAI o Vercel AI SDK en **backend** | Nunca API key en cliente |
 | Persistencia local | `core/storage` con **SecureStore** en iOS/Android y AsyncStorage en web | Migración automática desde AsyncStorage |
-| Transporte API | HTTPS + plugin `with-ssl-pinning` en builds `pro` nativos | Ver `docs/security-hardening.md` en `inversora-api` |
+| Transporte API | HTTPS + hardening nativo de transporte en builds `pro` | El plugin legacy `with-ssl-pinning` aplica ATS en iOS, bloquea cleartext en Android y valida allowlist de hosts; no implementa pinning SPKI real |
 
 ## No adoptado (por ahora)
 

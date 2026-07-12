@@ -1,7 +1,10 @@
 import type { FundDetail } from '@/core/domain/catalog';
 
 import { apiGet } from '@/core/api/client';
-import { shouldUseMockData } from '@/core/config/app-environment';
+import {
+  allowsMockFallback,
+  shouldUseMockData,
+} from '@/core/config/app-environment';
 import { parseFundDetailResponse } from '@/core/api/parse-fund-detail-response';
 import { AppError } from '@/core/errors/app-error';
 import {
@@ -48,6 +51,14 @@ export async function getFundByIsin(
     return getFundDetailMock(normalizedIsin);
   }
 
+  const mockFallback = (): FundDetail | null => {
+    if (!allowsMockFallback()) {
+      return null;
+    }
+
+    return getFundDetailMock(normalizedIsin);
+  };
+
   const loadDetail = async (): Promise<FundDetail | null> => {
     try {
       const payload = await apiGet<unknown>({
@@ -56,13 +67,19 @@ export async function getFundByIsin(
       });
 
       if (isNotFoundPayload(payload)) {
-        return null;
+        return mockFallback();
       }
 
       return parseFundDetailResponse(payload);
     } catch (error) {
       if (isHttpNotFoundError(error)) {
-        return null;
+        return mockFallback();
+      }
+
+      const fallback = mockFallback();
+
+      if (fallback !== null) {
+        return fallback;
       }
 
       throw error instanceof AppError
