@@ -1,7 +1,7 @@
 import { Animated, StyleSheet } from 'react-native';
 
 import { AppLaunchSplashWordmark } from '@/shared/components/brand/app-launch-splash-wordmark';
-import { palette } from '@/shared/theme/palette';
+import { LAUNCH_SPLASH_BACKGROUND } from '@/shared/components/brand/app-launch-splash.constants';
 
 interface AppLaunchSplashProps {
   /** Animated opacity driven by {@link useAppLaunchSplash}. */
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
     zIndex: 999,
-    backgroundColor: palette.deepOcean,
+    backgroundColor: LAUNCH_SPLASH_BACKGROUND,
     alignItems: 'center',
     justifyContent: 'center',
   },

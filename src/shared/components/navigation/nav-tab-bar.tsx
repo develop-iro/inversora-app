@@ -11,6 +11,7 @@ import {
 import Animated, {
   Easing,
   interpolate,
+  interpolateColor,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -19,6 +20,10 @@ import Animated, {
 import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
 import { useTheme } from "@/shared/hooks/use-theme";
 import { useSecondaryTabConfig } from "@/features/learn/hooks/use-secondary-tab-config";
+import {
+  resolveTabBarDisplayLabel,
+  resolveTabBarLayoutMetrics,
+} from "@/shared/navigation/tab-bar-layout";
 import {
   createFundsCatalogTabParams,
   FUNDS_TAB_NAME,
@@ -32,8 +37,12 @@ import { Typography } from "@/shared/theme/tokens";
 const FILL_ANIMATION_DURATION_MS = 280;
 const ICON_SIZE = Size.iconMd;
 const ICON_SLOT_SIZE = Size.iconSlot;
+const TAB_BAR_VERTICAL_PADDING = Platform.select({
+  ios: Spacing.sm,
+  default: Spacing.tight,
+}) ?? Spacing.tight;
 
-export const NAV_TAB_BAR_HEIGHT = 76;
+export const NAV_TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 80 : 76;
 export const NAV_TAB_BAR_BOTTOM_GAP = Spacing.lgPlus;
 export const NAV_TAB_BAR_CONTENT_GAP = Spacing['3xl'] + Spacing.lg;
 
@@ -60,6 +69,7 @@ type IconName = React.ComponentProps<typeof MaterialCommunityIcons>["name"];
 
 type TabConfig = {
   label: string;
+  compactLabel?: string;
   accessibilityLabel: string;
   activeIcon: IconName;
   inactiveIcon: IconName;
@@ -80,18 +90,21 @@ const tabs: Record<string, TabConfig> = {
   },
   favorites: {
     label: "Favoritos",
+    compactLabel: "Favoritos",
     accessibilityLabel: "Ver favoritos",
     activeIcon: "heart",
     inactiveIcon: "heart-outline",
   },
   compare: {
     label: "Comparar",
+    compactLabel: "Compara",
     accessibilityLabel: "Comparar fondos",
     activeIcon: "scale-balance",
     inactiveIcon: "scale-balance",
   },
   calculator: {
     label: "Calcular",
+    compactLabel: "Calcula",
     accessibilityLabel: "Abrir calculadora",
     activeIcon: "calculator-variant",
     inactiveIcon: "calculator-variant-outline",
@@ -117,12 +130,19 @@ type NavTabBarProps = {
   };
 };
 
+type TabBarLabelMetrics = {
+  fontSize: number;
+  lineHeight: number;
+  minimumFontScale: number;
+};
+
 type TabBarVisualProps = {
   activeIcon: IconName;
   inactiveIcon: IconName;
   isFocused: boolean;
   isReducedMotionEnabled: boolean;
   label: string;
+  labelMetrics: TabBarLabelMetrics;
   tabActive: string;
   tabInactive: string;
 };
@@ -136,6 +156,7 @@ function TabBarVisual({
   isFocused,
   isReducedMotionEnabled,
   label,
+  labelMetrics,
   tabActive,
   tabInactive,
 }: TabBarVisualProps) {
@@ -173,12 +194,8 @@ function TabBarVisual({
     ],
   }));
 
-  const inactiveLabelStyle = useAnimatedStyle(() => ({
-    opacity: 1 - fillProgress.value,
-  }));
-
-  const activeLabelStyle = useAnimatedStyle(() => ({
-    opacity: fillProgress.value,
+  const labelColorStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(fillProgress.value, [0, 1], [tabInactive, tabActive]),
   }));
 
   return (
@@ -202,32 +219,25 @@ function TabBarVisual({
         </View>
       </View>
 
-      <View style={styles.labelBox}>
+      <View
+        style={[
+          styles.labelBox,
+          { height: labelMetrics.lineHeight },
+        ]}
+      >
         <Animated.Text
           adjustsFontSizeToFit
-          minimumFontScale={0.85}
+          minimumFontScale={labelMetrics.minimumFontScale}
           numberOfLines={1}
-          // tailwind-exception: animated label crossfade; Typography via StyleSheet for correct width/ellipsis
+          // tailwind-exception: single label layer so iOS adjustsFontSizeToFit scales copy reliably
           style={[
             styles.label,
-            styles.labelLayer,
-            { color: tabInactive },
-            inactiveLabelStyle,
-          ]}
-        >
-          {label}
-        </Animated.Text>
-        <Animated.Text
-          adjustsFontSizeToFit
-          minimumFontScale={0.85}
-          numberOfLines={1}
-          // tailwind-exception: animated label crossfade; Typography via StyleSheet for correct width/ellipsis
-          style={[
-            styles.label,
-            styles.labelActive,
-            styles.labelLayer,
-            { color: tabActive },
-            activeLabelStyle,
+            isFocused ? styles.labelActive : null,
+            {
+              fontSize: labelMetrics.fontSize,
+              lineHeight: labelMetrics.lineHeight,
+            },
+            labelColorStyle,
           ]}
         >
           {label}
@@ -249,6 +259,10 @@ export function NavTabBar({
   const theme = useTheme(); // tailwind-exception: tab icon colors and native shadowColor
   const isReducedMotionEnabled = useReducedMotion();
   const { width } = useWindowDimensions();
+  const layoutMetrics = useMemo(
+    () => resolveTabBarLayoutMetrics(width, Platform.OS),
+    [width],
+  );
   const tabNavigation = navigation as {
     emit: (event: {
       canPreventDefault?: boolean;
@@ -295,12 +309,15 @@ export function NavTabBar({
     >
       <View
         pointerEvents="auto"
-        className="h-[76px] flex-row items-stretch justify-between overflow-hidden rounded-tabBar border border-border bg-surface px-lgPlus py-tight shadow-card"
-        // tailwind-exception: responsive width cap, native shadowColor, web box model
+        className="flex-row items-stretch justify-between overflow-hidden rounded-tabBar border border-border bg-surface shadow-card"
+        // tailwind-exception: responsive width cap, native shadowColor, platform padding and height
         style={[
           styles.container,
           {
-            width: Math.min(width - 36, 560),
+            width: layoutMetrics.barWidth,
+            height: NAV_TAB_BAR_HEIGHT,
+            paddingHorizontal: layoutMetrics.horizontalPadding,
+            paddingVertical: TAB_BAR_VERTICAL_PADDING,
             shadowColor: theme.shadow,
             elevation: 10,
             zIndex: 1000,
@@ -316,12 +333,23 @@ export function NavTabBar({
           const tab =
             route.name === 'favorites'
               ? {
-                  label: secondaryTab.label,
+                  label: resolveTabBarDisplayLabel(
+                    secondaryTab.label,
+                    secondaryTab.compactLabel,
+                    layoutMetrics.isCompact,
+                  ),
                   accessibilityLabel: secondaryTab.accessibilityLabel,
                   activeIcon: secondaryTab.activeIcon,
                   inactiveIcon: secondaryTab.inactiveIcon,
                 }
-              : baseTab;
+              : {
+                  ...baseTab,
+                  label: resolveTabBarDisplayLabel(
+                    baseTab.label,
+                    baseTab.compactLabel,
+                    layoutMetrics.isCompact,
+                  ),
+                };
 
           const isFocused = activeRoute?.key === route.key;
 
@@ -379,6 +407,11 @@ export function NavTabBar({
                 isFocused={isFocused}
                 isReducedMotionEnabled={isReducedMotionEnabled}
                 label={tab.label}
+                labelMetrics={{
+                  fontSize: layoutMetrics.labelFontSize,
+                  lineHeight: layoutMetrics.labelLineHeight,
+                  minimumFontScale: layoutMetrics.minimumFontScale,
+                }}
                 tabActive={theme.tabActive}
                 tabInactive={theme.tabInactive}
               />
@@ -449,7 +482,6 @@ const styles = StyleSheet.create({
   labelBox: {
     alignSelf: 'stretch',
     width: '100%',
-    height: Typography.tabLabel.lineHeight,
     marginTop: Spacing.xs,
     position: 'relative',
   },
@@ -465,11 +497,5 @@ const styles = StyleSheet.create({
   },
   labelActive: {
     ...Typography.tabLabelActive,
-  },
-  labelLayer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
   },
 });

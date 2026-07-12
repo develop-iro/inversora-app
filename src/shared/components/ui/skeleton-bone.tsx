@@ -37,6 +37,13 @@ type SkeletonBoneLayoutProps = SkeletonBoneProps & {
   resolvedRadius: number;
 };
 
+type WebSkeletonAnimationStyle = ViewStyle & {
+  animationName?: string;
+  animationDuration?: string;
+  animationTimingFunction?: string;
+  animationIterationCount?: string;
+};
+
 /**
  * Web: CSS `@keyframes skeleton-bone-pulse` in global.css (RN Animated native driver is unsupported).
  */
@@ -49,7 +56,7 @@ function SkeletonBoneWeb({
 }: SkeletonBoneLayoutProps) {
   const reducedMotionEnabled = useReducedMotion();
 
-  const webPulseStyle = reducedMotionEnabled
+  const webPulseStyle: WebSkeletonAnimationStyle = reducedMotionEnabled
     ? { backgroundColor: 'var(--color-skeleton-bone)' }
     : {
         backgroundColor: 'var(--color-skeleton-bone)',
@@ -74,7 +81,7 @@ function SkeletonBoneWeb({
           height,
           borderRadius: resolvedRadius,
           ...webPulseStyle,
-        },
+        } as ViewStyle,
         style,
       ]}
       accessibilityElementsHidden

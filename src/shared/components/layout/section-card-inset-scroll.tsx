@@ -27,7 +27,7 @@ export function SectionCardInsetScroll({
       showsHorizontalScrollIndicator={false}
       className={cn('-mx-lg', className)}
       style={style}
-      contentContainerClassName={cn('gap-sm px-lg py-xs', contentClassName)}
+      contentContainerClassName={cn('items-start gap-sm px-lg py-xs', contentClassName)}
       contentContainerStyle={contentContainerStyle}
     >
       {children}

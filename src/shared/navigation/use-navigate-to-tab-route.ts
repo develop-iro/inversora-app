@@ -1,39 +1,16 @@
-import { router, useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 
 import { compareSelectionStore } from '@/core/storage/compare-selection-store';
 import { routes } from '@/shared/navigation/routes';
-
-type TabNavigation = {
-  getState?: () => { routeNames?: readonly string[] };
-  getParent?: () => TabNavigation | undefined;
-  navigate: (name: string, params?: Record<string, string>) => void;
-};
-
-/**
- * Finds the primary tab navigator from a nested stack screen.
- */
-function getTabNavigation(navigation: ReturnType<typeof useNavigation>): TabNavigation | undefined {
-  let navigator = navigation as unknown as TabNavigation | undefined;
-
-  while (navigator) {
-    const routeNames = navigator.getState?.().routeNames;
-
-    if (Array.isArray(routeNames) && routeNames.includes('compare')) {
-      return navigator;
-    }
-
-    navigator = navigator.getParent?.();
-  }
-
-  return undefined;
-}
+import { getTabNavigation } from '@/shared/navigation/tab-navigation';
 
 /**
  * Hook for switching to sibling tab routes from nested stacks without breaking the tab shell.
  */
 export function useNavigateToTabRoute() {
   const navigation = useNavigation();
+  const router = useRouter();
 
   const navigateToCompare = useCallback(async (isins: readonly string[]) => {
     const normalized = [...new Set(isins.map((isin) => isin.trim().toUpperCase()))];
@@ -52,7 +29,7 @@ export function useNavigateToTabRoute() {
     }
 
     router.push(routes.compare);
-  }, [navigation]);
+  }, [navigation, router]);
 
   const navigateToCalculator = useCallback((isin: string) => {
     const normalized = isin.trim().toUpperCase();
@@ -69,7 +46,7 @@ export function useNavigateToTabRoute() {
     }
 
     router.push(routes.calculatorWithFund(normalized));
-  }, [navigation]);
+  }, [navigation, router]);
 
   return {
     navigateToCompare,

@@ -8,6 +8,10 @@ export type TabNavigation = {
   getState?: () => NavigationState;
   getParent?: () => TabNavigation | undefined;
   navigate: (name: string, params?: unknown) => void;
+  reset?: (state: {
+    index: number;
+    routes: { name: string; params?: Record<string, unknown> }[];
+  }) => void;
 };
 
 /**
