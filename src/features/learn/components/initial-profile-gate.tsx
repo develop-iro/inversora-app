@@ -5,6 +5,7 @@ import {
   initialProfileOnboardingStore,
   shouldUseInitialProfileGate,
 } from '@/core/storage/initial-profile-onboarding-store';
+import { shouldRedirectToInitialProfileQuestionnaire } from '@/core/storage/initial-profile-onboarding-policy';
 import { trackLearnGateRedirect } from '@/features/learn/services/learn-questionnaire-analytics';
 import { useEducationalProfile } from '@/features/learn/hooks/use-educational-profile';
 import { routes } from '@/shared/navigation/routes';
@@ -16,6 +17,8 @@ export type InitialProfileGateProps = {
 
 /**
  * Redirects first-time native users to the initial profiling questionnaire.
+ *
+ * Web users are not gated. Allowed routes without a profile: `/learn` and `/legal`.
  */
 export function InitialProfileGate({ enabled }: InitialProfileGateProps) {
   const router = useRouter();
@@ -45,21 +48,17 @@ export function InitialProfileGate({ enabled }: InitialProfileGateProps) {
   }, []);
 
   useEffect(() => {
-    if (!enabled || !shouldUseInitialProfileGate()) {
-      return;
-    }
-
-    if (isProfileLoading || isDismissed === null) {
-      return;
-    }
-
-    if (profile !== null || isDismissed || hasRedirectedRef.current) {
-      return;
-    }
-
-    const isOnLearnRoute = segments[0] === 'learn';
-
-    if (isOnLearnRoute) {
+    if (
+      !shouldRedirectToInitialProfileQuestionnaire({
+        enabled,
+        useGate: shouldUseInitialProfileGate(),
+        isProfileLoading,
+        isDismissed,
+        hasProfile: profile !== null,
+        hasRedirected: hasRedirectedRef.current,
+        segments,
+      })
+    ) {
       return;
     }
 

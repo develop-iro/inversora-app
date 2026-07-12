@@ -58,7 +58,7 @@ Se trata de una persona que quiere empezar a invertir, pero no sabe cómo compar
 
 | Funcionalidad | Estado MVP | Implementación |
 |---------------|------------|----------------|
-| Onboarding guiado | ✅ | Dashboard `/`, hero educativo, `features/onboarding/` |
+| Onboarding guiado | ✅ | **App nativa:** gate a `/learn?mode=initial`. **Web:** invitación (hero, banner) sin gate |
 | Perfilado básico | ✅ | `/learn`, `build-educational-profile.ts` |
 | Ranking simplificado | ✅ | Home + `/rankings` (HU-14) |
 | Explicaciones del Asistente Inversora | ✅ | SORA en home, catálogo, ficha (HU-23), comparación; guardrails HU-40 |

@@ -18,9 +18,9 @@ Leyenda de cumplimiento (§3.1):
 
 | Funcionalidad (documento oficial) | Estado | Notas |
 |-----------------------------------|--------|-------|
-| Onboarding inicial sin necesidad de registro | ✅ | Dashboard `/` accesible sin login |
-| Identificación básica del nivel de conocimiento financiero | ✅ | Cuestionario `/learn` (`knowledgeLevel`) |
-| Perfilado básico (horizonte, riesgo, objetivo) | ✅ | `build-educational-profile.ts`, persistencia local |
+| Onboarding inicial sin necesidad de registro | ✅ | Dashboard `/` accesible sin login; en **nativo** gate a `/learn?mode=initial` en primera visita |
+| Identificación básica del nivel de conocimiento financiero | ✅ | Cuestionario `/learn` (`knowledgeLevel`); obligatorio en app, invitado en web |
+| Perfilado básico (horizonte, riesgo, objetivo) | ✅ | `build-educational-profile.ts`, persistencia local; onboarding = cuestionario de perfilado |
 | Dashboard principal de fondos indexados | ✅ | `home-screen.tsx`, destacados, ranking, búsqueda |
 | Clasificación de fondos por categorías | ✅ | Catálogo con secciones y filtro por categoría |
 | Ranking según criterios objetivos | ✅ | `/rankings` + `/rankings/[benchmarkKey]`, grupos RN-02, home alineado |
@@ -81,7 +81,7 @@ La app **no expone** ninguna de las funcionalidades excluidas del documento ofic
 | Área | Descripción |
 |------|-------------|
 | Dashboard inicial | Hero, fondos destacados del trimestre, teaser de ranking, búsqueda, avisos |
-| Modo “Quiero aprender” | Flujo educativo y perfilado sin registro |
+| Modo “Quiero aprender” | Flujo educativo y perfilado sin registro; gate obligatorio en app nativa, invitación en web |
 | Perfil educativo | Orientativo, local/anónimo, no vinculado a cuenta |
 | Catálogo | Fondos indexados visibles, categorías, estados de calidad de datos |
 | Búsqueda y filtros | Nombre, ISIN, categoría; filtros básicos (comisión, riesgo, benchmark, etc.) |

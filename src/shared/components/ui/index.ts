@@ -61,6 +61,7 @@ export {
     HeaderModal,
     HeaderScreen,
     HeaderSection,
+    HeaderTextAction,
     HeaderActionsRow,
     useHeaderActionHandlers,
     useHeaderHorizontalInset,
@@ -78,6 +79,7 @@ export {
     type HeaderScreenTitleVariant,
     type HeaderSectionProps,
     type HeaderSectionVariant,
+    type HeaderTextActionProps,
     type HeaderTitleVariant,
 } from '@/shared/components/headers';
 export {

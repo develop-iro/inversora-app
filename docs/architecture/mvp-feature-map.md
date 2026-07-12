@@ -227,14 +227,15 @@ app ──► features/* ──► shared
 | Ruta | MVP | Implementado |
 |------|-----|--------------|
 | `/` | Dashboard | ✅ |
-| `/learn` | Modo educativo | ⬜ |
-| `/funds` | Catálogo | 🟡 placeholder |
+| `/learn` | Modo educativo + perfilado | ✅ (`InitialProfileGate` en nativo; voluntario en web) |
+| `/funds` | Catálogo | ✅ |
 | `/funds/[isin]` | Detalle ampliado | ✅ |
-| `/compare` | Comparación | 🟡 shell |
-| `/favorites` | Favoritos | 🟡 shell |
-| `/calculator` | Calculadora | 🟡 shell |
-| `/legal` | Legal | ⬜ |
-| `/explore` | — | 🟡 legado (oculto) |
+| `/compare` | Comparación | ✅ |
+| `/favorites` | Favoritos | ✅ |
+| `/calculator` | Calculadora | ✅ |
+| `/legal` | Legal | ✅ |
+| `/rankings` | Rankings por benchmark | ✅ |
+| `/explore` | — | 🟡 legado (oculto; deprecar) |
 
 ---
 
