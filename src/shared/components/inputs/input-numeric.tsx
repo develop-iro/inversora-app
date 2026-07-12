@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { InputField, type InputFieldProps } from '@/shared/components/inputs/input-field';
 import { sanitizeLocalizedDecimalInput } from '@/shared/components/inputs/input-utils';
@@ -26,12 +26,6 @@ export function InputNumeric({
 }: InputNumericProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [draftValue, setDraftValue] = useState(value ?? '');
-
-  useEffect(() => {
-    if (!isFocused) {
-      setDraftValue(value ?? '');
-    }
-  }, [isFocused, value]);
 
   const handleChangeText = useCallback(
     (text: string) => {

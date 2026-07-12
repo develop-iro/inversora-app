@@ -6,7 +6,7 @@ export type TabNavigation = {
   navigate: (name: string, params?: Record<string, unknown>) => void;
   reset: (state: {
     index: number;
-    routes: Array<{ name: string; params?: Record<string, unknown> }>;
+    routes: { name: string; params?: Record<string, unknown> }[];
   }) => void;
 };
 
