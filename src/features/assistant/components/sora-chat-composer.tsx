@@ -116,10 +116,6 @@ export function SoraChatComposer({
           </Pressable>
         </View>
       </View>
-
-      <TextParagraph variant="secondary" themeColor="textSecondary" className="text-center text-[11px] leading-4 opacity-[0.78]">
-        Respuestas educativas. No es asesoramiento financiero personalizado.
-      </TextParagraph>
     </View>
   );
 }
