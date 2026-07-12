@@ -22,7 +22,7 @@ export type AppEnvironmentConfig = {
 
 const DEFAULT_API_BASE_URLS: Readonly<Record<AppEnvironment, string>> = {
   local: 'http://localhost:3000',
-  qa: 'https://inversora-api-qa.up.railway.app',
+  qa: 'https://inversora-api-staging.up.railway.app',
   pro: 'https://inversora-api-production.up.railway.app',
 };
 

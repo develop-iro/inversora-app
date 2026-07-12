@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXPO_PUBLIC_API_URL: https://inversora-api-qa.up.railway.app
+  EXPO_PUBLIC_API_URL: https://inversora-api-staging.up.railway.app
   EXPO_PUBLIC_NEWS_API_ENABLED: 'false'
   EXPO_PUBLIC_APP_ENV: qa
 

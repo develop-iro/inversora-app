@@ -2,7 +2,7 @@ const { withAndroidManifest, withInfoPlist } = require('expo/config-plugins');
 
 const PINNED_HOSTS = [
   'inversora-api-production.up.railway.app',
-  'inversora-api-qa.up.railway.app',
+  'inversora-api-staging.up.railway.app',
 ];
 
 /**
