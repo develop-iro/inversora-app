@@ -88,6 +88,13 @@ describe('generateGlobalCssContent', () => {
     assert.match(css, /--shadow-card:/);
     assert.match(css, /\.dark \{[\s\S]*--shadow-elevated:/);
   });
+
+  it('includes skeleton pulse keyframes for web', () => {
+    const css = generateGlobalCssContent();
+    assert.match(css, /@keyframes skeleton-bone-pulse/);
+    assert.match(css, /\.skeleton-bone-pulse/);
+    assert.match(css, /animation: skeleton-bone-pulse 1400ms ease-in-out infinite/);
+  });
 });
 
 describe('committed global.css', () => {
