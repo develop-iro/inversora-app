@@ -26,6 +26,8 @@ export type UseCatalogFundsPaginationResult = {
   reload: () => Promise<void>;
 };
 
+const CATALOG_VISIBLE_BATCH_SIZE = 7;
+
 function mergeUniqueFunds(
   current: readonly CatalogFund[],
   incoming: readonly CatalogFund[],
@@ -59,7 +61,8 @@ export function useCatalogFundsPagination(
   filters: FundCatalogFilters,
   reloadToken = 0,
 ): UseCatalogFundsPaginationResult {
-  const [funds, setFunds] = useState<CatalogFund[]>([]);
+  const [fetchedFunds, setFetchedFunds] = useState<CatalogFund[]>([]);
+  const [visibleCount, setVisibleCount] = useState(CATALOG_VISIBLE_BATCH_SIZE);
   const [meta, setMeta] = useState<FundListMeta | null>(null);
   const [status, setStatus] = useState<CatalogFundsPaginationStatus>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +72,7 @@ export function useCatalogFundsPagination(
   const hasLoadedOnceRef = useRef(false);
   const lastReloadTokenRef = useRef(reloadToken);
 
-  const loadInitialPage = useCallback(async (options?: { soft?: boolean }) => {
+  const loadInitialPage = useCallback(async (options?: { signal?: AbortSignal; soft?: boolean }) => {
     const requestId = ++requestIdRef.current;
     const soft = options?.soft === true && hasLoadedOnceRef.current;
 
@@ -77,7 +80,8 @@ export function useCatalogFundsPagination(
       setStatus('refreshing');
     } else {
       setStatus('loading');
-      setFunds([]);
+      setFetchedFunds([]);
+      setVisibleCount(CATALOG_VISIBLE_BATCH_SIZE);
       setMeta(null);
       setLoadedPageCount(0);
     }
@@ -85,13 +89,14 @@ export function useCatalogFundsPagination(
     setError(null);
 
     try {
-      const response = await getFundsPage(filters, 1);
+      const response = await getFundsPage(filters, 1, options?.signal);
 
       if (requestId !== requestIdRef.current) {
         return;
       }
 
-      setFunds(response.data);
+      setFetchedFunds(response.data);
+      setVisibleCount(Math.min(CATALOG_VISIBLE_BATCH_SIZE, response.data.length));
       setMeta(response.meta);
       setLoadedPageCount(1);
       setStatus('ready');
@@ -102,7 +107,8 @@ export function useCatalogFundsPagination(
       }
 
       if (!soft) {
-        setFunds([]);
+        setFetchedFunds([]);
+        setVisibleCount(CATALOG_VISIBLE_BATCH_SIZE);
         setMeta(null);
         setLoadedPageCount(0);
       }
@@ -114,6 +120,7 @@ export function useCatalogFundsPagination(
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
     const forceHard = reloadToken !== lastReloadTokenRef.current;
     lastReloadTokenRef.current = reloadToken;
     const soft = !forceHard && hasLoadedOnceRef.current;
@@ -124,12 +131,13 @@ export function useCatalogFundsPagination(
         return;
       }
 
-      await loadInitialPage({ soft });
+      await loadInitialPage({ signal: controller.signal, soft });
     })();
 
     return () => {
       cancelled = true;
       requestIdRef.current += 1;
+      controller.abort();
     };
   }, [loadInitialPage, reloadToken]);
 
@@ -138,23 +146,41 @@ export function useCatalogFundsPagination(
       return;
     }
 
+    if (visibleCount < fetchedFunds.length) {
+      setVisibleCount((current) =>
+        Math.min(current + CATALOG_VISIBLE_BATCH_SIZE, fetchedFunds.length),
+      );
+      return;
+    }
+
     if (meta === null || loadedPageCount >= meta.totalPages) {
       return;
     }
 
     const requestId = requestIdRef.current;
-    const page = loadedPageCount + 1;
     setStatus('loading-more');
 
     try {
-      const response = await getFundsPage(filters, page);
+      let page = loadedPageCount;
+      let nextMeta = meta;
+      let nextFunds = fetchedFunds;
+
+      while (page < nextMeta.totalPages && nextFunds.length <= visibleCount) {
+        page += 1;
+        const response = await getFundsPage(filters, page);
+        nextMeta = response.meta;
+        nextFunds = mergeUniqueFunds(nextFunds, response.data);
+      }
 
       if (requestId !== requestIdRef.current) {
         return;
       }
 
-      setFunds((current) => mergeUniqueFunds(current, response.data));
-      setMeta(response.meta);
+      setFetchedFunds(nextFunds);
+      setVisibleCount((current) =>
+        Math.min(current + CATALOG_VISIBLE_BATCH_SIZE, nextFunds.length),
+      );
+      setMeta(nextMeta);
       setLoadedPageCount(page);
       setStatus('ready');
     } catch (loadError) {
@@ -165,9 +191,11 @@ export function useCatalogFundsPagination(
       setError(resolveFundApiErrorMessage(loadError));
       setStatus('ready');
     }
-  }, [filters, loadedPageCount, meta, status]);
+  }, [fetchedFunds, filters, loadedPageCount, meta, status, visibleCount]);
 
-  const hasMore = meta !== null && loadedPageCount < meta.totalPages;
+  const funds = fetchedFunds.slice(0, visibleCount);
+  const hasMore =
+    visibleCount < fetchedFunds.length || (meta !== null && loadedPageCount < meta.totalPages);
 
   return {
     funds,

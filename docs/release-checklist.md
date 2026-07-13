@@ -29,6 +29,7 @@ Use this checklist before tagging a preview or production mobile build.
 
 - [ ] Home: destacados, ranking, búsqueda SORA
 - [ ] Catálogo: búsqueda, filtros, ordenación (score / TER / rentab. 1 año)
+- [ ] Catálogo: el sheet de filtros actualiza `Ver N fondos` antes de aplicar cambios
 - [ ] Ficha: score, gráfico, favorito, SORA
 - [ ] Comparar: 2 fondos, banner de homogeneidad, SORA contextual
 - [ ] Calculadora: 3 escenarios + modo fondo

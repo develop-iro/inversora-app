@@ -1,7 +1,10 @@
 import type { CatalogFund } from '@/core/domain/catalog';
 
 import { apiGet } from '@/core/api/client';
-import { shouldUseMockData } from '@/core/config/app-environment';
+import {
+  allowsMockFallback,
+  shouldUseMockData,
+} from '@/core/config/app-environment';
 import {
   mapCatalogFiltersToApiQuery,
   type FundListApiQuery,
@@ -20,9 +23,23 @@ import {
 } from '@/core/query/query-cache';
 import type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
 import { filterCatalogVisible } from '@/features/funds/utils/catalog-visibility';
+import { filterCatalogFunds } from '@/features/funds/utils/filter-catalog-funds';
 import { CATALOG_SUGGESTIONS_LIMIT } from '@/features/funds/utils/fund-search';
+import { formatRankingThemeLabel } from '@/features/onboarding/utils/build-ranking-theme-options';
 
 export type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
+
+export type CatalogMetricsCategory = {
+  id: string;
+  label: string;
+  fundCount: number;
+  topScore: number | null;
+};
+
+export type CatalogMetricsResponse = {
+  total: number;
+  categories: CatalogMetricsCategory[];
+};
 
 /** Clears cached catalog pages (e.g. on pull-to-refresh). */
 export function invalidateCatalogCache(): void {
@@ -33,11 +50,8 @@ function buildCatalogCacheKey(filters: FundCatalogFilters | undefined, page: num
   return `catalog:${JSON.stringify(filters ?? {})}:${page}`;
 }
 
-/** Default page size for catalog infinite scroll (`GET /funds`). */
-export const CATALOG_PAGE_SIZE = 20;
-
-/** Wider slice used only to build category filter cards in the catalog. */
-export const CATALOG_CATEGORY_INDEX_LIMIT = 100;
+/** Backend page size for catalog infinite scroll (`GET /funds`). */
+export const CATALOG_PAGE_SIZE = 100;
 
 /**
  * Fetches a single page from `GET /funds`.
@@ -68,7 +82,7 @@ function buildMockFundListPage(
   page: number,
   limit: number,
 ): FundListResponse {
-  const allFunds = applyClientOnlyCatalogFilters(CATALOG_FUNDS_MOCK, filters);
+  const allFunds = filterCatalogFunds(CATALOG_FUNDS_MOCK, filters ?? {});
   const start = (page - 1) * limit;
   const data = allFunds.slice(start, start + limit);
   const total = allFunds.length;
@@ -120,7 +134,50 @@ export function applyClientOnlyCatalogFilters(
 }
 
 function getMockCatalogFunds(filters?: FundCatalogFilters): CatalogFund[] {
-  return applyClientOnlyCatalogFilters(CATALOG_FUNDS_MOCK, filters);
+  return filterCatalogFunds(CATALOG_FUNDS_MOCK, filters ?? {});
+}
+
+function getMockCatalogMetrics(filters?: FundCatalogFilters): CatalogMetricsResponse {
+  const funds = getMockCatalogFunds(filters);
+  const groups = new Map<string, { label: string; funds: CatalogFund[] }>();
+
+  for (const fund of funds) {
+    const id = fund.investmentTheme ?? fund.categoryLabel.trim();
+
+    if (id.length === 0) {
+      continue;
+    }
+
+    const label =
+      fund.themeLabel.trim().length > 0
+        ? fund.themeLabel
+        : fund.investmentTheme !== null
+          ? formatRankingThemeLabel(fund.investmentTheme)
+          : formatRankingThemeLabel(fund.categoryLabel);
+    const existing = groups.get(id) ?? { label, funds: [] };
+    existing.funds.push(fund);
+    groups.set(id, existing);
+  }
+
+  return {
+    total: funds.length,
+    categories: [...groups.entries()]
+      .map(([id, group]) => ({
+        id,
+        label: group.label,
+        fundCount: group.funds.length,
+        topScore: Math.max(...group.funds.map((fund) => fund.inversoraScore)),
+      }))
+      .sort((left, right) => left.label.localeCompare(right.label, 'es')),
+  };
+}
+
+function isAbortError(error: unknown): boolean {
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    return true;
+  }
+
+  return error instanceof Error && error.name === 'AbortError';
 }
 
 /**
@@ -168,33 +225,67 @@ async function loadFundsPageFromApi(
       meta: response.meta,
     };
   } catch (error) {
+    if (allowsMockFallback() && !isAbortError(error)) {
+      return buildMockFundListPage(filters, page, CATALOG_PAGE_SIZE);
+    }
+
     throw toFundsFetchError(error);
   }
 }
 
+function mapCatalogMetricsFiltersToApiQuery(
+  filters?: FundCatalogFilters,
+): Record<string, string | number | boolean | undefined> {
+  const { minReturn1y: _minReturn1y, minReturn3y: _minReturn3y, ...baseQuery } =
+    mapCatalogFiltersToApiQuery(filters);
+  const riskProfile =
+    filters?.riskLevel === undefined || filters.riskLevel === 'all'
+      ? 'all'
+      : filters.riskLevel;
+
+  return {
+    ...baseQuery,
+    riskProfile,
+  };
+}
+
 /**
- * Loads a wider first page to derive category filter options without coupling
- * them to the paginated results list.
+ * Loads lightweight catalog totals and category metrics without fetching all funds.
  *
+ * @param filters - Optional catalog filters.
  * @param signal - Optional abort signal.
  */
-export async function getCatalogCategoryIndex(signal?: AbortSignal): Promise<CatalogFund[]> {
+export async function getCatalogMetrics(
+  filters?: FundCatalogFilters,
+  signal?: AbortSignal,
+): Promise<CatalogMetricsResponse> {
   if (shouldUseMockData()) {
-    return applyClientOnlyCatalogFilters(CATALOG_FUNDS_MOCK);
+    return getMockCatalogMetrics(filters);
   }
 
   try {
-    const apiQuery: FundListApiQuery = {
-      sortBy: 'score',
-      sortOrder: 'desc',
-      page: 1,
-      limit: CATALOG_CATEGORY_INDEX_LIMIT,
-    };
-    const response = await fetchFundListPage(apiQuery, signal);
-    return response.data;
+    return await apiGet<CatalogMetricsResponse>({
+      path: '/funds/catalog-metrics',
+      searchParams: mapCatalogMetricsFiltersToApiQuery(filters),
+      signal,
+    });
   } catch (error) {
+    if (allowsMockFallback() && !isAbortError(error)) {
+      return getMockCatalogMetrics(filters);
+    }
+
     throw toFundsFetchError(error);
   }
+}
+
+/** @deprecated Use getCatalogMetrics for counts and getFundsPage for list data. */
+export async function getCatalogCategoryIndex(signal?: AbortSignal): Promise<CatalogFund[]> {
+  return getCatalogBrowseIndex(signal);
+}
+
+/** @deprecated Use getCatalogMetrics for counts and getFundsPage for list data. */
+export async function getCatalogFundsIndex(signal?: AbortSignal): Promise<CatalogFund[]> {
+  return getCatalogBrowseIndex(signal);
 }
 
 /**
@@ -257,18 +348,7 @@ export async function searchCatalogFunds(
   }
 
   if (shouldUseMockData()) {
-    const normalized = trimmedQuery.toLowerCase();
-
-    return getMockCatalogFunds({ query: trimmedQuery })
-      .filter(
-        (fund) =>
-          fund.name.toLowerCase().includes(normalized) ||
-          fund.isin.toLowerCase().includes(normalized) ||
-          fund.categoryLabel.toLowerCase().includes(normalized) ||
-          fund.themeLabel.toLowerCase().includes(normalized) ||
-          fund.symbol.toLowerCase().includes(normalized),
-      )
-      .slice(0, limit);
+    return getMockCatalogFunds({ query: trimmedQuery }).slice(0, limit);
   }
 
   try {

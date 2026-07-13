@@ -10,6 +10,7 @@ Documentación técnica del repositorio Inversora.
 | [adr-003-component-naming.md](./adr-003-component-naming.md) | Nombres y carpetas del design system (`TabHeader`, `TextParagraph`, …) |
 | [mvp-feature-map.md](./mvp-feature-map.md) | Estado de implementación por feature y ruta |
 | [catalog-client-side-filtering.md](./catalog-client-side-filtering.md) | Filtros de catálogo en memoria (sin HTTP por toggle) |
+| [front-final-quality-audit.md](./front-final-quality-audit.md) | Auditoria final de calidad, rendimiento y riesgos del front |
 | [stack-decisions.md](./stack-decisions.md) | Stack adoptado vs alternativas del doc oficial |
 
 ## Estructura de código

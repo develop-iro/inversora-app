@@ -14,6 +14,225 @@ async function gotoRoute(page: Page, path: string) {
   await page.goto(path, { waitUntil: 'domcontentloaded' });
 }
 
+type MockApiFund = {
+  id: string;
+  symbol: string;
+  isin: string;
+  name: string;
+  issuer: string;
+  benchmark: string;
+  investmentTheme: string;
+  riskLevel: number;
+  score: number;
+  ter: number;
+  idealForBeginners: boolean;
+  oneYearReturn: number;
+  threeYearReturn: number;
+};
+
+function toApiFund(fund: MockApiFund) {
+  return {
+    id: fund.id,
+    symbol: fund.symbol,
+    isin: fund.isin,
+    name: fund.name,
+    issuer: fund.issuer,
+    logoUrl: null,
+    benchmark: fund.benchmark,
+    investmentTheme: fund.investmentTheme,
+    assetClass: 'equity',
+    domicile: 'IE',
+    metrics: {
+      ter: fund.ter,
+      aum: 1000000000,
+      volatility: null,
+      drawdown: null,
+      per: null,
+      dividendYield: null,
+      trackingError: null,
+    },
+    riskLevel: fund.riskLevel,
+    score: fund.score,
+    editorial: {
+      badge: 'Catalogo',
+      themeLabel: fund.benchmark,
+      idealForBeginners: fund.idealForBeginners,
+    },
+    catalogVisibility: 'visible',
+    returns: {
+      ytd: 2,
+      oneYear: fund.oneYearReturn,
+      threeYear: fund.threeYearReturn,
+      asOf: '2026-06-30',
+    },
+  };
+}
+
+async function mockFundsApi(page: Page) {
+  const funds: MockApiFund[] = [
+    {
+      id: 'fund-global-low',
+      symbol: 'LOW-A',
+      isin: 'IE0000000001',
+      name: 'Inversora Global Low Risk',
+      issuer: 'Inversora',
+      benchmark: 'MSCI World',
+      investmentTheme: 'global-equity',
+      riskLevel: 2,
+      score: 86,
+      ter: 0.12,
+      idealForBeginners: true,
+      oneYearReturn: 7.2,
+      threeYearReturn: 21.4,
+    },
+    {
+      id: 'fund-global-mid',
+      symbol: 'MID-A',
+      isin: 'IE0000000002',
+      name: 'Inversora Global Balanced',
+      issuer: 'Inversora',
+      benchmark: 'MSCI World',
+      investmentTheme: 'global-equity',
+      riskLevel: 4,
+      score: 81,
+      ter: 0.18,
+      idealForBeginners: true,
+      oneYearReturn: 8.4,
+      threeYearReturn: 23.1,
+    },
+    {
+      id: 'fund-usa-high',
+      symbol: 'USA-A',
+      isin: 'IE0000000003',
+      name: 'Inversora USA Equity',
+      issuer: 'Inversora',
+      benchmark: 'S&P 500',
+      investmentTheme: 'us-equity',
+      riskLevel: 6,
+      score: 89,
+      ter: 0.09,
+      idealForBeginners: false,
+      oneYearReturn: 11.2,
+      threeYearReturn: 30.5,
+    },
+  ];
+
+  await page.route('**/funds**', async (route) => {
+    const requestUrl = new URL(route.request().url());
+
+    if (requestUrl.port !== '3000') {
+      await route.continue();
+      return;
+    }
+
+    if (
+      requestUrl.pathname !== '/funds' &&
+      requestUrl.pathname !== '/funds/catalog-metrics'
+    ) {
+      await route.continue();
+      return;
+    }
+
+    const query = requestUrl.searchParams.get('q')?.trim().toLowerCase();
+    const investmentTheme = requestUrl.searchParams.get('investmentTheme');
+    const benchmark = requestUrl.searchParams.get('benchmark')?.trim().toLowerCase();
+    const maxTer = Number(requestUrl.searchParams.get('maxTer') ?? Number.POSITIVE_INFINITY);
+    const minScore = Number(requestUrl.searchParams.get('minScore') ?? 0);
+    const minReturn1y = Number(requestUrl.searchParams.get('minReturn1y') ?? Number.NEGATIVE_INFINITY);
+    const minReturn3y = Number(requestUrl.searchParams.get('minReturn3y') ?? Number.NEGATIVE_INFINITY);
+    const idealForBeginnersOnly = requestUrl.searchParams.get('idealForBeginnersOnly') === 'true';
+    const riskProfile = requestUrl.searchParams.get('riskProfile') ?? 'all';
+    const pageNumber = Number(requestUrl.searchParams.get('page') ?? 1);
+    const limit = Number(requestUrl.searchParams.get('limit') ?? 20);
+
+    const filtered = funds.filter((fund) => {
+      if (
+        query &&
+        !`${fund.symbol} ${fund.isin} ${fund.name} ${fund.benchmark}`.toLowerCase().includes(query)
+      ) {
+        return false;
+      }
+
+      if (investmentTheme && fund.investmentTheme !== investmentTheme) {
+        return false;
+      }
+
+      if (benchmark && !fund.benchmark.toLowerCase().includes(benchmark)) {
+        return false;
+      }
+
+      if (riskProfile === 'low' && fund.riskLevel > 2) {
+        return false;
+      }
+
+      if (riskProfile === 'medium' && (fund.riskLevel < 3 || fund.riskLevel > 5)) {
+        return false;
+      }
+
+      if (riskProfile === 'high' && fund.riskLevel < 6) {
+        return false;
+      }
+
+      return (
+        fund.ter <= maxTer &&
+        fund.score >= minScore &&
+        fund.oneYearReturn >= minReturn1y &&
+        fund.threeYearReturn >= minReturn3y &&
+        (!idealForBeginnersOnly || fund.idealForBeginners)
+      );
+    });
+
+    if (requestUrl.pathname === '/funds/catalog-metrics') {
+      const groups = new Map<string, MockApiFund[]>();
+
+      for (const fund of filtered) {
+        groups.set(fund.investmentTheme, [
+          ...(groups.get(fund.investmentTheme) ?? []),
+          fund,
+        ]);
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'access-control-allow-origin': '*',
+        },
+        body: JSON.stringify({
+          total: filtered.length,
+          categories: [...groups.entries()].map(([id, categoryFunds]) => ({
+            id,
+            label: categoryFunds[0]?.benchmark ?? id,
+            fundCount: categoryFunds.length,
+            topScore: Math.max(...categoryFunds.map((fund) => fund.score)),
+          })),
+        }),
+      });
+      return;
+    }
+
+    const start = (pageNumber - 1) * limit;
+    const data = filtered.slice(start, start + limit).map(toApiFund);
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: {
+        'access-control-allow-origin': '*',
+      },
+      body: JSON.stringify({
+        data,
+        meta: {
+          page: pageNumber,
+          limit,
+          total: filtered.length,
+          totalPages: filtered.length === 0 ? 0 : Math.ceil(filtered.length / limit),
+        },
+      }),
+    });
+  });
+}
+
 async function mockRankingsApi(page: Page) {
   const groups = [
     {
@@ -134,6 +353,7 @@ test.describe('Inversora web smoke', () => {
   test('completes the educational profiling questionnaire and opens suggested catalog filters', async ({
     page,
   }) => {
+    await mockFundsApi(page);
     await gotoRoute(page, '/learn');
 
     await page.getByRole('button', { name: /Empezar cuestionario/i }).click();
@@ -168,6 +388,7 @@ test.describe('Inversora web smoke', () => {
   });
 
   test('filters the fund catalog from the draft filter sheet', async ({ page }) => {
+    await mockFundsApi(page);
     await gotoRoute(page, '/funds');
 
     await expectPageToContain(page, 'Catalogo de fondos');
@@ -177,9 +398,10 @@ test.describe('Inversora web smoke', () => {
     await expectPageToContain(page, 'Filtros');
 
     await page.getByRole('tab', { name: /Riesgo Bajo/i }).click();
+    await expect(page.getByRole('button', { name: /Ver \d+ fondos?/i })).toBeVisible();
     await page.getByRole('tab', { name: /Score .*80/i }).click();
     await page.getByRole('button', { name: /Mostrar solo fondos recomendados para empezar/i }).click();
-    await page.getByRole('button', { name: /Ver fondos|Ver \d+ fondos/i }).click();
+    await page.getByRole('button', { name: /Ver fondos|Ver \d+ fondos?/i }).click();
 
     await expect(
       page.getByRole('button', { name: /Filtrar, 3 filtros activos/i }),

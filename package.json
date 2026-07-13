@@ -93,6 +93,8 @@
     "deploy:web:pro": "pnpm run generate:theme && pnpm run build:web:pro && pnpm dlx eas-cli deploy --alias inversora",
     "verify:prebuild": "node scripts/run-expo-env.mjs pro prebuild --no-install",
     "build:preview": "npx eas-cli build --profile preview",
+    "build:preview:android": "npx eas-cli build --platform android --profile preview",
+    "build:preview:ios": "npx eas-cli build --platform ios --profile preview",
     "build:development": "npx eas-cli build --profile development",
     "build:development:android": "npx eas-cli build --platform android --profile development",
     "build:development:ios": "npx eas-cli build --platform ios --profile development",

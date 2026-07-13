@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import type { CatalogCategoryOption } from '@/features/funds/utils/build-catalog-category-options';
@@ -9,6 +9,8 @@ import {
   type FundCatalogFiltersState,
 } from '@/features/funds/components/fund-catalog-filters';
 import { formatCatalogFiltersApplyLabel } from '@/features/funds/utils/catalog-filter-presentation';
+import { buildCatalogPreviewServiceFilters } from '@/features/funds/utils/filter-catalog-funds';
+import { useCatalogMetrics } from '@/features/funds/hooks/use-catalog-metrics';
 import { ScreenFooter } from '@/shared/components/layout';
 import { AppModalShell } from '@/shared/components/overlay';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
@@ -69,6 +71,12 @@ function FundCatalogFiltersSheetInner({
   onApply,
 }: FundCatalogFiltersSheetInnerProps) {
   const [draft, setDraft] = useState<FundCatalogFiltersState>(initialValue);
+  const draftServiceFilters = useMemo(
+    () => buildCatalogPreviewServiceFilters(draft),
+    [draft],
+  );
+  const { metrics: draftMetrics } = useCatalogMetrics(draftServiceFilters);
+  const previewResultCount = draftMetrics?.total ?? resultCount;
 
   const handleApply = useCallback(() => {
     onApply(draft);
@@ -87,6 +95,7 @@ function FundCatalogFiltersSheetInner({
     draft.riskLevel !== 'all' ||
     draft.maxTerPercent != null ||
     draft.minScore != null ||
+    draft.minReturnPercent != null ||
     draft.idealForBeginnersOnly;
 
   return (
@@ -121,7 +130,7 @@ function FundCatalogFiltersSheetInner({
       footer={
         <ScreenFooter>
           <Button
-            label={formatCatalogFiltersApplyLabel(resultCount)}
+            label={formatCatalogFiltersApplyLabel(previewResultCount)}
             onPress={handleApply}
             fullWidth
           />
