@@ -2,6 +2,7 @@ import { ScrollViewStyleReset } from 'expo-router/html';
 import type { PropsWithChildren } from 'react';
 
 import '@/global.css';
+import '@/web-focus.css';
 
 /**
  * Root HTML document for static web rendering.
