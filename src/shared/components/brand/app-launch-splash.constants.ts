@@ -2,7 +2,7 @@ import { palette } from '@/shared/theme/palette';
 
 /**
  * Solid brand background shared by the native Expo splash and the in-app launch overlay.
- * Keep in sync with `expo-splash-screen` `backgroundColor` in `app.json`.
+ * Keep in sync with `expo-splash-screen` `backgroundColor` in `app.config.mjs`.
  */
 export const LAUNCH_SPLASH_BACKGROUND = palette.deepOcean;
 
