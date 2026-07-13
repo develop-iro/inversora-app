@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
 
 import { TextLabel, TextParagraph } from '@/shared/components/text';
 import { useTheme } from '@/shared/hooks/use-theme';
+import { isWeb } from '@/shared/platform/capabilities';
 import { Layout, Typography } from '@/shared/theme/theme';
 import { cn } from '@/shared/utils/cn';
 
@@ -34,6 +35,12 @@ export function SoraChatComposer({
   const trimmed = value.trim();
   const canSend = trimmed.length > 0 && !isLoading;
 
+  const handleSubmit = () => {
+    if (canSend) {
+      onSubmit();
+    }
+  };
+
   return (
     <View
       className="gap-xs border-t border-border-subtle pt-sm"
@@ -60,6 +67,8 @@ export function SoraChatComposer({
           value={value}
           onChangeText={onChangeText}
           multiline
+          returnKeyType="send"
+          blurOnSubmit={false}
           className="min-h-[44px] max-h-[120px] py-0 text-text"
           // tailwind-exception: TextInput uses theme typography tokens for font metrics
           style={{
@@ -69,10 +78,25 @@ export function SoraChatComposer({
             color: theme.text,
           }}
           textAlignVertical="top"
-          onSubmitEditing={() => {
-            if (canSend) {
-              onSubmit();
+          onSubmitEditing={handleSubmit}
+          onKeyPress={(event) => {
+            if (!isWeb) {
+              return;
             }
+
+            if (event.nativeEvent.key !== 'Enter') {
+              return;
+            }
+
+            // Web: Enter sends, Shift+Enter adds newline
+             
+            const shiftKey = (event.nativeEvent as any).shiftKey === true;
+            if (shiftKey) {
+              return;
+            }
+
+            event.preventDefault();
+            handleSubmit();
           }}
         />
 
