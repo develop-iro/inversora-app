@@ -4,28 +4,28 @@ Estado: Aceptado
 
 ## Contexto
 
-El catalogo usa `GET /funds` paginado para los resultados definitivos, pero la UI de filtros necesita responder mientras el usuario edita un borrador dentro del sheet. Si el contador del boton depende de `meta.total`, muestra el total de los filtros ya aplicados, no el total que tendra el borrador actual.
+El catalogo usa `GET /funds` paginado para los resultados definitivos, pero la UI de filtros necesita responder mientras el usuario edita un borrador dentro del sheet. Descargar todos los fondos para calcular esos numeros rompe el modelo de scroll infinito y puede bloquear la carga inicial.
 
 ## Decision
 
-Los previews de filtros usan un indice en memoria cargado una vez:
+Los previews de filtros y categorias usan metricas ligeras del backend:
 
-- `getCatalogFundsIndex()` carga una slice amplia del catalogo.
-- `useCatalogFundsIndex()` comparte esa slice con categorias y previews.
-- `filterCatalogFunds()` y `countCatalogFunds()` aplican filtros puros sobre esa slice.
-- `FundCatalogFiltersSheet` calcula el label `Ver N fondos` desde el borrador local.
+- `GET /funds` sigue cargando cards paginadas para scroll infinito.
+- `GET /funds/catalog-metrics` devuelve `total` y categorias agregadas con `count/groupBy`.
+- `useCatalogMetrics()` alimenta el headline, categorias y el CTA `Ver N fondos`.
+- Los filtros de rentabilidad historica siguen usando fallback porque requieren enriquecimiento de retornos.
 
 La lista principal sigue usando `useCatalogFundsPagination()` y solo refresca al aplicar filtros, al buscar o al recargar.
 
 ## Reglas
 
-- No llamar `GET /funds` por cada toggle del sheet.
-- Mantener la logica de filtros de preview en `src/features/funds/utils/filter-catalog-funds.ts`.
-- Si el indice aun no cargo, mostrar el ultimo total aplicado como fallback.
-- Los filtros server-side y client-side deben evolucionar juntos: query, categoria/tema, TER, score, rentabilidad, principiante y riesgo.
+- No descargar todas las paginas del catalogo para pintar contadores.
+- No llamar `GET /funds` por cada toggle del sheet; usar `GET /funds/catalog-metrics`.
+- Si las metricas aun no cargaron, mostrar el ultimo total aplicado como fallback.
+- Los filtros server-side y frontend deben evolucionar juntos: query, categoria/tema, TER, score, principiante y riesgo.
 
 ## Riesgos
 
-- El indice se carga por paginas de 100 usando `meta.totalPages`, por lo que representa la totalidad del catalogo indexado que expone `GET /funds`.
-- El preview puede diferir del total real si la API aplica reglas nuevas que el filtro local no conoce.
-- Para escalar a miles reales, el backend deberia exponer un endpoint ligero de facets/counts o permitir descargar un indice compacto.
+- El preview de rentabilidad historica puede caer a fallback porque depende de retornos enriquecidos.
+- `catalog-metrics` debe mantenerse barato: solo agregaciones de Postgres, sin mapear cards ni cargar historicos.
+- Para miles reales, revisar indices DB sobre `catalogVisibility`, `investmentTheme`, `riskLevel`, `score`, `ter` y campos de busqueda.

@@ -31,18 +31,18 @@ import { FundCatalogGrid } from '@/features/funds/components/fund-catalog-grid';
 import { FundCatalogLoadMoreFooter } from '@/features/funds/components/fund-catalog-load-more-footer';
 import { FundCatalogSearchField } from '@/features/funds/components/fund-catalog-search-field';
 import { FundCatalogToolbar } from '@/features/funds/components/fund-catalog-toolbar';
-import { useCatalogFundsIndex } from '@/features/funds/hooks/use-catalog-category-index';
 import { useCatalogFundsPagination } from '@/features/funds/hooks/use-catalog-funds-pagination';
+import { useCatalogMetrics } from '@/features/funds/hooks/use-catalog-metrics';
 import { invalidateCatalogCache } from '@/features/funds/services/get-funds';
-import { buildCatalogCategoryOptions } from '@/features/funds/utils/build-catalog-category-options';
+import type { CatalogCategoryOption } from '@/features/funds/utils/build-catalog-category-options';
 import {
   buildCatalogActiveFilterChips,
   countActiveCatalogFilters,
   formatCatalogResultsHeadline,
 } from '@/features/funds/utils/catalog-filter-presentation';
-import { countCatalogFunds } from '@/features/funds/utils/filter-catalog-funds';
 import { CATALOG_SEARCH_DEBOUNCE_MS } from '@/features/funds/utils/fund-search';
 import { groupFundsByCategory } from '@/features/funds/utils/group-funds-by-category';
+import { resolveRankingThemeIcon } from '@/features/onboarding/utils/build-ranking-theme-options';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { TabScreenScroll } from '@/shared/components/layout';
 import { TextHeading, TextLabel, TextParagraph } from '@/shared/components/text';
@@ -53,6 +53,23 @@ import { Spacing } from '@/shared/theme/theme';
 import { cn } from '@/shared/utils/cn';
 
 const SCROLL_LOAD_MORE_THRESHOLD_PX = 320;
+
+function mapMetricsCategoriesToOptions(
+  categories: readonly {
+    id: string;
+    label: string;
+    fundCount: number;
+    topScore: number | null;
+  }[],
+): CatalogCategoryOption[] {
+  return categories.map((category) => ({
+    id: category.id,
+    label: category.label,
+    icon: resolveRankingThemeIcon(category.label),
+    fundCount: category.fundCount,
+    topScore: category.topScore ?? 0,
+  }));
+}
 
 function hasActiveSecondaryFilters(filters: FundCatalogFiltersState): boolean {
   return (
@@ -148,11 +165,12 @@ export default function FundsScreen() {
   const { funds, meta, status, error, hasMore, loadMore } =
     useCatalogFundsPagination(activeServiceFilters, reloadToken);
 
-  const { funds: catalogFundsIndex } = useCatalogFundsIndex();
+  const { metrics: catalogMetrics } = useCatalogMetrics(activeServiceFilters);
+  const { metrics: baseCatalogMetrics } = useCatalogMetrics();
 
   const categoryOptions = useMemo(
-    () => buildCatalogCategoryOptions(catalogFundsIndex),
-    [catalogFundsIndex],
+    () => mapMetricsCategoriesToOptions(baseCatalogMetrics?.categories ?? []),
+    [baseCatalogMetrics],
   );
 
   const categoryLabelById = useMemo(
@@ -170,14 +188,7 @@ export default function FundsScreen() {
     filters.categoryLabel === 'all'
       ? undefined
       : categoryLabelById.get(filters.categoryLabel) ?? filters.categoryLabel;
-  const appliedPreviewResultCount = useMemo(() => {
-    if (catalogFundsIndex.length === 0) {
-      return null;
-    }
-
-    return countCatalogFunds(catalogFundsIndex, activeServiceFilters);
-  }, [activeServiceFilters, catalogFundsIndex]);
-  const resolvedResultCount = appliedPreviewResultCount ?? meta?.total ?? null;
+  const resolvedResultCount = catalogMetrics?.total ?? meta?.total ?? null;
   const loadedTotalCount = resolvedResultCount ?? meta?.total ?? null;
 
   const resultsHeadline = formatCatalogResultsHeadline(resolvedResultCount, funds.length, {
@@ -185,9 +196,9 @@ export default function FundsScreen() {
     query: debouncedQuery,
   });
 
-  const totalCatalogFundCount = useMemo(() => {
-    return categoryOptions.reduce((sum, category) => sum + category.fundCount, 0);
-  }, [categoryOptions]);
+  const totalCatalogFundCount =
+    baseCatalogMetrics?.total ??
+    categoryOptions.reduce((sum, category) => sum + category.fundCount, 0);
 
   const groupedFunds = useMemo(() => groupFundsByCategory(funds), [funds]);
   const showGrouped = shouldGroupByCategory(filters, debouncedQuery);
@@ -416,7 +427,6 @@ export default function FundsScreen() {
         sessionKey={filtersSheetSession}
         value={filters}
         categories={categoryOptions}
-        catalogFundsIndex={catalogFundsIndex}
         totalFundCount={totalCatalogFundCount}
         resultCount={resolvedResultCount}
         onClose={() => setIsFiltersVisible(false)}

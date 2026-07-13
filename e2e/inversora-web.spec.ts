@@ -120,7 +120,15 @@ async function mockFundsApi(page: Page) {
   await page.route('**/funds**', async (route) => {
     const requestUrl = new URL(route.request().url());
 
-    if (requestUrl.port !== '3000' || requestUrl.pathname !== '/funds') {
+    if (requestUrl.port !== '3000') {
+      await route.continue();
+      return;
+    }
+
+    if (
+      requestUrl.pathname !== '/funds' &&
+      requestUrl.pathname !== '/funds/catalog-metrics'
+    ) {
       await route.continue();
       return;
     }
@@ -133,6 +141,7 @@ async function mockFundsApi(page: Page) {
     const minReturn1y = Number(requestUrl.searchParams.get('minReturn1y') ?? Number.NEGATIVE_INFINITY);
     const minReturn3y = Number(requestUrl.searchParams.get('minReturn3y') ?? Number.NEGATIVE_INFINITY);
     const idealForBeginnersOnly = requestUrl.searchParams.get('idealForBeginnersOnly') === 'true';
+    const riskProfile = requestUrl.searchParams.get('riskProfile') ?? 'all';
     const pageNumber = Number(requestUrl.searchParams.get('page') ?? 1);
     const limit = Number(requestUrl.searchParams.get('limit') ?? 20);
 
@@ -152,6 +161,18 @@ async function mockFundsApi(page: Page) {
         return false;
       }
 
+      if (riskProfile === 'low' && fund.riskLevel > 2) {
+        return false;
+      }
+
+      if (riskProfile === 'medium' && (fund.riskLevel < 3 || fund.riskLevel > 5)) {
+        return false;
+      }
+
+      if (riskProfile === 'high' && fund.riskLevel < 6) {
+        return false;
+      }
+
       return (
         fund.ter <= maxTer &&
         fund.score >= minScore &&
@@ -160,6 +181,36 @@ async function mockFundsApi(page: Page) {
         (!idealForBeginnersOnly || fund.idealForBeginners)
       );
     });
+
+    if (requestUrl.pathname === '/funds/catalog-metrics') {
+      const groups = new Map<string, MockApiFund[]>();
+
+      for (const fund of filtered) {
+        groups.set(fund.investmentTheme, [
+          ...(groups.get(fund.investmentTheme) ?? []),
+          fund,
+        ]);
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'access-control-allow-origin': '*',
+        },
+        body: JSON.stringify({
+          total: filtered.length,
+          categories: [...groups.entries()].map(([id, categoryFunds]) => ({
+            id,
+            label: categoryFunds[0]?.benchmark ?? id,
+            fundCount: categoryFunds.length,
+            topScore: Math.max(...categoryFunds.map((fund) => fund.score)),
+          })),
+        }),
+      });
+      return;
+    }
+
     const start = (pageNumber - 1) * limit;
     const data = filtered.slice(start, start + limit).map(toApiFund);
 

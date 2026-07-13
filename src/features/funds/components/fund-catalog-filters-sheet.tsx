@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
-import type { CatalogFund } from '@/core/domain/catalog';
 import type { CatalogCategoryOption } from '@/features/funds/utils/build-catalog-category-options';
 import { FundCatalogCategoryFilterChips } from '@/features/funds/components/fund-catalog-category-filters';
 import {
@@ -10,10 +9,8 @@ import {
   type FundCatalogFiltersState,
 } from '@/features/funds/components/fund-catalog-filters';
 import { formatCatalogFiltersApplyLabel } from '@/features/funds/utils/catalog-filter-presentation';
-import {
-  buildCatalogPreviewServiceFilters,
-  countCatalogFunds,
-} from '@/features/funds/utils/filter-catalog-funds';
+import { buildCatalogPreviewServiceFilters } from '@/features/funds/utils/filter-catalog-funds';
+import { useCatalogMetrics } from '@/features/funds/hooks/use-catalog-metrics';
 import { ScreenFooter } from '@/shared/components/layout';
 import { AppModalShell } from '@/shared/components/overlay';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
@@ -24,7 +21,6 @@ export type FundCatalogFiltersSheetProps = {
   sessionKey: number;
   value: FundCatalogFiltersState;
   categories: readonly CatalogCategoryOption[];
-  catalogFundsIndex: readonly CatalogFund[];
   totalFundCount: number;
   resultCount: number | null;
   onClose: () => void;
@@ -39,7 +35,6 @@ export function FundCatalogFiltersSheet({
   sessionKey,
   value,
   categories,
-  catalogFundsIndex,
   totalFundCount,
   resultCount,
   onClose,
@@ -50,7 +45,6 @@ export function FundCatalogFiltersSheet({
       key={sessionKey}
       initialValue={value}
       categories={categories}
-      catalogFundsIndex={catalogFundsIndex}
       totalFundCount={totalFundCount}
       resultCount={resultCount}
       onClose={onClose}
@@ -62,7 +56,6 @@ export function FundCatalogFiltersSheet({
 type FundCatalogFiltersSheetInnerProps = {
   initialValue: FundCatalogFiltersState;
   categories: readonly CatalogCategoryOption[];
-  catalogFundsIndex: readonly CatalogFund[];
   totalFundCount: number;
   resultCount: number | null;
   onClose: () => void;
@@ -72,20 +65,18 @@ type FundCatalogFiltersSheetInnerProps = {
 function FundCatalogFiltersSheetInner({
   initialValue,
   categories,
-  catalogFundsIndex,
   totalFundCount,
   resultCount,
   onClose,
   onApply,
 }: FundCatalogFiltersSheetInnerProps) {
   const [draft, setDraft] = useState<FundCatalogFiltersState>(initialValue);
-  const previewResultCount = useMemo(() => {
-    if (catalogFundsIndex.length === 0) {
-      return resultCount;
-    }
-
-    return countCatalogFunds(catalogFundsIndex, buildCatalogPreviewServiceFilters(draft));
-  }, [catalogFundsIndex, draft, resultCount]);
+  const draftServiceFilters = useMemo(
+    () => buildCatalogPreviewServiceFilters(draft),
+    [draft],
+  );
+  const { metrics: draftMetrics } = useCatalogMetrics(draftServiceFilters);
+  const previewResultCount = draftMetrics?.total ?? resultCount;
 
   const handleApply = useCallback(() => {
     onApply(draft);
