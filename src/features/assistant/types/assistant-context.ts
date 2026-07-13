@@ -7,7 +7,14 @@ export type AssistantSurface =
   | 'compare';
 
 /** Assistant response source layer. */
-export type AssistantResponseSource = 'glossary' | 'cache' | 'openai' | 'mock';
+export type AssistantResponseSource =
+  | 'glossary'
+  | 'cache'
+  | 'openai'
+  | 'openai-fallback'
+  | 'template'
+  | 'qwen'
+  | 'mock';
 
 /** Shared fund reference sent to the assistant API. */
 export type AssistantFundRef = {
