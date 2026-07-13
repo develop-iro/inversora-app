@@ -1,8 +1,8 @@
 # Inversora
 
-Inversora is an Expo / React Native app that helps beginner investors understand and compare index funds through an educational, visual, AI-assisted experience.
+Inversora is an Expo / React Native app that helps beginner investors understand and compare indexed investment products through an educational, visual, AI-assisted experience.
 
-The MVP does not execute investments and does not replace a financial advisor. Its goal is to help beginner users understand the basics, compare index funds with better context, and read clear explanations about rankings, fees, risk, and historical performance.
+The MVP does not execute investments and does not replace a financial advisor. Its goal is to help beginner users understand the basics, compare indexed products with better context, and read clear explanations about rankings, fees, risk, and historical performance.
 
 **Project documentation:** see [docs/README.md](./docs/README.md) for product rules, user stories index, scoring spec, and architecture map.
 
@@ -16,16 +16,16 @@ The experience should guide users before showing complex tables or rankings. Inv
 
 Included:
 
-- Initial index-fund dashboard.
+- Initial indexed-product dashboard.
 - "I want to learn" educational mode.
 - Basic educational profiling without registration.
-- Index-fund catalog.
+- Indexed-product catalog.
 - Category rankings based on objective criteria.
 - Summary fund detail screen.
 - Inversora Assistant explanations.
 - Search by name, ISIN, or category.
 - Basic filters for fee, risk, category, and historical performance.
-- Basic fund comparison (up to two funds).
+- Basic product comparison (up to two funds or ETFs).
 - Compound-interest calculator with educational scenarios.
 - Local favorites stored on the device/browser.
 - Visible legal notices and risk messages.
@@ -37,7 +37,7 @@ Excluded from the MVP:
 - Direct broker connections.
 - Real portfolio custody or management.
 - Legally valid personalized financial recommendations.
-- ETFs, stocks, crypto, pension plans, and actively managed funds.
+- Stocks, crypto, pension plans, actively managed funds, broker flows, and any product outside the validated indexed-product catalog.
 - Advanced administration panel.
 
 ## Current Stack
@@ -50,6 +50,7 @@ Excluded from the MVP:
 - Planned client state: Zustand.
 - Planned validation: Zod.
 - **Backend oficial:** [inversora-api](https://github.com/) (NestJS + PostgreSQL + Prisma). Ver `inversora-api/docs/README.md`.
+- **Datos financieros:** Financial Modeling Prep (FMP) se consume solo desde backend; la app nunca llama a proveedores externos directamente.
 - **IA explicativa:** servicio de asistente en backend; nunca API key en el cliente.
 
 Before changing Expo-related code, read the versioned documentation:

@@ -17,7 +17,7 @@ Para problema, perfiles, alcance y principios, ver también:
 
 Inversora ofrece una plataforma educativa y visual que ayuda a usuarios principiantes a comprender los fundamentos de la inversión en productos de inversión antes de enfrentarse a rankings, comparativas o métricas técnicas.
 
-Su propuesta de valor se basa en transformar información financiera compleja en una experiencia clara, guiada y accesible. En lugar de presentar directamente una lista de fondos, Inversora acompaña al usuario en un **proceso progresivo** donde primero aprende conceptos básicos, identifica su perfil general y luego explora fondos indexados con mayor criterio.
+Su propuesta de valor se basa en transformar información financiera compleja en una experiencia clara, guiada y accesible. En lugar de presentar directamente una lista de productos, Inversora acompaña al usuario en un **proceso progresivo** donde primero aprende conceptos básicos, identifica su perfil general y luego explora productos indexados con mayor criterio.
 
 El valor diferencial de Inversora no está únicamente en ordenar fondos, sino en explicar por qué ciertos criterios son importantes y cómo deben interpretarse de forma responsable.
 
@@ -81,7 +81,7 @@ Inversora no se limita a mostrar datos: añade capa educativa (glosario, desglos
 
 Inversora **no** ejecuta inversiones, **no** custodia capital y **no** crea carteras personalizadas con validez de asesoramiento financiero.
 
-Su propuesta es **anterior** a ese momento: aprender, orientarse y comparar fondos indexados de forma responsable.
+Su propuesta es **anterior** a ese momento: aprender, orientarse y comparar productos indexados de forma responsable.
 
 Ver [mvp-scope.md](./mvp-scope.md) §3.2 (exclusiones).
 
@@ -89,6 +89,6 @@ Ver [mvp-scope.md](./mvp-scope.md) §3.2 (exclusiones).
 
 ## 6.5 Frase de valor resumida
 
-> Inversora ayuda a las personas a entender la inversión en fondos indexados antes de comparar opciones, combinando educación financiera, visualización clara y asistencia inteligente.
+> Inversora ayuda a las personas a entender la inversión indexada antes de comparar opciones, combinando educación financiera, visualización clara y asistencia inteligente.
 
 Copy alineado en app: hero «Entiende antes de comparar», banner web `HomeLearnInvitationBanner`, principio rector en [vision-and-principles.md](./vision-and-principles.md).

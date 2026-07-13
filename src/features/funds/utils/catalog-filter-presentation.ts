@@ -124,7 +124,14 @@ export function formatCatalogResultsHeadline(
 /**
  * Formats the primary CTA label inside the filters sheet.
  */
-export function formatCatalogFiltersApplyLabel(totalCount: number | null): string {
+export function formatCatalogFiltersApplyLabel(
+  totalCount: number | null,
+  options?: { returnFilterActive?: boolean },
+): string {
+  if (options?.returnFilterActive && totalCount == null) {
+    return 'Aplica para ver resultados';
+  }
+
   if (totalCount == null) {
     return 'Ver fondos';
   }

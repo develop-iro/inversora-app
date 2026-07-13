@@ -26,14 +26,19 @@ export function FundReturnChip({
   className,
   style,
 }: FundReturnChipProps) {
-  const displayValue = value === null ? '—' : formatReturnPercent(value);
+  const displayValue =
+    value === null ? 'Sin hist.' : formatReturnPercent(value);
   const colorToken = value === null ? 'textSecondary' : resolveReturnColorToken(value);
+  const nullHint =
+    value === null
+      ? 'Rentabilidad histórica no disponible todavía. Los datos se actualizan con la sincronización diaria.'
+      : accessibilityHint;
   const isSurface = variant === 'surface';
 
   return (
     <View
       accessibilityRole="text"
-      accessibilityLabel={`${label}: ${displayValue}. ${accessibilityHint}`}
+      accessibilityLabel={`${label}: ${displayValue}. ${nullHint}`}
       className={cn(
         'min-w-[52px] items-end gap-half',
         isSurface &&
