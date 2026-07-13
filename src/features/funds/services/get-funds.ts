@@ -40,8 +40,8 @@ function buildCatalogCacheKey(filters: FundCatalogFilters | undefined, page: num
 /** Default page size for catalog infinite scroll (`GET /funds`). */
 export const CATALOG_PAGE_SIZE = 20;
 
-/** Wider in-memory slice used for category cards and filter preview counts. */
-export const CATALOG_FUNDS_INDEX_LIMIT = 1000;
+/** Maximum backend page size for catalog index reads. */
+export const CATALOG_FUNDS_INDEX_PAGE_SIZE = 100;
 
 /**
  * Fetches a single page from `GET /funds`.
@@ -188,18 +188,47 @@ async function loadFundsPageFromApi(
   }
 }
 
-/**
- * Loads a wider first page to derive category filter options without coupling
- * them to the paginated results list.
- *
- * @param signal - Optional abort signal.
- */
+async function fetchCatalogFundsIndexFromApi(signal?: AbortSignal): Promise<CatalogFund[]> {
+  const firstPage = await fetchFundListPage(
+    {
+      sortBy: 'score',
+      sortOrder: 'desc',
+      page: 1,
+      limit: CATALOG_FUNDS_INDEX_PAGE_SIZE,
+    },
+    signal,
+  );
+
+  if (firstPage.meta.totalPages <= 1) {
+    return firstPage.data;
+  }
+
+  const remainingFunds: CatalogFund[] = [];
+
+  for (let page = 2; page <= firstPage.meta.totalPages; page += 1) {
+    const response = await fetchFundListPage(
+      {
+        sortBy: 'score',
+        sortOrder: 'desc',
+        page,
+        limit: CATALOG_FUNDS_INDEX_PAGE_SIZE,
+      },
+      signal,
+    );
+
+    remainingFunds.push(...response.data);
+  }
+
+  return [...firstPage.data, ...remainingFunds];
+}
+
+/** Loads the complete category index without coupling it to the visible page. */
 export async function getCatalogCategoryIndex(signal?: AbortSignal): Promise<CatalogFund[]> {
   return getCatalogFundsIndex(signal);
 }
 
 /**
- * Loads the in-memory catalog slice used by draft previews and category cards.
+ * Loads the complete in-memory catalog index used by draft previews and category cards.
  *
  * @param signal - Optional abort signal.
  */
@@ -209,14 +238,7 @@ export async function getCatalogFundsIndex(signal?: AbortSignal): Promise<Catalo
   }
 
   try {
-    const apiQuery: FundListApiQuery = {
-      sortBy: 'score',
-      sortOrder: 'desc',
-      page: 1,
-      limit: CATALOG_FUNDS_INDEX_LIMIT,
-    };
-    const response = await fetchFundListPage(apiQuery, signal);
-    return response.data;
+    return await fetchCatalogFundsIndexFromApi(signal);
   } catch (error) {
     if (allowsMockFallback() && !isAbortError(error)) {
       return filterCatalogFunds(CATALOG_FUNDS_MOCK, {});

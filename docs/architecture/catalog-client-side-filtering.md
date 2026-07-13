@@ -26,6 +26,6 @@ La lista principal sigue usando `useCatalogFundsPagination()` y solo refresca al
 
 ## Riesgos
 
-- El indice es una slice, no necesariamente el 100% del universo si el backend supera `CATALOG_FUNDS_INDEX_LIMIT`.
+- El indice se carga por paginas de 100 usando `meta.totalPages`, por lo que representa la totalidad del catalogo indexado que expone `GET /funds`.
 - El preview puede diferir del total real si la API aplica reglas nuevas que el filtro local no conoce.
 - Para escalar a miles reales, el backend deberia exponer un endpoint ligero de facets/counts o permitir descargar un indice compacto.
