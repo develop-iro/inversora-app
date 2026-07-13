@@ -34,9 +34,12 @@ You are an expert in TypeScript, React Native, Expo, and Mobile App Development.
   
   UI and Styling:
 
-- Use consistent styling, either through `StyleSheet.create()` or Styled Components.
-- Ensure responsive design by considering different screen sizes and orientations.
-- Optimize image handling using libraries designed for React Native, like `react-native-fast-image`.
+- Default to NativeWind `className` with semantic tokens (`bg-surface`, `text-text-secondary`, `gap-md`).
+- Follow `.cursor/rules/nativewind-styling.mdc` for the hybrid model, whitelist, and token pipeline.
+- Use `StyleSheet` only for whitelist components (tab bar, Reanimated, charts, measured layout).
+- Use `useTheme()` for icon/chart/`TextInput` colors where `className` does not apply.
+- MVP is light theme only; do not add system dark mode.
+- Ensure responsive layout across phone sizes and web (`useMobileLayout` where needed).
   
   Best Practices:
 

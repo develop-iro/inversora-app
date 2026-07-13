@@ -25,6 +25,8 @@ Cuando NativeWind no basta, documentar con `// tailwind-exception: <motivo>`.
 |------------|------|---------|
 | `button.tsx` | B, F | `Animated.View` scale; `ActivityIndicator` color |
 | `content-empty-state.tsx` | B, F | Animaciones orbit/float; icon color |
+| `reload-state.tsx` | D | Columna centrada con ancho fijo |
+| `status-icon.tsx` | D, F | Viewport SVG; color de icono |
 | `screen-shell.tsx` | E | Safe-area bottom inset |
 | `nav-tab-bar.tsx` | B, F | StyleSheet para layout/iconos/labels animados; `className` solo en el shell de la barra |
 | `search-field.tsx` | F | `TextInput` cursor/selection colors |
@@ -33,6 +35,8 @@ Cuando NativeWind no basta, documentar con `// tailwind-exception: <motivo>`.
 | `calculator-breakdown-donut.tsx` | D | Segmentos SVG del donut |
 | `tab-pill.tsx` | B | StyleSheet en labels animados; `className` solo en track/thumb shell |
 | `home-hero-slide-card.tsx` | D | Altura fija del strip de ilustración |
+| `home-starter-card.tsx` | D | Alturas fijas del panel portrait |
+| `home-starter-illustration.tsx` | B, D | SVG animado y geometría del podio |
 | `legal-notice.tsx` | F | Icon `color` prop |
 
 ## Reglas para nuevas excepciones

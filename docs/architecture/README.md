@@ -12,6 +12,8 @@ Documentación técnica del repositorio Inversora.
 | [catalog-client-side-filtering.md](./catalog-client-side-filtering.md) | Filtros de catálogo en memoria (sin HTTP por toggle) |
 | [front-final-quality-audit.md](./front-final-quality-audit.md) | Auditoria final de calidad, rendimiento y riesgos del front |
 | [stack-decisions.md](./stack-decisions.md) | Stack adoptado vs alternativas del doc oficial |
+| [tailwind-stylesheet-whitelist.md](./tailwind-stylesheet-whitelist.md) | Cuándo usar `className` vs `StyleSheet` (lista blanca) |
+| [styling-exceptions.md](./styling-exceptions.md) | Tipos de excepción y componentes documentados |
 
 ## Estructura de código
 

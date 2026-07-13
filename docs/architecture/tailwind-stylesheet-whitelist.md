@@ -22,6 +22,8 @@ Fuente de verdad en código: `src/shared/nativewind/stylesheet-whitelist.ts`.
 | `tab-pill.tsx` | Solo track exterior | Thumb Reanimated + labels crossfade medidos |
 | `button.tsx` | Variantes estáticas del `Pressable` | Scale animado en press |
 | `content-empty-state.tsx` | Layout estático del card | Órbita/flotación animada |
+| `reload-state.tsx` | Layout estático | Columna de acción con ancho fijo |
+| `status-icon.tsx` | Wrapper estático | Viewport SVG de iconos de estado |
 | `skeleton-bone.tsx` | Caja del hueso | Shimmer Reanimated |
 | `carousel-shell.tsx` | Wrapper/padding | Ancho de viewport y paging |
 | `carousel-dots.tsx` | Fila de dots | Ancho/escala/color animados |
@@ -32,6 +34,8 @@ Fuente de verdad en código: `src/shared/nativewind/stylesheet-whitelist.ts`.
 | `calculator-breakdown-donut.tsx` | Leyenda / contenedor | Segmentos SVG y swatches dinámicos |
 | `fund-performance-chart.tsx` | Leyenda/ejes | Barras con altura dinámica |
 | `card-fund.tsx` | Card estática | Scale en press/hover |
+| `home-starter-card.tsx` | Shell del panel | Alturas fijas ilustración + título |
+| `home-starter-illustration.tsx` | Contenedor | SVG animado y barras del podio |
 
 ## Cómo añadir una excepción
 
