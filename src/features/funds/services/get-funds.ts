@@ -50,8 +50,8 @@ function buildCatalogCacheKey(filters: FundCatalogFilters | undefined, page: num
   return `catalog:${JSON.stringify(filters ?? {})}:${page}`;
 }
 
-/** Default page size for catalog infinite scroll (`GET /funds`). */
-export const CATALOG_PAGE_SIZE = 20;
+/** Backend page size for catalog infinite scroll (`GET /funds`). */
+export const CATALOG_PAGE_SIZE = 100;
 
 /**
  * Fetches a single page from `GET /funds`.

@@ -76,8 +76,8 @@ export function FundCatalogLoadMoreFooter({
     <View className={cn('items-center gap-xs py-lg', className)}>
       <TextParagraph variant="secondary" themeColor="textSecondary">
         {totalCount != null
-          ? `${loadedCount} de ${totalCount} fondos cargados`
-          : `${loadedCount} fondos cargados`}
+          ? `${loadedCount} de ${totalCount} fondos mostrados`
+          : `${loadedCount} fondos mostrados`}
       </TextParagraph>
       <TextParagraph variant="secondary" themeColor="textSecondary">
         Sigue desplazando para ver mas fondos.
