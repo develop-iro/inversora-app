@@ -10,7 +10,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isAssistantSource(value: unknown): value is AssistantExplainResponse['source'] {
-  return value === 'glossary' || value === 'cache' || value === 'openai';
+  return (
+    value === 'glossary' ||
+    value === 'cache' ||
+    value === 'openai' ||
+    value === 'openai-fallback' ||
+    value === 'template' ||
+    value === 'qwen'
+  );
 }
 
 function parseAssistantResponseBase(
