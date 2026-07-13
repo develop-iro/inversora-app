@@ -25,7 +25,7 @@ Para alcance detallado, historias de usuario y código, ver también:
 
 ### 1. Facilitar la comparación mediante rankings organizados por categorías
 
-**Objetivo:** que el usuario compare fondos indexados con criterios homogéneos, agrupados por categoría o benchmark comparable.
+**Objetivo:** que el usuario compare productos indexados con criterios homogéneos, agrupados por categoría o benchmark comparable.
 
 | Aspecto | Estado | Implementación |
 |---------|--------|----------------|
@@ -162,13 +162,13 @@ Para alcance detallado, historias de usuario y código, ver también:
 
 ### Propósito de validación
 
-El MVP debe validar si una plataforma de **ranking y explicación de fondos indexados** ayuda a usuarios con poca experiencia financiera a **comprender mejor sus opciones de inversión**, sin sustituir el criterio personal ni el asesoramiento profesional.
+El MVP debe validar si una plataforma de **ranking y explicación de productos indexados** ayuda a usuarios con poca experiencia financiera a **comprender mejor sus opciones de inversión**, sin sustituir el criterio personal ni el asesoramiento profesional.
 
 ### Requisitos mínimos del MVP
 
 | Requisito | Estado | Ruta / módulo | Notas |
 |-----------|--------|---------------|-------|
-| Dashboard principal de fondos indexados | ✅ | `/`, `features/onboarding/` | Destacados, ranking, búsqueda, SORA |
+| Dashboard principal de productos indexados | ✅ | `/`, `features/onboarding/` | Destacados, ranking, búsqueda, SORA |
 | Categorías básicas de fondos | ✅ | `/funds` | Agrupación y filtros por categoría |
 | Ranking por categoría | ✅ | Home + `GET /rankings` + UI `/rankings` (HU-14); API agrupa por benchmark |
 | Perfilado básico del usuario | ✅ | `/learn` | Local, sin registro |

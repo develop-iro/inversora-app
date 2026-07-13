@@ -77,6 +77,7 @@ function FundCatalogFiltersSheetInner({
   );
   const { metrics: draftMetrics } = useCatalogMetrics(draftServiceFilters);
   const previewResultCount = draftMetrics?.total ?? resultCount;
+  const returnFilterActive = draft.minReturnPercent != null;
 
   const handleApply = useCallback(() => {
     onApply(draft);
@@ -130,7 +131,9 @@ function FundCatalogFiltersSheetInner({
       footer={
         <ScreenFooter>
           <Button
-            label={formatCatalogFiltersApplyLabel(previewResultCount)}
+            label={formatCatalogFiltersApplyLabel(previewResultCount, {
+              returnFilterActive,
+            })}
             onPress={handleApply}
             fullWidth
           />

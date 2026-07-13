@@ -16,7 +16,7 @@ Para alcance, objetivos y principios, ver también:
 
 ## Público objetivo principal
 
-El público objetivo principal de Inversora está formado por personas interesadas en empezar a invertir en vehículos de inversión como fondos o ETFs, pero que no cuentan con conocimientos financieros suficientes para interpretar con facilidad la información técnica disponible en bancos, brokers o gestoras.
+El público objetivo principal de Inversora está formado por personas interesadas en empezar a invertir en vehículos indexados como fondos o ETFs, pero que no cuentan con conocimientos financieros suficientes para interpretar con facilidad la información técnica disponible en bancos, brokers o gestoras.
 
 La plataforma busca reducir la barrera de entrada a la inversión, ofreciendo una experiencia guiada, visual y comprensible. Aunque el foco principal del MVP será el usuario principiante, también se contemplan perfiles con mayor conocimiento que deseen comparar fondos de forma rápida y objetiva.
 
@@ -78,7 +78,7 @@ Este usuario ya conoce algunos conceptos básicos de inversión y puede haber in
 ### Características
 
 - Entiende conceptos como comisión, rentabilidad y riesgo.
-- Puede conocer plataformas como MyInvestor, Indexa Capital, Finizens o bancos tradicionales.
+- Puede conocer plataformas de inversión digital, roboadvisors o bancos tradicionales, pero no necesariamente entiende sus métricas.
 - Busca comparar fondos antes de tomar una decisión.
 - Valora los filtros y métricas objetivas.
 - Puede querer validar si un fondo es competitivo frente a otros similares.

@@ -25,7 +25,9 @@
 ## Jerarquía de fuentes de verdad
 
 ```text
-Documento oficial (negocio, HUs, RN)     ← fuera del repo; prevalece ante cualquier doc
+Memoria Final Inversora (entrega TFM)    ← fuente de verdad de entrega/as-built
+        ↓
+Documento oficial de proyecto            ← negocio, HUs y RN base
         ↓
 docs/product/*                           ← reglas de producto resumidas (§2, §3, §4, §5…)
         ↓
@@ -38,7 +40,7 @@ docs/architecture/*                      ← decisiones técnicas y mapa de cód
 src/                                     ← implementación cliente
 ```
 
-Ante conflicto entre repos o docs internas, **prevalece el documento oficial**. Luego `docs/product/*` en este repositorio para reglas de producto, y `inversora-api` para contratos y datos de servidor.
+Ante conflicto entre repos o docs internas, **prevalece la Memoria Final Inversora como fuente de verdad de entrega**. Luego se usa el documento oficial de proyecto para negocio, HUs y reglas RN base; `docs/product/*` resume producto, e `inversora-api` concreta contratos y datos de servidor.
 
 ## Relación con inversora-api
 
@@ -62,7 +64,7 @@ El backend canónico es **[inversora-api](https://github.com/)** (NestJS + Postg
 Definiciones que **no deberían cambiar** sin revisar el doc oficial o un ADR:
 
 - Principio *educar primero, comparar después*.
-- Alcance MVP (solo fondos indexados; sin broker ni asesoramiento personalizado).
+- Alcance MVP (productos indexados validados; sin broker ni asesoramiento personalizado).
 - Modelo de scoring objetivo y papel del asistente.
 - Índice de historias de usuario para cerrar issues y sprints.
 
@@ -82,4 +84,5 @@ Definiciones que **no deberían cambiar** sin revisar el doc oficial o un ADR:
 ## Referencias externas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)
-- Documento oficial: *Documentación de Proyecto: Inversora* (v1.0) — mantener copia local acordada por el equipo.
+- Memoria Final Inversora — fuente de verdad de entrega/as-built.
+- Documento oficial: *Documentación de Proyecto: Inversora* (v1.0) — base de negocio y requisitos.

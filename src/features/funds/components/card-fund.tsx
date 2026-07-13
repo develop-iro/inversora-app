@@ -240,6 +240,11 @@ function CardFundContent({
               value={fund.returns.oneYear}
               className="w-full self-stretch"
             />
+            {fund.returns.asOf ? (
+              <TextLabel variant="meta" themeColor="textSecondary" className="text-right">
+                Datos al {fund.returns.asOf}
+              </TextLabel>
+            ) : null}
           </View>
         </View>
 

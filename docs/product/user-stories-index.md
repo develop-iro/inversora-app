@@ -30,7 +30,7 @@ Estado detallado por módulo: [mvp-feature-map.md](../architecture/mvp-feature-m
 
 | ID | Historia (resumen) | Prioridad | Estado |
 |----|-------------------|-----------|--------|
-| HU-04 | Catálogo de fondos indexados | Alta | ✅ |
+| HU-04 | Catálogo de productos indexados | Alta | ✅ |
 | HU-05 | Búsqueda por nombre o ISIN | Alta | ✅ |
 | HU-06 | Búsqueda predictiva / sugerencias | Media | 🟡 |
 | HU-07 | Filtros básicos | Alta | ✅ |

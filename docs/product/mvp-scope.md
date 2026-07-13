@@ -23,7 +23,7 @@ Leyenda de cumplimiento (§3.1):
 | Onboarding inicial sin necesidad de registro | ✅ | Dashboard `/` accesible sin login; en **nativo** gate a `/learn?mode=initial` en primera visita |
 | Identificación básica del nivel de conocimiento financiero | ✅ | Cuestionario `/learn` (`knowledgeLevel`); obligatorio en app, invitado en web |
 | Perfilado básico (horizonte, riesgo, objetivo) | ✅ | `build-educational-profile.ts`, persistencia local; onboarding = cuestionario de perfilado |
-| Dashboard principal de fondos indexados | ✅ | `home-screen.tsx`, destacados, ranking, búsqueda |
+| Dashboard principal de productos indexados | ✅ | `home-screen.tsx`, destacados, ranking, búsqueda |
 | Clasificación de fondos por categorías | ✅ | Catálogo con secciones y filtro por categoría |
 | Ranking según criterios objetivos | ✅ | `/rankings` + `/rankings/[benchmarkKey]`, grupos RN-02, home alineado |
 | Ficha individual resumida de cada fondo | ✅ | `/funds/[isin]` |
@@ -51,7 +51,7 @@ La app **no expone** ninguna de las funcionalidades excluidas del documento ofic
 | Conexión con brokers | ✅ Excluido | |
 | Gestión real de carteras | ✅ Excluido | Favoritos ≠ cartera |
 | Recomendaciones financieras con validez legal | ✅ Excluido | Solo copy educativo |
-| Acciones, cripto, gestión activa, planes de pensiones | ✅ Excluido | Catálogo limitado a fondos indexados |
+| Acciones, cripto, gestión activa, planes de pensiones | ✅ Excluido | Catálogo limitado a productos indexados validados |
 | Optimización fiscal personalizada | ✅ Excluido | |
 | Panel de administración (producto usuario) | ✅ Excluido | No hay panel en la app |
 | Gestión interna avanzada de fuentes de datos | ✅ Excluido en app | Existe tooling interno en `inversora-api` (`admin/`, CLI sync), no visible al usuario |
@@ -65,7 +65,7 @@ La app **no expone** ninguna de las funcionalidades excluidas del documento ofic
 
 | Supuesto | Estado | Evidencia |
 |----------|--------|-----------|
-| Datos de fuentes externas o datasets tratados | ✅ | FMP vía `inversora-api`; mock en dev/CI |
+| Datos de fuentes externas o datasets tratados | ✅ | FMP vía `inversora-api`; mock en dev/CI; la app no llama a FMP directamente |
 | Ranking calculado por motor determinista, no por IA | ✅ | Scoring `rn-04` en API; SORA solo explica |
 | Asistente solo como capa explicativa y educativa | ✅ | Guardrails HU-40 en API y cliente; SORA no altera scores |
 | Usuario no opera desde la plataforma | ✅ | Sin broker ni órdenes |
@@ -85,7 +85,7 @@ La app **no expone** ninguna de las funcionalidades excluidas del documento ofic
 | Dashboard inicial | Hero, fondos destacados del trimestre, teaser de ranking, búsqueda, avisos |
 | Modo “Quiero aprender” | Flujo educativo y perfilado sin registro; gate obligatorio en app nativa, invitación en web |
 | Perfil educativo | Orientativo, local/anónimo, no vinculado a cuenta |
-| Catálogo | Fondos indexados visibles, categorías, estados de calidad de datos |
+| Catálogo | Productos indexados visibles, categorías, estados de calidad de datos |
 | Búsqueda y filtros | Nombre, ISIN, categoría; filtros básicos (comisión, riesgo, benchmark, etc.) |
 | Rankings | Por categoría / benchmark comparable, Score Inversora |
 | Ficha de fondo | Resumen con métricas, score, desglose y advertencias |
@@ -101,7 +101,7 @@ La app **no expone** ninguna de las funcionalidades excluidas del documento ofic
 - Órdenes de compra/venta y conexión con brokers.
 - Custodia o gestión de cartera real.
 - Recomendaciones financieras personalizadas con validez legal.
-- ETFs, acciones, cripto, planes de pensiones y fondos de gestión activa (fuera del catálogo MVP).
+- Acciones, cripto, planes de pensiones, fondos de gestión activa y cualquier vehículo fuera del catálogo indexado validado.
 - Panel de administración avanzado (“Clínica de Datos” y similares → fase posterior).
 
 ## Rutas planificadas
