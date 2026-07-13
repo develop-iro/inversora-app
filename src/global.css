@@ -5,16 +5,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Web focus styles: replace the default yellow outline with themed focus ring. */
-:where(a, button, input, textarea, select, [role='button'], [role='tab']):focus {
-  outline: none;
-}
-
-:where(a, button, input, textarea, select, [role='button'], [role='tab']):focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
 :root {
   /* Brand palette */
   --color-black: #000000;
