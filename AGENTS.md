@@ -121,7 +121,7 @@ Target routes:
 - `pnpm run quality` is an alias for `pnpm run test:ci` (typecheck, lint with zero warnings, unit tests, script tests, Expo config).
 - Pre-commit runs ESLint with `--fix` on staged files via lint-staged.
 - Commit-msg runs commitlint ([Conventional Commits](https://www.conventionalcommits.org/)) via Husky after `pnpm install`.
-- CI also runs `build:web:ci`, `verify:prebuild`, and EAS preview Android when `EXPO_TOKEN` is set in GitHub Actions secrets.
+- CI also runs `build:web:ci` and `verify:prebuild`. EAS preview Android builds run via `.eas/workflows/preview-android.yml` on push to `main`.
 - Keep `src/app` thin. Add screens and feature logic under `src/features/*`, and place reusable UI/theme/helpers under `src/shared/*` or `src/core/*`.
 - Do not introduce broker flows, account management, real portfolio actions, or personalized financial advice into the MVP.
 - If a change touches Expo, React Native, routing, or native config, consult the exact Expo SDK 57 docs first instead of relying on older assumptions.

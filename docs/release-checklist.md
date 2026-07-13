@@ -42,11 +42,10 @@ Use this checklist before tagging a preview or production mobile build.
 - [ ] `pnpm run build:web:ci` (Metro Android bundle export) and `pnpm run verify:prebuild` pass locally before release
 - [ ] `npm run test` passes in `inversora-api`
 - [ ] Manual CORS check for Expo web if applicable
-- [ ] GitHub Actions secret `EXPO_TOKEN` configured for EAS preview builds in CI
 
 ## EAS build
 
-- [ ] CI job **EAS preview Android** passes on the release branch (or run manually)
+- [ ] EAS workflow **Preview build (Android)** passes on `main` (`.eas/workflows/preview-android.yml`), or run `pnpm run build:preview:android` manually
 - [ ] `eas build --profile preview` (QA) succeeds
 - [ ] Install preview APK/IPA on physical device and repeat smoke test
 - [ ] Privacy policy URL live and reachable: `https://inversora--inversora.expo.app/privacidad.html` (deploy with `pnpm run deploy:web:pro`; override via `EXPO_PUBLIC_PRIVACY_POLICY_URL` if using a custom domain)
