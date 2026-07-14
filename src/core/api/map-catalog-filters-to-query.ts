@@ -15,6 +15,7 @@ export type FundListApiQuery = {
   minReturn1y?: number;
   minReturn3y?: number;
   idealForBeginnersOnly?: boolean;
+  riskProfile?: 'all' | 'low' | 'medium' | 'high';
 };
 
 const CATEGORY_LABEL_PREFIX = 'Índice ';
@@ -42,8 +43,8 @@ export function extractBenchmarkFromCategoryLabel(categoryLabel: string): string
 /**
  * Maps catalog UI filters to `GET /funds` query parameters.
  *
- * Risk level is applied client-side because the API accepts a single numeric
- * risk value, not the app's low/medium/high ranges.
+ * Risk profiles map to `riskProfile` so SQL applies the same ranges as
+ * `GET /funds/catalog-metrics` and the app risk labels.
  *
  * @param filters - Optional catalog filters from the funds screen.
  */
@@ -89,6 +90,10 @@ export function mapCatalogFiltersToApiQuery(
 
   if (filters.idealForBeginnersOnly) {
     query.idealForBeginnersOnly = true;
+  }
+
+  if (filters.riskLevel !== undefined && filters.riskLevel !== 'all') {
+    query.riskProfile = filters.riskLevel;
   }
 
   if (filters.minReturnPercent != null) {
