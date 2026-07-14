@@ -15,7 +15,21 @@ jobs:
 
   deploy_web_pro:
     name: Deploy web to EAS Hosting
-    type: deploy
     environment: production
-    params:
-      alias: inversora
+    steps:
+      - uses: eas/checkout
+      - uses: eas/use_npm_token
+      - uses: eas/install_node_modules
+      - name: Generate theme
+        run: pnpm run generate:theme
+      - name: Export web bundle (pro)
+        run: pnpm run build:web:pro
+      - id: deploy
+        name: Deploy
+        run: |
+          DEPLOY_JSON_OUTPUT=$(npx -y eas-cli@latest-eas-build deploy --non-interactive --json --environment production --alias inversora) || DEPLOY_EXIT_CODE=$?
+          if [ ! -z "$DEPLOY_EXIT_CODE" ] && [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+            echo "$DEPLOY_JSON_OUTPUT"
+            exit $DEPLOY_EXIT_CODE
+          fi
+          set-output deploy_json "$DEPLOY_JSON_OUTPUT"
