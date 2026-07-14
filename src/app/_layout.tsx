@@ -1,3 +1,5 @@
+import 'react-native-gesture-handler';
+
 import '@/global.css';
 import '@/shared/nativewind/css-interop';
 

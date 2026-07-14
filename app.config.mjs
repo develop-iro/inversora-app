@@ -7,7 +7,14 @@ import { loadEnv, resolveProfile } from './scripts/load-env.mjs';
 loadEnv({ profile: resolveProfile() });
 
 const appEnv = process.env.EXPO_PUBLIC_APP_ENV?.trim() ?? 'local';
-const includeDevClient = appEnv !== 'pro';
+const easBuildProfile = process.env.EAS_BUILD_PROFILE?.trim();
+
+/**
+ * expo-dev-client must only be linked in EAS development profiles.
+ * Preview/production IPAs bundle JS and crash when the dev launcher is embedded.
+ */
+const includeDevClient =
+  easBuildProfile === 'development' || easBuildProfile === 'development-simulator';
 
 const plugins = [
   ...(includeDevClient ? ['expo-dev-client'] : []),
