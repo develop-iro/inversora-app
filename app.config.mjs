@@ -16,9 +16,17 @@ const easBuildProfile = process.env.EAS_BUILD_PROFILE?.trim();
 const includeDevClient =
   easBuildProfile === 'development' || easBuildProfile === 'development-simulator';
 
+/**
+ * Sentry native hooks into AppDelegate even when JS init is skipped.
+ * Link it only for production EAS builds where a DSN is configured.
+ */
+const includeSentry =
+  easBuildProfile === 'production' &&
+  (process.env.EXPO_PUBLIC_SENTRY_DSN?.trim()?.length ?? 0) > 0;
+
 const plugins = [
   ...(includeDevClient ? ['expo-dev-client'] : []),
-  '@sentry/react-native',
+  ...(includeSentry ? ['@sentry/react-native'] : []),
   'expo-router',
   [
     'expo-splash-screen',
