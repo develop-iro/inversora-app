@@ -56,4 +56,12 @@ const plugins = [
 export default ({ config }) => ({
   ...config,
   plugins,
+  ...(includeDevClient
+    ? {}
+    : {
+        autolinking: {
+          ...config.autolinking,
+          exclude: [...new Set([...(config.autolinking?.exclude ?? []), 'expo-dev-client'])],
+        },
+      }),
 });
