@@ -31,13 +31,21 @@ describe('mapCatalogFiltersToApiQuery', () => {
     );
   });
 
-  it('maps return threshold filter for three-year period', () => {
+  it('maps risk profile to API query params', () => {
     assert.deepEqual(
       mapCatalogFiltersToApiQuery({
-        minReturnPercent: 10,
-        returnPeriod: '3y',
-      }).minReturn3y,
-      10,
+        riskLevel: 'medium',
+      }).riskProfile,
+      'medium',
+    );
+  });
+
+  it('omits risk profile when set to all', () => {
+    assert.equal(
+      mapCatalogFiltersToApiQuery({
+        riskLevel: 'all',
+      }).riskProfile,
+      undefined,
     );
   });
 });

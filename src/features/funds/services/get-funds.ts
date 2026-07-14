@@ -112,7 +112,7 @@ function isReturnBasedCatalogSort(filters?: FundCatalogFilters): boolean {
 }
 
 /**
- * Applies filters that the API cannot express (risk ranges).
+ * Applies post-fetch catalog shaping that the API does not perform.
  *
  * @param funds - Funds returned by the API.
  * @param filters - Active catalog filters.
@@ -121,16 +121,11 @@ export function applyClientOnlyCatalogFilters(
   funds: CatalogFund[],
   filters?: FundCatalogFilters,
 ): CatalogFund[] {
-  const filtered =
-    !filters?.riskLevel || filters.riskLevel === 'all'
-      ? funds
-      : funds.filter((fund) => fund.riskLevel === filters.riskLevel);
-
   if (isReturnBasedCatalogSort(filters) || filters?.minReturnPercent != null) {
-    return [...filtered];
+    return [...funds];
   }
 
-  return [...filtered].sort((left, right) => right.inversoraScore - left.inversoraScore);
+  return [...funds].sort((left, right) => right.inversoraScore - left.inversoraScore);
 }
 
 function getMockCatalogFunds(filters?: FundCatalogFilters): CatalogFund[] {
@@ -238,15 +233,8 @@ function mapCatalogMetricsFiltersToApiQuery(
 ): Record<string, string | number | boolean | undefined> {
   const { minReturn1y: _minReturn1y, minReturn3y: _minReturn3y, ...baseQuery } =
     mapCatalogFiltersToApiQuery(filters);
-  const riskProfile =
-    filters?.riskLevel === undefined || filters.riskLevel === 'all'
-      ? 'all'
-      : filters.riskLevel;
 
-  return {
-    ...baseQuery,
-    riskProfile,
-  };
+  return baseQuery;
 }
 
 /**
