@@ -94,6 +94,8 @@
     "build:preview": "npx eas-cli build --profile preview",
     "build:preview:android": "npx eas-cli build --platform android --profile preview",
     "build:preview:ios": "npx eas-cli build --platform ios --profile preview",
+    "build:production:ios": "npx eas-cli build --platform ios --profile production-internal",
+    "build:production:android": "npx eas-cli build --platform android --profile production-internal",
     "build:development": "npx eas-cli build --profile development",
     "build:development:android": "npx eas-cli build --platform android --profile development",
     "build:development:ios": "npx eas-cli build --platform ios --profile development",
