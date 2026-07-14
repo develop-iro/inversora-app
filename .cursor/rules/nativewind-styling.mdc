@@ -1,0 +1,65 @@
+---
+description: NativeWind v4 hybrid styling — className by default, StyleSheet whitelist, token pipeline
+alwaysApply: true
+---
+
+# NativeWind / Tailwind (Inversora)
+
+Expo SDK 57 app with **NativeWind v4** hybrid styling. Default to `className`; use `StyleSheet` only on precision-native surfaces.
+
+## Default workflow
+
+1. Style static layout with semantic Tailwind classes: `bg-surface`, `text-text-secondary`, `gap-md`, `rounded-card`, `shadow-card`, `p-md`.
+2. Compose with `cn()` from `@/shared/utils/cn`.
+3. Map variants through `src/shared/nativewind/theme-classes.ts` (`typographyClassNames`, `themeColorClassNames`, button/card variants).
+4. Use `useTheme()` from `@/shared/hooks/use-theme` for third-party APIs (`MaterialCommunityIcons` `color`, `TextInput`, charts, SVG).
+
+## Do not
+
+- Do not default to `StyleSheet.create` for new visual UI (conflicts with the hybrid model).
+- Do not use arbitrary hex in components (`bg-[#fff]`); use semantic tokens.
+- Do not use `dark:` or system color scheme — MVP is light only (`userInterfaceStyle: light`).
+- Do not put `className` on `Animated.Text` or Reanimated-driven text (ellipsis/alignment break on native).
+- Do not add `StyleSheet` outside the whitelist without updating docs + `stylesheet-whitelist.ts`.
+
+## StyleSheet whitelist
+
+Precision components keep layout/animation in `StyleSheet` or inline `style`:
+
+- Canonical list: `src/shared/nativewind/stylesheet-whitelist.ts`
+- Human doc: `docs/architecture/tailwind-stylesheet-whitelist.md`
+- Exceptions catalog: `docs/architecture/styling-exceptions.md`
+
+When using non-obvious `style`/`StyleSheet`, add `// tailwind-exception: <reason>`.
+
+Register new whitelist entries in the same PR (code + docs).
+
+## Token pipeline (single source of truth)
+
+| Change | Run |
+|--------|-----|
+| Palette/spacing JSON or semantic colors | `pnpm run generate:theme` |
+| Output files | `src/global.css`, `tailwind.config.js` (generated — do not hand-edit) |
+
+Primitives: `src/shared/theme/palette.primitives.json`, `spacing.primitives.json`.  
+Runtime theme: `src/shared/theme/colors.ts`, `tokens.ts`.
+
+## Build wiring
+
+| File | Role |
+|------|------|
+| `babel.config.js` | `nativewind/babel` + `jsxImportSource: 'nativewind'` |
+| `metro.config.js` | `withNativeWind({ input: './src/global.css' })` + React dedupe for pnpm |
+| `nativewind-env.d.ts` | `/// <reference types="nativewind/types" />` |
+| `src/app/_layout.tsx` | `import '@/global.css'` + `import '@/shared/nativewind/css-interop'` |
+| `src/app/+html.tsx` | `import '@/global.css'` for web SSR |
+| `src/shared/nativewind/css-interop.ts` | `cssInterop` for `Image`, `LinearGradient` |
+
+## Reuse before creating UI
+
+Follow `.cursor/rules/ux-system-reuse.mdc` — prefer `@/shared/components/ui/*` with `className` tokens.
+
+## References
+
+- `docs/architecture/stack-decisions.md` (styling row)
+- `AGENTS.md` § Styling

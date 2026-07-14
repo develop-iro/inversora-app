@@ -121,7 +121,7 @@ Target routes:
 - `pnpm run quality` is an alias for `pnpm run test:ci` (typecheck, lint with zero warnings, unit tests, script tests, Expo config).
 - Pre-commit runs ESLint with `--fix` on staged files via lint-staged.
 - Commit-msg runs commitlint ([Conventional Commits](https://www.conventionalcommits.org/)) via Husky after `pnpm install`.
-- CI also runs `build:web:ci`, `verify:prebuild`, and EAS preview Android when `EXPO_TOKEN` is set in GitHub Actions secrets.
+- CI also runs `build:web:ci` and `verify:prebuild`. On push to `main`, EAS Workflow `.eas/workflows/main-deployments.yml` builds Android preview and deploys web (`alias: inversora`). iOS preview remains manual (`pnpm run build:preview:ios`).
 - Keep `src/app` thin. Add screens and feature logic under `src/features/*`, and place reusable UI/theme/helpers under `src/shared/*` or `src/core/*`.
 - Do not introduce broker flows, account management, real portfolio actions, or personalized financial advice into the MVP.
 - If a change touches Expo, React Native, routing, or native config, consult the exact Expo SDK 57 docs first instead of relying on older assumptions.
@@ -133,6 +133,7 @@ Target routes:
 - **Whitelist:** precision components use `StyleSheet` — see `docs/architecture/tailwind-stylesheet-whitelist.md` and `src/shared/nativewind/stylesheet-whitelist.ts`.
 - Compose classes with `cn()` from `@/shared/utils/cn`.
 - Variant maps live in `src/shared/nativewind/theme-classes.ts`.
+- Cursor rule: `.cursor/rules/nativewind-styling.mdc` (always applied).
 - Do not add `StyleSheet.create` outside the whitelist without documenting it.
 - `useTheme()` for third-party APIs (icon colors, `TextInput`, charts).
 - MVP uses light theme only (`userInterfaceStyle: light`).

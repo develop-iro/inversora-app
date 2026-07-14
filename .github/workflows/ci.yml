@@ -160,58 +160,7 @@ jobs:
       - run: cp .env.example .env
       - run: pnpm run verify:prebuild
 
-  # ── Phase 3: EAS preview (Android) ───────────────────────────────────────
-
-  eas-preview:
-    name: EAS preview Android
-    needs: [bundle-export, native-prebuild, unit-tests, script-tests]
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    outputs:
-      result_label: ${{ steps.eas-result.outputs.label }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: cp .env.example .env
-      - run: pnpm run generate:theme
-      - name: Check EXPO_TOKEN
-        id: eas-token
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          if [ -z "$EXPO_TOKEN" ]; then
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::EXPO_TOKEN is not configured — skipping EAS preview build"
-          else
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Trigger EAS preview build
-        id: eas-build
-        if: steps.eas-token.outputs.configured == 'true'
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          pnpm dlx eas-cli@latest build \
-            --platform android \
-            --profile preview \
-            --non-interactive \
-            --wait
-      - name: Set EAS job result label
-        id: eas-result
-        if: always()
-        run: |
-          if [ "${{ steps.eas-token.outputs.configured }}" = "true" ]; then
-            echo "label=${{ steps.eas-build.outcome }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "label=skipped (no EXPO_TOKEN)" >> "$GITHUB_OUTPUT"
-          fi
-
-  # ── Phase 4: Report ──────────────────────────────────────────────────────
+  # ── Phase 3: Report ──────────────────────────────────────────────────────
 
   report:
     name: CI report
@@ -225,7 +174,6 @@ jobs:
       - e2e-web
       - bundle-export
       - native-prebuild
-      - eas-preview
     if: always() && !cancelled()
     runs-on: ubuntu-latest
     steps:
@@ -240,7 +188,6 @@ jobs:
           E2E_WEB_RESULT: ${{ needs.e2e-web.result }}
           BUNDLE_EXPORT_RESULT: ${{ needs.bundle-export.result }}
           PREBUILD_RESULT: ${{ needs.native-prebuild.result }}
-          EAS_RESULT: ${{ needs.eas-preview.outputs.result_label }}
         run: |
           {
             echo "## CI report"
@@ -256,7 +203,6 @@ jobs:
             echo "| E2E web | ${E2E_WEB_RESULT} |"
             echo "| Metro bundle export | ${BUNDLE_EXPORT_RESULT} |"
             echo "| Native prebuild | ${PREBUILD_RESULT} |"
-            echo "| EAS preview Android | ${EAS_RESULT} |"
             echo ""
           } >> "${GITHUB_STEP_SUMMARY}"
 
@@ -270,6 +216,5 @@ jobs:
           needs.expo-config.result != 'success' ||
           needs.e2e-web.result != 'success' ||
           needs.bundle-export.result != 'success' ||
-          needs.native-prebuild.result != 'success' ||
-          needs.eas-preview.result != 'success'
+          needs.native-prebuild.result != 'success'
         run: exit 1

@@ -1,0 +1,21 @@
+name: Main deployments (Android preview + web)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_android_preview:
+    name: Build Android preview
+    type: build
+    params:
+      platform: android
+      profile: preview
+
+  deploy_web_pro:
+    name: Deploy web to EAS Hosting
+    type: deploy
+    environment: production
+    params:
+      alias: inversora

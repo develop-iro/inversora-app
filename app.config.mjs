@@ -16,6 +16,11 @@ const plugins = [
   [
     'expo-splash-screen',
     {
+      // Android 12+ requires a drawable logo resource during prebuild even when the
+      // in-app launch overlay owns the branded wordmark animation.
+      image: './assets/images/splash-icon.png',
+      imageWidth: 1,
+      resizeMode: 'contain',
       backgroundColor: '#0B2E36',
       ios: {
         backgroundColor: '#0B2E36',

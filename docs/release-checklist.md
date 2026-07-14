@@ -42,12 +42,12 @@ Use this checklist before tagging a preview or production mobile build.
 - [ ] `pnpm run build:web:ci` (Metro Android bundle export) and `pnpm run verify:prebuild` pass locally before release
 - [ ] `npm run test` passes in `inversora-api`
 - [ ] Manual CORS check for Expo web if applicable
-- [ ] GitHub Actions secret `EXPO_TOKEN` configured for EAS preview builds in CI
 
-## EAS build
+## EAS workflows (push to `main`)
 
-- [ ] CI job **EAS preview Android** passes on the release branch (or run manually)
-- [ ] `eas build --profile preview` (QA) succeeds
+- [ ] Workflow **Main deployments** passes (`.eas/workflows/main-deployments.yml`): Android preview build + web deploy to `https://inversora--inversora.expo.app`
+- [ ] Or run manually: `pnpm run build:preview:android`, `pnpm run deploy:web:pro`
+- [ ] iOS preview: `pnpm run build:preview:ios` (manual — not automated on `main`)
 - [ ] Install preview APK/IPA on physical device and repeat smoke test
-- [ ] Privacy policy URL live and reachable: `https://inversora--inversora.expo.app/privacidad.html` (deploy with `pnpm run deploy:web:pro`; override via `EXPO_PUBLIC_PRIVACY_POLICY_URL` if using a custom domain)
+- [ ] Privacy policy URL live after web deploy: `https://inversora--inversora.expo.app/privacidad.html` (automated on `main`; manual fallback: `pnpm run deploy:web:pro`)
 - [ ] **Production only:** set `SENTRY_AUTH_TOKEN` (and org/project in app config) in EAS secrets so source maps upload; preview/dev builds skip upload via `SENTRY_DISABLE_AUTO_UPLOAD`
