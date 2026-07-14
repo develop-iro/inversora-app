@@ -7,7 +7,19 @@ import {
   loadEnv,
   normalizeProfile,
   resetLoadEnvForTests,
+  resolveProfileFromEasBuildProfile,
 } from './load-env.mjs';
+
+describe('resolveProfileFromEasBuildProfile', () => {
+  it('maps EAS build profiles to committed env profiles', () => {
+    assert.equal(resolveProfileFromEasBuildProfile('production-internal'), 'pro');
+    assert.equal(resolveProfileFromEasBuildProfile('production'), 'pro');
+    assert.equal(resolveProfileFromEasBuildProfile('preview'), 'pro');
+    assert.equal(resolveProfileFromEasBuildProfile('development'), 'local');
+    assert.equal(resolveProfileFromEasBuildProfile('development-simulator'), 'local');
+    assert.equal(resolveProfileFromEasBuildProfile(undefined), undefined);
+  });
+});
 
 describe('normalizeProfile', () => {
   it('accepts canonical mobile profiles', () => {

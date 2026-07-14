@@ -39,10 +39,49 @@ export function normalizeProfile(raw) {
   return 'local';
 }
 
+/** Maps EAS build profiles to committed env profiles when explicit env is absent. */
+const EAS_BUILD_PROFILE_TO_ENV = {
+  'production-internal': 'pro',
+  production: 'pro',
+  preview: 'pro',
+  development: 'local',
+  'development-simulator': 'local',
+};
+
+/**
+ * Resolves the env profile from `EAS_BUILD_PROFILE` when present.
+ *
+ * @param {string | undefined} rawProfile
+ * @returns {'local' | 'qa' | 'pro' | undefined}
+ */
+export function resolveProfileFromEasBuildProfile(rawProfile) {
+  const normalized = typeof rawProfile === 'string' ? rawProfile.trim().toLowerCase() : '';
+
+  if (normalized.length === 0) {
+    return undefined;
+  }
+
+  const mapped = EAS_BUILD_PROFILE_TO_ENV[normalized];
+
+  if (mapped === undefined) {
+    return undefined;
+  }
+
+  return normalizeProfile(mapped);
+}
+
 /**
  * @returns {'local' | 'qa' | 'pro'}
  */
 export function resolveProfile() {
+  const fromEasBuildProfile = resolveProfileFromEasBuildProfile(
+    process.env.EAS_BUILD_PROFILE,
+  );
+
+  if (fromEasBuildProfile !== undefined) {
+    return fromEasBuildProfile;
+  }
+
   const selector =
     process.env.INVERSORA_ENV ??
     process.env.EXPO_PUBLIC_APP_ENV ??
