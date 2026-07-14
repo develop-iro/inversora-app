@@ -45,6 +45,19 @@
         "EXPO_PUBLIC_SSL_PINNING_ENABLED": "true",
         "NODE_ENV": "production"
       }
+    },
+    "production-internal": {
+      "extends": "production",
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "pro",
+        "EXPO_PUBLIC_API_URL": "https://inversora-api-production.up.railway.app",
+        "EXPO_PUBLIC_NEWS_API_ENABLED": "true",
+        "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://inversora--inversora.expo.app/privacidad.html",
+        "EXPO_PUBLIC_SSL_PINNING_ENABLED": "true",
+        "NODE_ENV": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
     }
   },
   "submit": {
