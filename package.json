@@ -16,7 +16,6 @@
     "expo-build-properties": "~57.0.3",
     "expo-clipboard": "~57.0.0",
     "expo-constants": "~57.0.3",
-    "expo-dev-client": "~57.0.5",
     "expo-file-system": "~57.0.0",
     "expo-font": "^57.0.0",
     "expo-linear-gradient": "~57.0.0",
@@ -43,6 +42,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "expo-dev-client": "~57.0.5",
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
     "@playwright/test": "^1.61.1",
