@@ -106,6 +106,16 @@ export const STYLESHEET_WHITELIST = [
     reason: 'Animated SVG overlays and podium bar geometry',
     tailwindAllowed: 'static-wrapper-only',
   },
+  {
+    path: 'features/learn/components/learn-welcome-intro.tsx',
+    reason: 'Fixed illustration height + Reanimated entrance scale/opacity',
+    tailwindAllowed: 'shell-only',
+  },
+  {
+    path: 'features/learn/components/learn-welcome-typewriter-text.tsx',
+    reason: 'Typography tokens for typewriter line + Reanimated caret blink',
+    tailwindAllowed: 'static-wrapper-only',
+  },
 ] as const satisfies readonly StylesheetWhitelistEntry[];
 
 /** Returns true when a source path is on the StyleSheet whitelist. */

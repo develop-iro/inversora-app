@@ -78,6 +78,7 @@ export default function LearnQuestionnaireScreen() {
   const [completedProfile, setCompletedProfile] = useState<EducationalProfile | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
+  const [isWelcomeRevealComplete, setIsWelcomeRevealComplete] = useState(false);
 
   const currentStep = LEARN_QUESTIONNAIRE_STEPS[stepIndex];
   const isWelcomeStep = phase === 'questionnaire' && isLearnWelcomeStep(stepIndex);
@@ -90,12 +91,16 @@ export default function LearnQuestionnaireScreen() {
       return false;
     }
 
+    if (isWelcomeStep && !isWelcomeRevealComplete) {
+      return false;
+    }
+
     if (currentStep.kind === 'info') {
       return true;
     }
 
     return Boolean(selectedOptionId);
-  }, [currentStep, selectedOptionId]);
+  }, [currentStep, isWelcomeRevealComplete, isWelcomeStep, selectedOptionId]);
 
   useEffect(() => {
     if (phase !== 'questionnaire' || !currentStep) {
@@ -344,6 +349,10 @@ export default function LearnQuestionnaireScreen() {
   const showQuestionnaireHeader =
     (phase !== 'questionnaire' || !isWelcomeStep || isInitialMode) && !showInitialWelcomeHeader;
 
+  const handleWelcomeRevealComplete = useCallback(() => {
+    setIsWelcomeRevealComplete(true);
+  }, []);
+
   const header = showInitialWelcomeHeader ? (
     <HeaderBar
       layout="screen"
@@ -356,6 +365,7 @@ export default function LearnQuestionnaireScreen() {
             void handleSkipInitialProfile();
           }}
           loading={isSkipping}
+          className="rounded-pill border border-border-subtle bg-surface-muted px-md"
         />
       }
     />
@@ -369,7 +379,13 @@ export default function LearnQuestionnaireScreen() {
   const bodyContent = (() => {
     if (phase === 'questionnaire' && currentStep) {
       if (isWelcomeStep && currentStep.kind === 'info') {
-        return <LearnWelcomeIntro step={currentStep} showSkipHint={isInitialMode} />;
+        return (
+          <LearnWelcomeIntro
+            step={currentStep}
+            showSkipHint={isInitialMode}
+            onRevealComplete={handleWelcomeRevealComplete}
+          />
+        );
       }
 
       return (
@@ -407,15 +423,16 @@ export default function LearnQuestionnaireScreen() {
         <ScrollView
           className="min-h-0 w-full flex-1"
           contentContainerClassName={
-            isWelcomeStep ? 'flex-grow self-center' : 'flex-grow gap-lg self-center pt-xl'
+            isWelcomeStep
+              ? 'flex-grow self-center pb-md'
+              : 'flex-grow gap-lg self-center pt-xl'
           }
           contentContainerStyle={{
             width: contentWidth,
             maxWidth: contentWidth,
             paddingHorizontal: Layout.screenPaddingHorizontal,
             paddingTop: isWelcomeStep && !isInitialMode ? insets.top + Spacing.lg : undefined,
-            paddingBottom: isWelcomeStep ? Spacing.lg : Spacing['3xl'],
-            minHeight: isWelcomeStep ? '100%' : undefined,
+            paddingBottom: isWelcomeStep ? Spacing.md : Spacing['3xl'],
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -428,7 +445,8 @@ export default function LearnQuestionnaireScreen() {
           className="self-stretch border-t border-border-subtle bg-surface pt-md"
           style={{
             paddingHorizontal: Layout.screenPaddingHorizontal,
-            paddingBottom: insets.bottom + Spacing.md,
+            // ScreenShell already applies safe-area bottom around the footer.
+            paddingBottom: Spacing.md,
           }}
         >
           <View className="w-full max-w-full gap-sm self-center">

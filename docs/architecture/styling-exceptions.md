@@ -37,6 +37,8 @@ Cuando NativeWind no basta, documentar con `// tailwind-exception: <motivo>`.
 | `home-hero-slide-card.tsx` | D | Altura fija del strip de ilustración |
 | `home-starter-card.tsx` | D | Alturas fijas del panel portrait |
 | `home-starter-illustration.tsx` | B, D | SVG animado y geometría del podio |
+| `learn-welcome-intro.tsx` | B, D | Entrada Reanimated de ilustración; altura fija |
+| `learn-welcome-typewriter-text.tsx` | B | Tipografía medida + caret con opacidad animada |
 | `legal-notice.tsx` | F | Icon `color` prop |
 
 ## Reglas para nuevas excepciones
