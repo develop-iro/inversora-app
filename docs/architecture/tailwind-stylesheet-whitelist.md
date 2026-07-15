@@ -36,6 +36,8 @@ Fuente de verdad en código: `src/shared/nativewind/stylesheet-whitelist.ts`.
 | `card-fund.tsx` | Card estática | Scale en press/hover |
 | `home-starter-card.tsx` | Shell del panel | Alturas fijas ilustración + título |
 | `home-starter-illustration.tsx` | Contenedor | SVG animado y barras del podio |
+| `learn-welcome-intro.tsx` | Shell + ilustración | Altura fija + entrada Reanimated |
+| `learn-welcome-typewriter-text.tsx` | Wrapper estático | Tipografía medida + caret animado |
 
 ## Cómo añadir una excepción
 
