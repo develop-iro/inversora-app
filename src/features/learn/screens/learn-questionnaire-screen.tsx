@@ -229,7 +229,10 @@ export default function LearnQuestionnaireScreen() {
   }, [analyticsMode, currentStep]);
 
   const finalizeProfile = useCallback(
-    async (result: BuildEducationalProfileResult) => {
+    async (
+      result: BuildEducationalProfileResult,
+      options?: { readonly goHome?: boolean },
+    ) => {
       setIsSaving(true);
 
       try {
@@ -237,18 +240,24 @@ export default function LearnQuestionnaireScreen() {
         await saveProfile(graduatedProfile);
         void syncEducationalProfileToServer(graduatedProfile);
         await initialProfileOnboardingStore.clearDismissed();
-        setCompletedProfile(graduatedProfile);
-        setPhase('result');
         trackLearnCompleted(
           graduatedProfile.riskOrientation,
           graduatedProfile.profileVersion,
           analyticsMode,
         );
+
+        if (options?.goHome) {
+          router.replace(routes.home);
+          return;
+        }
+
+        setCompletedProfile(graduatedProfile);
+        setPhase('result');
       } finally {
         setIsSaving(false);
       }
     },
-    [analyticsMode, saveProfile],
+    [analyticsMode, router, saveProfile],
   );
 
   const handleContinue = useCallback(async () => {
@@ -278,13 +287,17 @@ export default function LearnQuestionnaireScreen() {
     await finalizeProfile(result);
   }, [analyticsMode, answers, canContinue, currentStep, finalizeProfile, isLastQuestionnaireStep, isWelcomeStep]);
 
-  const handleAcceptInconsistency = useCallback(async () => {
-    if (!profileResult) {
-      return;
-    }
+  const handleAcceptInconsistency = useCallback(
+    async (destination: 'result' | 'home' = 'result') => {
+      if (!profileResult) {
+        return;
+      }
 
-    await finalizeProfile(profileResult);
-  }, [finalizeProfile, profileResult]);
+      trackLearnInconsistencyResolved('accept', analyticsMode);
+      await finalizeProfile(profileResult, { goHome: destination === 'home' });
+    },
+    [analyticsMode, finalizeProfile, profileResult],
+  );
 
   const handleReviseAnswers = useCallback(() => {
     trackLearnInconsistencyResolved('revise', analyticsMode);
@@ -295,11 +308,11 @@ export default function LearnQuestionnaireScreen() {
 
   const primaryLabel = useMemo(() => {
     if (phase === 'inconsistency') {
-      return 'Ver mi perfil orientativo';
+      return 'Ir al inicio';
     }
 
     if (phase === 'result') {
-      return isInitialMode ? 'Ir al inicio' : 'Explorar fondos';
+      return 'Ir al inicio';
     }
 
     if (isWelcomeStep) {
@@ -311,27 +324,21 @@ export default function LearnQuestionnaireScreen() {
     }
 
     return isLastQuestionnaireStep ? 'Ver mi perfil' : 'Siguiente';
-  }, [currentStep?.kind, isInitialMode, isLastQuestionnaireStep, isWelcomeStep, phase]);
+  }, [currentStep?.kind, isLastQuestionnaireStep, isWelcomeStep, phase]);
 
   const handlePrimaryPress = useCallback(async () => {
     if (phase === 'result') {
-      if (isInitialMode) {
-        router.replace(routes.home);
-        return;
-      }
-
-      router.replace(routes.fundsCatalog);
+      router.replace(routes.home);
       return;
     }
 
     if (phase === 'inconsistency') {
-      trackLearnInconsistencyResolved('accept', analyticsMode);
-      await handleAcceptInconsistency();
+      await handleAcceptInconsistency('home');
       return;
     }
 
     await handleContinue();
-  }, [analyticsMode, handleAcceptInconsistency, handleContinue, isInitialMode, phase, router]);
+  }, [handleAcceptInconsistency, handleContinue, phase, router]);
 
   const handleOpenSuggestedCatalog = useCallback(() => {
     router.replace(routes.fundsCatalogWithProfileHints);
@@ -451,13 +458,25 @@ export default function LearnQuestionnaireScreen() {
         >
           <View className="w-full max-w-full gap-sm self-center">
             {phase === 'inconsistency' ? (
-              <Button
-                variant="ghost"
-                label="Ajustar alguna respuesta"
-                accessibilityLabel="Volver al cuestionario para ajustar alguna respuesta"
-                onPress={handleReviseAnswers}
-                fullWidth
-              />
+              <>
+                <Button
+                  variant="ghost"
+                  label="Ajustar alguna respuesta"
+                  accessibilityLabel="Volver al cuestionario para ajustar alguna respuesta"
+                  onPress={handleReviseAnswers}
+                  fullWidth
+                />
+                <Button
+                  variant="secondary"
+                  label="Ver resumen del perfil"
+                  accessibilityLabel="Guardar y ver el resumen del perfil orientativo"
+                  onPress={() => {
+                    void handleAcceptInconsistency('result');
+                  }}
+                  loading={isSaving}
+                  fullWidth
+                />
+              </>
             ) : null}
 
             {showPreviousStep ? (
@@ -482,24 +501,13 @@ export default function LearnQuestionnaireScreen() {
             />
 
             {phase === 'result' ? (
-              <>
-                <Button
-                  variant="secondary"
-                  label="Ir al catálogo con filtros sugeridos"
-                  accessibilityLabel="Ir al catálogo con filtros sugeridos según tu perfil"
-                  onPress={handleOpenSuggestedCatalog}
-                  fullWidth
-                />
-                {!isInitialMode ? (
-                  <Button
-                    variant="ghost"
-                    label="Volver al inicio"
-                    accessibilityLabel="Volver al inicio"
-                    onPress={() => router.replace(routes.home)}
-                    fullWidth
-                  />
-                ) : null}
-              </>
+              <Button
+                variant="secondary"
+                label="Ir al catálogo con filtros sugeridos"
+                accessibilityLabel="Ir al catálogo con filtros sugeridos según tu perfil"
+                onPress={handleOpenSuggestedCatalog}
+                fullWidth
+              />
             ) : null}
           </View>
         </View>
