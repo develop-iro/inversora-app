@@ -389,6 +389,7 @@ test.describe('Inversora web smoke', () => {
     await page.getByRole('button', { name: /Ver mi perfil/i }).click();
 
     await expectPageToContain(page, 'perfil orientativo');
+    await expect(page.getByRole('button', { name: /^Ir al inicio$/i })).toBeVisible();
     await page.getByRole('button', { name: /catalogo con filtros sugeridos|catálogo con filtros sugeridos/i }).click();
 
     await expect(page).toHaveURL(/\/funds\?applyProfileHints=true/);

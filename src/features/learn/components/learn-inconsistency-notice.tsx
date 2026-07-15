@@ -96,7 +96,7 @@ export function LearnInconsistencyNotice({ inconsistencies }: LearnInconsistency
           Si continúas ahora
         </TextLabel>
         <TextParagraph variant="emphasis" className="text-[17px] leading-6">
-          Verás tu perfil orientativo con ese contexto en mente
+          Puedes guardar el perfil e ir al inicio, o ver un resumen antes de continuar
         </TextParagraph>
         <View className="gap-sm">
           <GuidancePoint text="Tu perfil se calculará con prudencia; no es un fallo del cuestionario." />
