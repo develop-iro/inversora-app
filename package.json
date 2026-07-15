@@ -86,6 +86,7 @@
     "lint:fix": "expo lint --fix",
     "typecheck": "tsc --noEmit",
     "test:ci": "pnpm run typecheck && pnpm run lint:ci && pnpm run test:unit && pnpm run test:scripts && pnpm run security:verify-plugins && pnpm run test:e2e",
+    "audit:prod": "node scripts/audit-prod.mjs",
     "quality": "pnpm run test:ci",
     "build:web:ci": "node scripts/run-expo-env.mjs qa export --platform android",
     "build:web:pro": "node scripts/run-expo-env.mjs pro export --platform web --clear",

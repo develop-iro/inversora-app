@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, View } from 'react-native';
 
 import type { CatalogFund } from '@/core/domain/catalog';
@@ -14,9 +14,9 @@ import {
 } from '@/shared/components/layout';
 import { AppModalShell } from '@/shared/components/overlay';
 import { TextLabel, TextParagraph } from '@/shared/components/text';
-import { FundListRow } from '@/features/funds/components/fund-list-row';
-import { Button, ContentEmptyState, ReloadState, SearchField, SkeletonShimmerProvider } from '@/shared/components/ui';
+import { Button, ContentEmptyState, ReloadState, SearchField, SkeletonShimmerProvider, SlowRequestReloadState } from '@/shared/components/ui';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
+import { useSlowRequestNotice } from '@/shared/hooks/use-slow-request-notice';
 import { useTheme } from '@/shared/hooks/use-theme';
 
 export type CompareFundPickerModalProps = {
@@ -24,15 +24,15 @@ export type CompareFundPickerModalProps = {
   selectedIsins: readonly string[];
   canAddMore: boolean;
   onClose: () => void;
-  onSelectFund: (fund: CatalogFund) => void;
+  onSelectFund: (fund: CatalogFund) => void | Promise<void>;
 };
 
 function PickerLoadingSkeleton() {
   return (
     <SkeletonShimmerProvider>
       <View className="gap-sm" accessibilityLabel="Cargando catálogo">
-        {Array.from({ length: 4 }, (_, index) => (
-          <FundListRow key={`picker-loading-${index}`} loading />
+        {Array.from({ length: 6 }, (_, index) => (
+          <CompareFundPickerRow key={`picker-loading-${index}`} loading disabled />
         ))}
       </View>
     </SkeletonShimmerProvider>
@@ -59,20 +59,33 @@ export function CompareFundPickerModal({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [baselineSelectedIsins, setBaselineSelectedIsins] = useState<readonly string[]>([]);
+  const wasVisibleRef = useRef(false);
 
   const debouncedQuery = useDebouncedValue(query, CATALOG_SEARCH_DEBOUNCE_MS);
+  const { isSlow: isPickerLoadSlow } = useSlowRequestNotice({
+    isLoading: visible && isLoading,
+    loadingKey: reloadToken,
+  });
 
-  const resetModalState = useCallback(() => {
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    const justOpened = visible && !wasVisibleRef.current;
+    wasVisibleRef.current = visible;
+
+    if (!justOpened) {
+      return;
+    }
+
     setQuery('');
     setFunds([]);
     setErrorMessage(null);
     setIsLoading(false);
-  }, []);
-
-  const handleClose = useCallback(() => {
-    resetModalState();
-    onClose();
-  }, [onClose, resetModalState]);
+    setBaselineSelectedIsins(selectedIsins);
+  }, [selectedIsins, visible]);
 
   useEffect(() => {
     if (!visible) {
@@ -115,8 +128,8 @@ export function CompareFundPickerModal({
   }, [visible, debouncedQuery, reloadToken]);
 
   const filteredFunds = useMemo(
-    () => funds.filter((fund) => !selectedIsins.includes(fund.isin)),
-    [funds, selectedIsins],
+    () => funds.filter((fund) => !baselineSelectedIsins.includes(fund.isin)),
+    [baselineSelectedIsins, funds],
   );
 
   const listHeader = useMemo(() => {
@@ -146,14 +159,26 @@ export function CompareFundPickerModal({
 
   const handleSelectFund = useCallback(
     (fund: CatalogFund) => {
-      onSelectFund(fund);
-      handleClose();
+      void (async () => {
+        await onSelectFund(fund);
+        handleClose();
+      })();
     },
     [handleClose, onSelectFund],
   );
 
   const renderListContent = () => {
     if (isLoading) {
+      if (isPickerLoadSlow) {
+        return (
+          <SlowRequestReloadState
+            onRetry={handleRetry}
+            layout="screen"
+            className="flex-1"
+          />
+        );
+      }
+
       return <PickerLoadingSkeleton />;
     }
 

@@ -7,6 +7,10 @@ import {
   learnCurriculumProgressStore,
   subscribeLearnCurriculumProgress,
 } from '@/core/storage/learn-curriculum-progress-store';
+import {
+  STORAGE_READ_TIMEOUT_MS,
+  withStorageTimeout,
+} from '@/core/storage/with-storage-timeout';
 import type { CurriculumProgress } from '@/features/learn/entities/learn-curriculum.schema';
 import { syncEducationalProfileToServer } from '@/features/learn/services/educational-profile-sync';
 import {
@@ -32,12 +36,23 @@ export function useLearnCurriculumProgress(): UseLearnCurriculumProgressResult {
     let cancelled = false;
 
     const load = () => {
-      learnCurriculumProgressStore.getProgress().then((nextProgress) => {
-        if (!cancelled) {
-          setProgress(nextProgress);
-          setIsLoading(false);
-        }
-      });
+      void withStorageTimeout(
+        learnCurriculumProgressStore.getProgress(),
+        STORAGE_READ_TIMEOUT_MS,
+        null,
+      )
+        .then((nextProgress) => {
+          if (!cancelled) {
+            setProgress(nextProgress);
+            setIsLoading(false);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setProgress(null);
+            setIsLoading(false);
+          }
+        });
     };
 
     load();

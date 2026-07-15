@@ -57,7 +57,9 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm audit --prod --audit-level high
+      # pnpm@10 still hits the retired npm /-/npm/v1/security/audits endpoint (HTTP 410).
+      # scripts/audit-prod.mjs runs the audit CLI from pnpm@11 against the lockfile.
+      - run: pnpm run audit:prod
 
   unit-tests:
     name: Unit tests

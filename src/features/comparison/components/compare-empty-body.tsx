@@ -13,10 +13,12 @@ import {
   ScreenQuickActionsRow,
   SectionCard,
 } from '@/shared/components/layout';
-import { InvestmentCard } from '@/shared/components/ui/card';
+import { TextParagraph } from '@/shared/components/text';
+import { Card } from '@/shared/components/ui/card';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { routes } from '@/shared/navigation/routes';
 import { useTheme } from '@/shared/hooks/use-theme';
+import { cn } from '@/shared/utils/cn';
 
 /** Switch suggested pairs from horizontal scroll to a wrapped grid. */
 const COMPARE_PAIR_GRID_BREAKPOINT = 640;
@@ -50,7 +52,7 @@ export function CompareEmptyBody({
         borderless
         contentClassName="gap-sm p-0 pt-0"
       >
-        <ScreenQuickActionsRow>
+        <ScreenQuickActionsRow className="gap-lg">
           <ScreenQuickAction
             icon="magnify-plus-outline"
             label="Buscar fondo"
@@ -106,7 +108,7 @@ export function CompareEmptyBody({
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerClassName="gap-sm py-xs"
+            contentContainerClassName="items-start gap-sm py-xs"
           >
             {COMPARE_SUGGESTED_PAIRS.map((pair) => (
               <CompareSuggestedPairCard
@@ -120,22 +122,35 @@ export function CompareEmptyBody({
         )}
       </SectionCard>
 
-      <SectionCard title="Qué vas a comparar" borderless contentClassName="gap-sm p-0 pt-0">
-        <View className="flex-row flex-wrap gap-sm">
-          {COMPARE_METRIC_TIPS.map((tip) => (
-            <InvestmentCard
+      <SectionCard
+        title="Qué vas a comparar"
+        summary="Métricas que verás en la tabla cuando elijas dos fondos."
+        borderless
+        contentClassName="gap-sm p-0 pt-0"
+      >
+        <Card variant="outlined" contentClassName="gap-0 p-0">
+          {COMPARE_METRIC_TIPS.map((tip, index) => (
+            <View
               key={tip.id}
-              className="min-h-[132px] min-w-[140px] grow basis-[160px]"
-              icon={
-                <View className="h-8 w-8 items-center justify-center rounded-full bg-background-soft">
-                  <MaterialCommunityIcons name={tip.icon} size={18} color={theme.deepOcean} />
-                </View>
-              }
-              title={tip.title}
-              subtitle={tip.description}
-            />
+              accessibilityRole="text"
+              accessibilityLabel={`${tip.title}: ${tip.description}`}
+              className={cn(
+                'flex-row items-start gap-md px-md py-md',
+                index > 0 && 'border-t border-border',
+              )}
+            >
+              <View className="h-8 w-8 items-center justify-center rounded-full bg-background-soft">
+                <MaterialCommunityIcons name={tip.icon} size={18} color={theme.deepOcean} />
+              </View>
+              <View className="min-w-0 flex-1 gap-xs">
+                <TextParagraph variant="emphasis">{tip.title}</TextParagraph>
+                <TextParagraph variant="secondary" themeColor="textSecondary">
+                  {tip.description}
+                </TextParagraph>
+              </View>
+            </View>
           ))}
-        </View>
+        </Card>
       </SectionCard>
     </View>
   );

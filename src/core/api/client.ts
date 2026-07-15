@@ -1,6 +1,10 @@
 import { AppError } from '@/core/errors/app-error';
 import { resolveSafeApiErrorMessage } from '@/core/api/api-error-message';
 import { getApiBaseUrl } from '@/core/api/config';
+import {
+  API_REQUEST_TIMEOUT_MS,
+  createTimedAbortSignal,
+} from '@/core/api/request-timeout';
 import { deviceIdentityStore } from '@/core/storage/device-identity-store';
 
 type ApiRequestOptions = {
@@ -9,6 +13,8 @@ type ApiRequestOptions = {
   signal?: AbortSignal;
   /** When true, attaches `X-Device-Token` when the installation is registered. */
   withDeviceToken?: boolean;
+  /** Optional override for the default request timeout in milliseconds. */
+  timeoutMs?: number;
 };
 
 type ApiPostOptions<TBody> = ApiRequestOptions & {
@@ -61,6 +67,10 @@ async function requestJson<T>(
   body?: unknown,
 ): Promise<T> {
   const url = buildRequestUrl(options);
+  const timed = createTimedAbortSignal(
+    options.timeoutMs ?? API_REQUEST_TIMEOUT_MS,
+    options.signal,
+  );
   let response: Response;
 
   try {
@@ -68,7 +78,7 @@ async function requestJson<T>(
       method,
       headers: await buildJsonHeaders(options, body !== undefined),
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal: options.signal,
+      signal: timed.signal,
     });
   } catch (error) {
     throw new AppError(
@@ -76,6 +86,8 @@ async function requestJson<T>(
       'No se pudo conectar con la API de Inversora.',
       error,
     );
+  } finally {
+    timed.clear();
   }
 
   return parseApiResponse<T>(response);

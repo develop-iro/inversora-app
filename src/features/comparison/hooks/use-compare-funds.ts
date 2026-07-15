@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { FundDetail } from '@/core/domain/catalog';
 import type { CompareFundEntry } from '@/features/comparison/models/compare-fund-entry';
@@ -12,7 +12,77 @@ export type UseCompareFundsResult = {
   readonly notFoundIsins: readonly string[];
   readonly isLoading: boolean;
   readonly hasPartialErrors: boolean;
+  readonly reloadToken: number;
+  readonly refetch: () => void;
 };
+
+/**
+ * Merges the current selection into previously loaded compare entries.
+ *
+ * @param selectedIsins - ISINs selected for comparison, in display order.
+ * @param currentEntries - Previously hydrated compare entries.
+ */
+function mergeCompareEntries(
+  selectedIsins: readonly string[],
+  currentEntries: readonly CompareFundEntry[],
+): CompareFundEntry[] {
+  return selectedIsins.map((isin) => {
+    const existing = currentEntries.find((entry) => entry.isin === isin);
+
+    return existing ?? { isin, detail: null, errorMessage: null };
+  });
+}
+
+/**
+ * Returns ISINs that still need a network fetch.
+ *
+ * @param entries - Merged compare entries for the current selection.
+ * @param forceFailed - When true, retries entries that previously failed.
+ */
+function resolveIsinsToFetch(
+  entries: readonly CompareFundEntry[],
+  forceFailed: boolean,
+): string[] {
+  return entries
+    .filter((entry) => {
+      if (entry.detail !== null) {
+        return false;
+      }
+
+      if (entry.errorMessage === null) {
+        return true;
+      }
+
+      return forceFailed;
+    })
+    .map((entry) => entry.isin);
+}
+
+async function loadCompareFundEntry(isin: string): Promise<CompareFundEntry> {
+  try {
+    const detail = await getFundByIsin(isin);
+
+    if (detail === null) {
+      return {
+        isin,
+        detail: null,
+        errorMessage: LOAD_ERROR_MESSAGE,
+      } satisfies CompareFundEntry;
+    }
+
+    return {
+      isin,
+      detail,
+      errorMessage: null,
+    } satisfies CompareFundEntry;
+  } catch {
+    return {
+      isin,
+      detail: null,
+      errorMessage: LOAD_ERROR_MESSAGE,
+    } satisfies CompareFundEntry;
+  }
+}
 
 /**
  * Loads fund detail payloads for the current comparison selection.
@@ -22,9 +92,17 @@ export type UseCompareFundsResult = {
 export function useCompareFunds(selectedIsins: readonly string[]): UseCompareFundsResult {
   const [entries, setEntries] = useState<readonly CompareFundEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
+  const entriesRef = useRef(entries);
+  const selectionKey = selectedIsins.join(',');
+
+  useEffect(() => {
+    entriesRef.current = entries;
+  }, [entries]);
 
   useEffect(() => {
     let cancelled = false;
+    const forceFailed = reloadToken > 0;
 
     void (async () => {
       if (selectedIsins.length === 0) {
@@ -35,57 +113,56 @@ export function useCompareFunds(selectedIsins: readonly string[]): UseCompareFun
         return;
       }
 
+      const mergedEntries = mergeCompareEntries(selectedIsins, entriesRef.current).map(
+        (entry) => {
+          if (!forceFailed || entry.detail !== null || entry.errorMessage === null) {
+            return entry;
+          }
+
+          return { ...entry, errorMessage: null };
+        },
+      );
+      const isinsToFetch = resolveIsinsToFetch(mergedEntries, forceFailed);
+
       if (!cancelled) {
-        setIsLoading(true);
-        setEntries(
-          selectedIsins.map((isin) => ({
-            isin,
-            detail: null,
-            errorMessage: null,
-          })),
-        );
+        setEntries(mergedEntries);
       }
 
-      const results = await Promise.all(
-        selectedIsins.map(async (isin) => {
-          try {
-            const detail = await getFundByIsin(isin);
+      if (isinsToFetch.length === 0) {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+        return;
+      }
 
-            if (detail === null) {
-              return {
-                isin,
-                detail: null,
-                errorMessage: LOAD_ERROR_MESSAGE,
-              } satisfies CompareFundEntry;
-            }
+      if (!cancelled) {
+        setIsLoading(true);
+      }
 
-            return {
-              isin,
-              detail,
-              errorMessage: null,
-            } satisfies CompareFundEntry;
-          } catch {
-            return {
-              isin,
-              detail: null,
-              errorMessage: LOAD_ERROR_MESSAGE,
-            } satisfies CompareFundEntry;
-          }
-        }),
+      const fetchedEntries = await Promise.all(
+        isinsToFetch.map((isin) => loadCompareFundEntry(isin)),
       );
 
       if (cancelled) {
         return;
       }
 
-      setEntries(results);
+      const fetchedByIsin = new Map(
+        fetchedEntries.map((entry) => [entry.isin, entry] as const),
+      );
+
+      setEntries(mergedEntries.map((entry) => fetchedByIsin.get(entry.isin) ?? entry));
       setIsLoading(false);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [selectedIsins]);
+  }, [selectionKey, reloadToken, selectedIsins]);
+
+  const refetch = useCallback(() => {
+    setReloadToken((current) => current + 1);
+  }, []);
 
   const loadedDetails = useMemo(
     () =>
@@ -96,7 +173,10 @@ export function useCompareFunds(selectedIsins: readonly string[]): UseCompareFun
   );
 
   const notFoundIsins = useMemo(
-    () => entries.filter((entry) => entry.detail === null).map((entry) => entry.isin),
+    () =>
+      entries
+        .filter((entry) => entry.detail === null && entry.errorMessage !== null)
+        .map((entry) => entry.isin),
     [entries],
   );
 
@@ -108,5 +188,7 @@ export function useCompareFunds(selectedIsins: readonly string[]): UseCompareFun
     notFoundIsins,
     isLoading,
     hasPartialErrors,
+    reloadToken,
+    refetch,
   };
 }
