@@ -18,7 +18,7 @@ export function shouldUseInitialProfileGateForPlatform(platformOs: string): bool
  */
 export function isOnboardingExemptRoute(segments: readonly string[]): boolean {
   const root = segments[0];
-  return root === 'learn' || root === 'legal' || root === 'feedback';
+  return root === 'questionnaire' || root === 'legal' || root === 'feedback';
 }
 
 export type InitialProfileGateRedirectInput = {
@@ -32,7 +32,7 @@ export type InitialProfileGateRedirectInput = {
 };
 
 /**
- * Returns whether the client should redirect to `/learn?mode=initial`.
+ * Returns whether the client should redirect to `/questionnaire?mode=initial`.
  *
  * @param input - Current gate evaluation context.
  */

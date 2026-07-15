@@ -11,6 +11,10 @@ export function resolveAnalyticsSurface(pathname: string): string {
   }
 
   if (pathname === '/learn') {
+    return 'learn_curriculum';
+  }
+
+  if (pathname === '/questionnaire') {
     return 'learn_questionnaire';
   }
 

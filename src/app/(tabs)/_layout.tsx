@@ -10,7 +10,10 @@ import {
 import { TAB_SCENE_STYLE } from '@/shared/navigation/stack-screen-options';
 
 /**
- * Primary tab shell: home, funds stack, favorites, compare, calculator.
+ * Primary tab shell: home, funds, learn, favorites, compare, calculator.
+ *
+ * The floating tab bar shows either Aprendizaje (`/learn`) or Favoritos
+ * (`/favorites`) in the middle slot — each keeps a dedicated route.
  */
 export default function TabsLayout() {
   const segments = useSegments();
@@ -52,10 +55,17 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="learn"
+        options={{
+          title: 'Aprendizaje',
+          tabBarAccessibilityLabel: 'Abrir aprendizaje',
+        }}
+      />
+      <Tabs.Screen
         name="favorites"
         options={{
           title: 'Favoritos',
-          tabBarAccessibilityLabel: 'Ver favoritos o aprendizaje',
+          tabBarAccessibilityLabel: 'Ver favoritos',
         }}
       />
       <Tabs.Screen

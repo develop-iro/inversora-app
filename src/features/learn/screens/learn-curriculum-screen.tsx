@@ -87,7 +87,7 @@ export default function LearnCurriculumScreen() {
     }
 
     if (activeLesson.link.type === 'questionnaire') {
-      router.push(routes.learn);
+      router.push(routes.questionnaire);
       return;
     }
 

@@ -11,7 +11,8 @@ describe('resolveAnalyticsSurface', () => {
     assert.equal(resolveAnalyticsSurface('/'), 'home');
     assert.equal(resolveAnalyticsSurface('/funds'), 'funds_catalog');
     assert.equal(resolveAnalyticsSurface('/funds/IE00B4L5Y983'), 'fund_detail');
-    assert.equal(resolveAnalyticsSurface('/learn'), 'learn_questionnaire');
+    assert.equal(resolveAnalyticsSurface('/learn'), 'learn_curriculum');
+    assert.equal(resolveAnalyticsSurface('/questionnaire'), 'learn_questionnaire');
     assert.equal(resolveAnalyticsSurface('/compare'), 'compare');
   });
 });

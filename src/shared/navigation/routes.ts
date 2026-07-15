@@ -3,11 +3,14 @@ import type { Href } from 'expo-router';
 /** Helpers for expo-router typed routes (funds stack). */
 export const routes = {
   home: '/' as Href,
+  /** Curriculum tab (dedicated Aprendizaje surface). */
   learn: '/learn' as Href,
+  /** Educational profiling questionnaire (stack flow above tabs). */
+  questionnaire: '/questionnaire' as Href,
   learnInitial: {
-    pathname: '/learn',
+    pathname: '/questionnaire',
     params: { mode: 'initial' },
-  } as Href,
+  } as unknown as Href,
   fundsCatalog: '/funds' as Href,
   fundsCatalogWithProfileHints: {
     pathname: '/funds',
@@ -26,6 +29,7 @@ export const routes = {
       pathname: '/funds/[isin]',
       params: { isin },
     }) as Href,
+  favorites: '/favorites' as Href,
   calculator: '/calculator' as Href,
   calculatorWithFund: (isin: string): Href => {
     const normalized = isin.trim().toUpperCase();

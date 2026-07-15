@@ -79,16 +79,16 @@ Una vez completada esta etapa educativa inicial, el usuario podrá acceder al vi
 
 ### 5.2.1 Política de onboarding por plataforma
 
-El **onboarding del MVP** es el **cuestionario de perfilado** en `/learn?mode=initial` (`LEARN_QUESTIONNAIRE_STEPS`), no un tour genérico independiente. Incluye bienvenida educativa, concept cards y preguntas orientativas (conocimiento, horizonte, riesgo, objetivo).
+El **onboarding del MVP** es el **cuestionario de perfilado** en `/questionnaire?mode=initial` (`LEARN_QUESTIONNAIRE_STEPS`), no un tour genérico independiente. Incluye bienvenida educativa, concept cards y preguntas orientativas (conocimiento, horizonte, riesgo, objetivo). El tab **Aprendizaje** del curriculum vive en `/learn` (ruta de tab dedicada, distinta de Favoritos).
 
 | Plataforma | Primera visita | Educación | Omitir | Tras omitir o completar |
 |------------|----------------|-----------|--------|-------------------------|
-| **iOS / Android** | `InitialProfileGate` redirige a `/learn?mode=initial` | Obligatoria antes del dashboard | «Omitir» en header superior derecho (`HeaderBar` + `HeaderTextAction`); cierre con X en pasos posteriores tras confirmación | Acceso libre a catálogo, rankings y comparador |
-| **Web** | Sin gate; aterriza en `/` | **Invitada** (hero, «Para empezar», banner, acción «Aprender» en header) | No aplica gate | Exploración inmediata; `/learn` voluntario |
+| **iOS / Android** | `InitialProfileGate` redirige a `/questionnaire?mode=initial` | Obligatoria antes del dashboard | «Omitir» en header superior derecho (`HeaderBar` + `HeaderTextAction`); cierre con X en pasos posteriores tras confirmación | Acceso libre a catálogo, rankings y comparador |
+| **Web** | Sin gate; aterriza en `/` | **Invitada** (hero, «Para empezar», banner, acción «Aprender» en header) | No aplica gate | Exploración inmediata; `/learn` (curriculum) y `/questionnaire` voluntarios |
 
 **Omitir ≠ completar el perfil:** si el usuario omite, no se guarda perfil orientativo y se aplican las guardas de principiante (HU-16) en home y rankings (`beginner-eligibility.ts`). Si completa el cuestionario, el perfil se persiste localmente y puede sincronizarse de forma anónima.
 
-**Rutas accesibles sin perfil durante el gate nativo:** `/learn` y `/legal` (avisos legales legibles antes de aceptar u omitir).
+**Rutas accesibles sin perfil durante el gate nativo:** `/questionnaire` y `/legal` (avisos legales legibles antes de aceptar u omitir).
 
 ### Leyenda de cobertura
 

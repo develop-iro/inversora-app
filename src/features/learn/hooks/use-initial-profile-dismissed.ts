@@ -19,7 +19,7 @@ type UseInitialProfileDismissedResult = {
  * Reads whether the user dismissed the native initial profiling questionnaire.
  *
  * Storage failures degrade to `false` so the native gate can still redirect
- * first-time users to `/learn?mode=initial`.
+ * first-time users to `/questionnaire?mode=initial`.
  */
 export function useInitialProfileDismissed(): UseInitialProfileDismissedResult {
   const useGate = shouldUseInitialProfileGate();

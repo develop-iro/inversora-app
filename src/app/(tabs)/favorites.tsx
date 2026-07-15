@@ -1,4 +1,5 @@
-import SecondaryTabScreen from '@/features/favorites/screens/secondary-tab-screen';
+import FavoritesScreen from '@/features/favorites/screens/favorites-screen';
 import { withTabTransition } from '@/shared/navigation/with-tab-transition';
 
-export default withTabTransition(SecondaryTabScreen);
+/** Local favorites tab at `/favorites`. */
+export default withTabTransition(FavoritesScreen);

@@ -34,7 +34,7 @@ describe('resolve-investment-news-press', () => {
   it('falls back to in-app routes for curated headlines without URL', () => {
     assert.deepEqual(resolveInvestmentNewsPressAction(curatedItem), {
       kind: 'internal',
-      href: '/learn',
+      href: '/questionnaire',
     });
     assert.deepEqual(
       resolveInvestmentNewsPressAction({ ...curatedItem, id: 'news-mifid-reminder' }),
