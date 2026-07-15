@@ -14,7 +14,7 @@ Guiding principle:
 
 **Educate first, compare later.**
 
-Onboarding policy (platform-specific): native iOS/Android users must complete the profiling questionnaire (`/learn?mode=initial`) on first launch, with an explicit **Omitir** escape in the header; web users land on the dashboard with educational invitations only (no gate). See [docs/product/problem-statement.md](docs/product/problem-statement.md) §5.2.1.
+Onboarding policy (platform-specific): native iOS/Android users must complete the profiling questionnaire (`/questionnaire?mode=initial`) on first launch, with an explicit **Omitir** escape in the header; web users land on the dashboard with educational invitations only (no gate). The Aprendizaje tab lives at `/learn` (curriculum). See [docs/product/problem-statement.md](docs/product/problem-statement.md) §5.2.1.
 
 The MVP must prioritize clarity, guided learning, responsible comparison, and explainable rankings. It must not behave like a broker, roboadvisor, or personalized financial advisor.
 
@@ -107,6 +107,7 @@ Target routes:
 
 - `/`
 - `/learn`
+- `/questionnaire`
 - `/funds`
 - `/funds/[isin]`
 - `/compare`

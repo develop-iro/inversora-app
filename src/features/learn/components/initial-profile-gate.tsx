@@ -16,7 +16,8 @@ export type InitialProfileGateProps = {
 /**
  * Redirects first-time native users to the initial profiling questionnaire.
  *
- * Web users are not gated. Allowed routes without a profile: `/learn` and `/legal`.
+ * Web users are not gated. Allowed routes without a profile: `/questionnaire`
+ * and `/legal`.
  */
 export function InitialProfileGate({ enabled }: InitialProfileGateProps) {
   const router = useRouter();

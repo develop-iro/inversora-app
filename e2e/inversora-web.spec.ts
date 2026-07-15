@@ -350,11 +350,19 @@ test.describe('Inversora web smoke', () => {
     await expectPageToContain(page, 'Inversora no ofrece asesoramiento financiero personalizado');
   });
 
+  test('opens the dedicated Aprendizaje curriculum tab at /learn', async ({ page }) => {
+    await gotoRoute(page, '/learn');
+
+    await expect(page.getByText('Aprendizaje')).toBeVisible();
+    await expectPageToContain(page, 'Mini-curriculum');
+    await expect(page).toHaveURL(/\/learn$/);
+  });
+
   test('completes the educational profiling questionnaire and opens suggested catalog filters', async ({
     page,
   }) => {
     await mockFundsApi(page);
-    await gotoRoute(page, '/learn');
+    await gotoRoute(page, '/questionnaire');
 
     await page.getByRole('button', { name: /Empezar cuestionario/i }).click();
     await page.getByRole('button', { name: /Continuar/i }).click();

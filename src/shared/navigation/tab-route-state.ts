@@ -55,9 +55,16 @@ export function isFundDetailPath(segments: readonly string[]): boolean {
   return isFundsStackDetailRoute(nestedSegment);
 }
 
-/** Path-based check for `/learn` (reactive with `useSegments`). */
+/** Path-based check for the profiling questionnaire stack (`/questionnaire`). */
+export function isQuestionnairePath(segments: readonly string[]): boolean {
+  return segments.includes('questionnaire');
+}
+
+/**
+ * @deprecated Use {@link isQuestionnairePath}. Kept for transitional imports.
+ */
 export function isLearnPath(segments: readonly string[]): boolean {
-  return segments.includes('learn');
+  return isQuestionnairePath(segments);
 }
 
 /** Path-based check for `/legal` (reactive with `useSegments`). */

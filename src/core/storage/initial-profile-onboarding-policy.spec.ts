@@ -15,10 +15,11 @@ describe('initial-profile-onboarding-policy', () => {
     assert.equal(shouldUseInitialProfileGateForPlatform('windows'), false);
   });
 
-  it('treats learn and legal as exempt routes', () => {
-    assert.equal(isOnboardingExemptRoute(['learn']), true);
+  it('treats questionnaire and legal as exempt routes', () => {
+    assert.equal(isOnboardingExemptRoute(['questionnaire']), true);
     assert.equal(isOnboardingExemptRoute(['legal']), true);
     assert.equal(isOnboardingExemptRoute(['feedback']), true);
+    assert.equal(isOnboardingExemptRoute(['learn']), false);
     assert.equal(isOnboardingExemptRoute(['(tabs)']), false);
     assert.equal(isOnboardingExemptRoute(['rankings']), false);
   });
@@ -87,7 +88,7 @@ describe('initial-profile-onboarding-policy', () => {
         isDismissed: false,
         hasProfile: false,
         hasRedirected: false,
-        segments: ['learn'],
+        segments: ['questionnaire'],
       }),
       false,
     );

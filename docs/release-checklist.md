@@ -13,7 +13,8 @@ Use this checklist before tagging a preview or production mobile build.
 
 ### Native (iOS / Android)
 
-- [ ] Primera visita: redirección a `/learn?mode=initial` (gate obligatorio)
+- [ ] Primera visita nativa: redirección a `/questionnaire?mode=initial` (gate obligatorio)
+- [ ] Tab Aprendizaje en `/learn` (ruta dedicada, no `/favorites`)
 - [ ] Bienvenida initial: «Omitir» visible arriba a la derecha; footer sin botón ghost duplicado
 - [ ] Omitir → home con acceso a tabs; segunda visita sin re-gate
 - [ ] `/legal` accesible durante el gate sin perfil

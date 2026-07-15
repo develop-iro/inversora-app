@@ -28,8 +28,8 @@ import {
   createFundsCatalogTabParams,
   FUNDS_TAB_NAME,
   isFundDetailPath,
-  isLearnPath,
   isLegalPath,
+  isQuestionnairePath,
 } from "@/shared/navigation/tab-route-state";
 import { Size, Spacing } from "@/shared/theme/theme";
 import { Typography } from "@/shared/theme/tokens";
@@ -88,6 +88,13 @@ const tabs: Record<string, TabConfig> = {
     activeIcon: "magnify",
     inactiveIcon: "magnify",
   },
+  learn: {
+    label: "Aprendizaje",
+    compactLabel: "Aprende",
+    accessibilityLabel: "Abrir aprendizaje",
+    activeIcon: "book-open-page-variant",
+    inactiveIcon: "book-open-page-variant-outline",
+  },
   favorites: {
     label: "Favoritos",
     compactLabel: "Favoritos",
@@ -111,14 +118,15 @@ const tabs: Record<string, TabConfig> = {
   },
 };
 
-/** Top-level tab routes only — avoids duplicate `index` from nested stacks (e.g. funds/index). */
-const TAB_ROUTE_ORDER = [
-  "index",
-  "funds",
-  "favorites",
-  "compare",
-  "calculator",
-] as const;
+/**
+ * Builds the visible tab order. Aprendizaje and Favoritos share the middle slot
+ * but keep dedicated routes (`/learn` vs `/favorites`).
+ */
+function resolveTabRouteOrder(secondaryMode: 'learn' | 'favorites'): readonly string[] {
+  const secondaryRoute = secondaryMode === 'learn' ? 'learn' : 'favorites';
+
+  return ['index', 'funds', secondaryRoute, 'compare', 'calculator'];
+}
 
 type NavTabBarProps = {
   bottomInset: number;
@@ -278,11 +286,15 @@ export function NavTabBar({
   const segments = useSegments();
   const secondaryTab = useSecondaryTabConfig();
   const hideOnFundDetail = useMemo(() => isFundDetailPath(segments), [segments]);
-  const hideOnLearn = useMemo(() => isLearnPath(segments), [segments]);
+  const hideOnQuestionnaire = useMemo(() => isQuestionnairePath(segments), [segments]);
   const hideOnLegal = useMemo(() => isLegalPath(segments), [segments]);
   const activeRoute = state.routes[state.index];
+  const tabRouteOrder = useMemo(
+    () => resolveTabRouteOrder(secondaryTab.mode),
+    [secondaryTab.mode],
+  );
 
-  const visibleRoutes = TAB_ROUTE_ORDER.map((routeName) => {
+  const visibleRoutes = tabRouteOrder.map((routeName) => {
     const route = state.routes.find((candidate) => candidate.name === routeName);
     if (!route) {
       return null;
@@ -296,7 +308,7 @@ export function NavTabBar({
     return route;
   }).filter((route): route is (typeof state.routes)[number] => route !== null);
 
-  if (hideOnFundDetail || hideOnLearn || hideOnLegal) {
+  if (hideOnFundDetail || hideOnQuestionnaire || hideOnLegal) {
     return null;
   }
 
@@ -331,7 +343,7 @@ export function NavTabBar({
           }
 
           const tab =
-            route.name === 'favorites'
+            route.name === 'learn' || route.name === 'favorites'
               ? {
                   label: resolveTabBarDisplayLabel(
                     secondaryTab.label,

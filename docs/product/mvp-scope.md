@@ -113,6 +113,8 @@ La app **no expone** ninguna de las funcionalidades excluidas del documento ofic
 | `/funds` | Catálogo |
 | `/funds/[isin]` | Ficha de fondo |
 | `/compare` | Comparador (máx. 2 fondos) |
+| `/learn` | Curriculum Aprendizaje (tab dedicada) |
+| `/questionnaire` | Cuestionario de perfilado educativo |
 | `/favorites` | Favoritos locales |
 | `/calculator` | Calculadora |
 | `/legal` | Textos legales centralizados |

@@ -46,7 +46,7 @@ export default function RootLayout() {
           <StatusBar barStyle={showLaunchSplash ? 'light-content' : 'dark-content'} />
           <Stack screenOptions={ROOT_STACK_SCREEN_OPTIONS}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'none' }} />
-            <Stack.Screen name="learn" options={ROOT_FLOW_SCREEN_OPTIONS} />
+            <Stack.Screen name="questionnaire" options={ROOT_FLOW_SCREEN_OPTIONS} />
             <Stack.Screen name="legal" options={ROOT_FLOW_SCREEN_OPTIONS} />
             <Stack.Screen name="feedback" options={ROOT_FLOW_SCREEN_OPTIONS} />
             <Stack.Screen name="rankings" options={ROOT_FLOW_SCREEN_OPTIONS} />

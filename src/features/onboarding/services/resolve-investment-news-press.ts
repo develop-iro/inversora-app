@@ -9,8 +9,8 @@ export type InvestmentNewsPressAction =
   | { readonly kind: 'internal'; readonly href: Href };
 
 const CURATED_NEWS_FALLBACKS: Readonly<Record<string, InvestmentNewsPressAction>> = {
-  'news-ter-basics': { kind: 'internal', href: routes.learn },
-  'news-tracking-error': { kind: 'internal', href: routes.learn },
+  'news-ter-basics': { kind: 'internal', href: routes.questionnaire },
+  'news-tracking-error': { kind: 'internal', href: routes.questionnaire },
   'news-ecb-context': {
     kind: 'external',
     url: 'https://www.ecb.europa.eu/press/pubby/date/2026/html/index.en.html',
