@@ -4,6 +4,10 @@ import {
   initialProfileOnboardingStore,
   shouldUseInitialProfileGate,
 } from '@/core/storage/initial-profile-onboarding-store';
+import {
+  STORAGE_READ_TIMEOUT_MS,
+  withStorageTimeout,
+} from '@/core/storage/with-storage-timeout';
 
 type UseInitialProfileDismissedResult = {
   /** True when the user skipped the native initial profiling gate. Null while loading on native. */
@@ -13,6 +17,9 @@ type UseInitialProfileDismissedResult = {
 
 /**
  * Reads whether the user dismissed the native initial profiling questionnaire.
+ *
+ * Storage failures degrade to `false` so the native gate can still redirect
+ * first-time users to `/learn?mode=initial`.
  */
 export function useInitialProfileDismissed(): UseInitialProfileDismissedResult {
   const useGate = shouldUseInitialProfileGate();
@@ -27,11 +34,21 @@ export function useInitialProfileDismissed(): UseInitialProfileDismissedResult {
 
     let cancelled = false;
 
-    void initialProfileOnboardingStore.getDismissed().then((dismissed) => {
-      if (!cancelled) {
-        setIsDismissed(dismissed);
-      }
-    });
+    void withStorageTimeout(
+      initialProfileOnboardingStore.getDismissed(),
+      STORAGE_READ_TIMEOUT_MS,
+      false,
+    )
+      .then((dismissed) => {
+        if (!cancelled) {
+          setIsDismissed(dismissed);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIsDismissed(false);
+        }
+      });
 
     return () => {
       cancelled = true;

@@ -6,6 +6,10 @@ import {
   subscribeEducationalProfile,
 } from '@/core/storage/educational-profile-store';
 import { learnCurriculumProgressStore } from '@/core/storage/learn-curriculum-progress-store';
+import {
+  STORAGE_READ_TIMEOUT_MS,
+  withStorageTimeout,
+} from '@/core/storage/with-storage-timeout';
 import { syncEducationalProfileToServer } from '@/features/learn/services/educational-profile-sync';
 import {
   resolveCurriculumGraduatedProfile,
@@ -21,6 +25,9 @@ type UseEducationalProfileResult = {
 
 /**
  * Reads and updates the locally stored educational profile.
+ *
+ * Storage failures degrade to `profile: null` so native gates and the
+ * Aprendizaje tab never stay blocked on an indefinite spinner.
  */
 export function useEducationalProfile(): UseEducationalProfileResult {
   const [profile, setProfile] = useState<EducationalProfile | null>(null);
@@ -30,39 +37,60 @@ export function useEducationalProfile(): UseEducationalProfileResult {
     let cancelled = false;
 
     const load = async () => {
-      const [nextProfile, curriculumProgress] = await Promise.all([
-        educationalProfileStore.getProfile(),
-        learnCurriculumProgressStore.getProgress(),
-      ]);
+      try {
+        const [nextProfile, curriculumProgress] = await Promise.all([
+          withStorageTimeout(
+            educationalProfileStore.getProfile(),
+            STORAGE_READ_TIMEOUT_MS,
+            null,
+          ),
+          withStorageTimeout(
+            learnCurriculumProgressStore.getProgress(),
+            STORAGE_READ_TIMEOUT_MS,
+            null,
+          ),
+        ]);
 
-      const graduatedProfile = resolveCurriculumGraduatedProfile(
-        nextProfile,
-        curriculumProgress,
-      );
+        const graduatedProfile = resolveCurriculumGraduatedProfile(
+          nextProfile,
+          curriculumProgress,
+        );
 
-      if (
-        graduatedProfile !== null &&
-        shouldPersistGraduatedProfile(nextProfile, graduatedProfile)
-      ) {
-        await educationalProfileStore.saveProfile(graduatedProfile);
-        void syncEducationalProfileToServer(graduatedProfile);
+        if (
+          graduatedProfile !== null &&
+          shouldPersistGraduatedProfile(nextProfile, graduatedProfile)
+        ) {
+          try {
+            await educationalProfileStore.saveProfile(graduatedProfile);
+            void syncEducationalProfileToServer(graduatedProfile);
+          } catch {
+            // Keep the in-memory graduated profile even if persistence fails.
+          }
 
-        if (!cancelled) {
-          setProfile(graduatedProfile);
-          setIsLoading(false);
+          if (!cancelled) {
+            setProfile(graduatedProfile);
+            setIsLoading(false);
+          }
+
+          return;
         }
 
-        return;
-      }
-
-      if (!cancelled) {
-        setProfile(nextProfile);
-        setIsLoading(false);
+        if (!cancelled) {
+          setProfile(nextProfile);
+          setIsLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setProfile(null);
+          setIsLoading(false);
+        }
       }
     };
 
-    load();
-    return subscribeEducationalProfile(load);
+    void load();
+    return subscribeEducationalProfile(() => {
+      void load();
+    });
   }, []);
 
   const saveProfile = useCallback(async (nextProfile: EducationalProfile) => {

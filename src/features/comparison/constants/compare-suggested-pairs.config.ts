@@ -21,17 +21,17 @@ export const COMPARE_SUGGESTED_PAIRS: readonly CompareSuggestedPair[] = [
     icon: 'earth',
   },
   {
-    id: 'global-vs-balanced',
-    label: 'Global vs equilibrado',
-    description: 'Renta variable frente a mixto moderado',
-    isins: ['IE00B4L5Y983', 'IE00BYVJRP78'],
+    id: 'world-vs-all-world',
+    label: 'World vs All-World',
+    description: 'MSCI World frente a FTSE All-World',
+    isins: ['IE00B4L5Y983', 'IE00BK5BQT80'],
     icon: 'chart-line',
   },
   {
-    id: 'usa-vs-europe',
-    label: 'EE.UU. vs Europa',
-    description: 'S&P 500 frente a calidad europea',
-    isins: ['IE00B5BMR087', 'LU1781541179'],
+    id: 'usa-ishares-vs-vanguard',
+    label: 'S&P 500 iShares vs Vanguard',
+    description: 'Misma referencia, distinta gestora',
+    isins: ['IE00B5BMR087', 'IE00B3XXRP09'],
     icon: 'scale-balance',
   },
 ] as const;
@@ -48,7 +48,7 @@ export const COMPARE_METRIC_TIPS: readonly CompareMetricTip[] = [
   {
     id: 'ter',
     title: 'TER',
-    description: 'Comision anual del fondo',
+    description: 'Comisión anual del fondo',
     icon: 'percent-outline',
   },
   {
