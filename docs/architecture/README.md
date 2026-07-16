@@ -8,6 +8,8 @@ Documentación técnica del repositorio Inversora.
 |-----------|-----------|
 | [adr-001-domain-boundaries.md](./adr-001-domain-boundaries.md) | Scoring, favoritos, asistente, imports entre features |
 | [adr-003-component-naming.md](./adr-003-component-naming.md) | Nombres y carpetas del design system (`TabHeader`, `TextParagraph`, …) |
+| [adr-004-testing-by-architecture-layer.md](./adr-004-testing-by-architecture-layer.md) | Tests por capa; árbol `test/`; pirámide como baremo |
+| [testing-strategy.md](./testing-strategy.md) | Guía operativa de tests y naming |
 | [mvp-feature-map.md](./mvp-feature-map.md) | Estado de implementación por feature y ruta |
 | [catalog-client-side-filtering.md](./catalog-client-side-filtering.md) | Filtros de catálogo en memoria (sin HTTP por toggle) |
 | [front-final-quality-audit.md](./front-final-quality-audit.md) | Auditoria final de calidad, rendimiento y riesgos del front |
@@ -23,6 +25,12 @@ src/
   features/     # Módulos de producto (screens, components, services)
   shared/       # UI, theme, hooks reutilizables
   core/         # Dominio transversal: scoring, storage, errors, domain types
+test/
+  domain/       # Unitarios
+  application/  # Integración (casos de uso)
+  contracts/    # Contratos de adaptador
+  e2e/          # Playwright (journeys, fixtures, doubles)
+  support/      # Fixtures/doubles compartidos
 ```
 
 Reglas de dependencia:

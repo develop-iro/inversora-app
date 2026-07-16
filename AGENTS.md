@@ -120,6 +120,7 @@ Target routes:
 - Use `docs/README.md` for product and architecture docs; `README.md` and `package.json` for quick onboarding and scripts.
 - Verification step for changes: run `pnpm run test:ci` before considering work complete (also enforced by the Husky pre-push hook after `pnpm install`).
 - `pnpm run quality` is an alias for `pnpm run test:ci` (typecheck, lint with zero warnings, unit tests, script tests, Expo config).
+- Tests live under `test/` by layer: `domain` (unit), `application` (integration), `contracts` (adapter), `e2e` (Playwright + fixtures/doubles). Do not add new `*.spec.ts` under `src/`. See [test/README.md](test/README.md), [docs/architecture/testing-strategy.md](docs/architecture/testing-strategy.md), and `.cursor/rules/testing-strategy.mdc`.
 - Pre-commit runs ESLint with `--fix` on staged files via lint-staged.
 - Commit-msg runs commitlint ([Conventional Commits](https://www.conventionalcommits.org/)) via Husky after `pnpm install`.
 - CI also runs `build:web:ci` and `verify:prebuild`. On push to `main`, EAS Workflow `.eas/workflows/main-deployments.yml` builds Android preview and deploys web (`alias: inversora`). iOS preview remains manual (`pnpm run build:preview:ios`).

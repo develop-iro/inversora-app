@@ -150,6 +150,12 @@ Run lint:
 pnpm run lint
 ```
 
+Unit, integration, and contract tests live under `test/` by layer (`domain`, `application`, `contracts`). Playwright e2e lives in `test/e2e/` (see `test/README.md`).
+
+```bash
+pnpm run test:unit
+```
+
 Install the local browser used by E2E tests:
 
 ```bash

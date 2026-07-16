@@ -1,0 +1,42 @@
+---
+description: Test layout under test/ by layer — domain, application, contracts, e2e + fixtures/doubles
+alwaysApply: true
+---
+
+# Testing strategy (clean architecture)
+
+Pyramid (~50–60% unit, ~25–30% integration, ~10–15% e2e) is a **maturity baremo**, not a sprint quota. Physical layout and naming live under `test/` — see `test/README.md` and `docs/architecture/testing-strategy.md`.
+
+## Where to put tests
+
+| Layer | Path | Naming |
+|-------|------|--------|
+| Domain | `test/domain/**` | `*.spec.ts` |
+| Use case | `test/application/**` | `*.integration.spec.ts` |
+| Adapter | `test/contracts/**` | `*.contract.spec.ts` |
+| Journey | `test/e2e/journeys/**` | Playwright `*.spec.ts` |
+| Shared builders | `test/support/{fixtures,doubles}` | reusable across non-e2e |
+| E2E builders | `test/e2e/{fixtures,doubles,support}` | Playwright-only |
+
+Do **not** add new `*.spec.ts` next to production files under `src/`.
+
+## Do
+
+- Import production code with `@/` and shared test helpers with `@test/` (maps to `test/`).
+- Fake ports in application tests; no real network/device storage.
+- When touching an adapter, add/update a contract in `test/contracts`.
+- Put ready data in `fixtures/`, route/API fakes in `doubles/`.
+- Climb toward the baremo incrementally — add missing layers; do not delete useful domain units to “fix” percentages.
+
+## Do not
+
+- Do not call a single pure-function spec an integration test.
+- Do not mock the domain under test in its own unit test.
+- Do not add trivial UI render snapshots without a business/contract assertion.
+- Do not require e2e for every component change.
+
+## Commands
+
+- `pnpm run test:unit` — domain + application + contracts
+- `pnpm run test:e2e` — Playwright under `test/e2e`
+- `pnpm run test:ci` — full quality gate
