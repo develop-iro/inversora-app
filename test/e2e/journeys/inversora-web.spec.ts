@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test';
 
 import {
+  mockFundDetailApi,
   mockFundsApi,
   mockRankingsApi,
   mockSuggestedComparisonDetailMisses,
 } from '../doubles/mock-api';
+import { MOCK_CATALOG_FUNDS } from '../fixtures/catalog-funds';
 import { expectPageToContain, gotoRoute } from '../support/page-helpers';
 
 test.describe('Inversora web smoke', () => {
@@ -146,5 +148,56 @@ test.describe('Inversora web smoke', () => {
     await expectPageToContain(page, 'uso educativo de Inversora');
     await expectPageToContain(page, 'Sin asesoramiento personalizado');
     await expectPageToContain(page, 'No es un broker');
+  });
+
+  test('opens a fund detail smoke screen from a known ISIN', async ({ page }) => {
+    const fund = MOCK_CATALOG_FUNDS[0]!;
+
+    await mockFundsApi(page);
+    await mockFundDetailApi(page);
+    await gotoRoute(page, `/funds/${fund.isin}`);
+
+    await expect(page).toHaveURL(new RegExp(`/funds/${fund.isin}`, 'i'));
+    await expectPageToContain(page, fund.name);
+    await expectPageToContain(page, 'Score Inversora');
+    await expectPageToContain(page, fund.isin);
+    await expectPageToContain(page, 'no ofrece asesoramiento financiero personalizado');
+  });
+
+  test('persists a local favorite across favorites navigation', async ({ page }) => {
+    const fund = MOCK_CATALOG_FUNDS[0]!;
+
+    await mockFundsApi(page);
+    await mockFundDetailApi(page);
+    // Toggle from the detail surface: CI uses staging API hosts, and the catalog
+    // grid may not expose the mock ISIN until list mocks are applied.
+    await gotoRoute(page, `/funds/${fund.isin}`);
+
+    await expectPageToContain(page, fund.name);
+    await page.getByRole('button', { name: new RegExp(`Guardar en favoritos, ${fund.isin}`, 'i') }).click();
+    await expect(
+      page.getByRole('button', { name: new RegExp(`Quitar de favoritos, ${fund.isin}`, 'i') }),
+    ).toBeVisible();
+
+    await gotoRoute(page, '/favorites');
+    await expectPageToContain(page, 'Favoritos');
+    await expectPageToContain(page, fund.name);
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expectPageToContain(page, fund.name);
+  });
+
+  test('opens SORA educational answer with disclaimer from home search', async ({ page }) => {
+    await mockRankingsApi(page);
+    await gotoRoute(page, '/');
+
+    const search = page.getByLabel(/Buscar conceptos o fondos/i);
+    await expect(search).toBeVisible();
+    await search.fill('qué es el TER');
+
+    await expectPageToContain(page, 'Respuesta educativa');
+    await expectPageToContain(page, 'Qué es la comisión (TER)');
+    await expectPageToContain(page, 'SORA');
+    await expectPageToContain(page, 'No es asesoramiento financiero personalizado');
   });
 });

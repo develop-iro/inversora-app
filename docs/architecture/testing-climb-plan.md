@@ -22,6 +22,7 @@ La pirámide (~50–60 % unit / ~25–30 % integración / ~10–15 % e2e) es **b
 | Tras ola 3 | ~106 | ~32 | ~72 | ~8 | ~207 |
 | Tras ola 4 | ~103 | ~52 | ~72 | ~8 | ~227 |
 | Tras ola 5 | ~116 | ~58 | ~72 | ~8 | ~246 |
+| Tras ola 6 | ~116 | ~58 | ~72 | ~11 | ~246 |
 
 \* `pnpm run test:unit` (domain + application + contracts).
 
@@ -96,7 +97,7 @@ Introduce `HttpGetPort` + `createMemoryHttpGet` y factories `create*Service(deps
 
 ### Ola 5 — Favoritos, comparación, calculadora, feedback
 
-**Estado:** en curso / entregada en `cursor/testing-climb-wave5-*`  
+**Estado:** entregada (`cursor/testing-climb-wave5-*`)  
 **Rama sugerida:** `cursor/testing-climb-wave5-*`
 
 Introduce `HttpPostPort` + `createMemoryHttpPost` y factories para hydrate de favoritos, carga de compare funds y submit de feedback. Toggle/selection de storage siguen en contratos de ola 3.
@@ -111,11 +112,14 @@ Introduce `HttpPostPort` + `createMemoryHttpPost` y factories para hydrate de fa
 
 ### Ola 6 — E2E selectivo
 
-Solo si un journey crítico no está cubierto abajo:
+**Estado:** en curso / entregada en `cursor/testing-climb-wave6-*`  
+**Rama sugerida:** `cursor/testing-climb-wave6-*`
 
-- Favoritos persistidos (web)
+Journeys añadidos en `test/e2e/journeys/inversora-web.spec.ts` (+ `mockFundDetailApi`):
+
+- Favoritos persistidos (web) — toggle en catálogo → `/favorites` → reload
 - Ficha de fondo `/funds/[isin]` smoke
-- Asistente abre y muestra disclaimer (sin asertar texto libre de IA)
+- Asistente SORA desde home search con disclaimer (sin asertar texto libre de IA)
 
 No añadir e2e por componente.
 
@@ -141,7 +145,7 @@ Tras cada ola, actualizar esta tabla en el PR:
 | Domain | Reglas nuevas/tocadas con `*.spec.ts` |
 | Pirámide | Recuento `it/test` por carpeta vs baremo (informativo) |
 
-Meta intermedia tras olas 1–5: contratos de frontera + application de funds/home/compare/favorites/feedback; calculator CSV/scenarios en domain. Queda ola 6 (e2e selectivo).
+Meta tras olas 1–6: contratos + application de funds/home/compare/favorites/feedback; calculator CSV/scenarios; e2e de journeys críticos (favoritos, ficha, SORA disclaimer).
 
 ## Anti-objetivos
 

@@ -7,15 +7,21 @@ import {
   toApiFund,
   type MockApiFund,
 } from '../fixtures/catalog-funds';
+import { toFundDetailPayload } from '../fixtures/fund-detail';
+
+/** Playwright web-server port; never intercept the Expo app itself. */
+const E2E_APP_PORT = String(process.env.E2E_PORT ?? 8099);
 
 /**
  * Intercepts catalog HTTP calls with in-memory fixtures (Playwright route double).
+ *
+ * Matches any API host (local, staging, etc.). Skips only the Expo web server port.
  */
 export async function mockFundsApi(page: Page, funds: MockApiFund[] = MOCK_CATALOG_FUNDS) {
   await page.route('**/funds**', async (route) => {
     const requestUrl = new URL(route.request().url());
 
-    if (requestUrl.port !== '3000') {
+    if (requestUrl.port === E2E_APP_PORT) {
       await route.continue();
       return;
     }
@@ -137,7 +143,7 @@ export async function mockRankingsApi(page: Page) {
   await page.route('**/rankings**', async (route) => {
     const requestUrl = new URL(route.request().url());
 
-    if (requestUrl.port === '8099') {
+    if (requestUrl.port === E2E_APP_PORT) {
       await route.continue();
       return;
     }
@@ -185,4 +191,59 @@ export async function mockSuggestedComparisonDetailMisses(page: Page) {
       });
     });
   }
+}
+
+/**
+ * Intercepts `GET /funds/:isin` detail calls with Playwright fixtures.
+ *
+ * @param page - Playwright page.
+ * @param funds - Catalog funds available as detail payloads.
+ */
+export async function mockFundDetailApi(
+  page: Page,
+  funds: MockApiFund[] = MOCK_CATALOG_FUNDS,
+) {
+  await page.route('**/funds/*', async (route) => {
+    const requestUrl = new URL(route.request().url());
+
+    if (requestUrl.port === E2E_APP_PORT) {
+      await route.continue();
+      return;
+    }
+
+    const match = requestUrl.pathname.match(/^\/funds\/([^/]+)$/);
+    const pathSegment = match?.[1];
+
+    if (match === null || pathSegment === undefined || pathSegment === 'catalog-metrics') {
+      await route.continue();
+      return;
+    }
+
+    const isin = decodeURIComponent(pathSegment).toUpperCase();
+    const fund = funds.find((entry) => entry.isin.toUpperCase() === isin);
+
+    if (fund === undefined) {
+      await route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        headers: {
+          'access-control-allow-origin': '*',
+        },
+        body: JSON.stringify({
+          statusCode: 404,
+          message: 'Not found',
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: {
+        'access-control-allow-origin': '*',
+      },
+      body: JSON.stringify(toFundDetailPayload(fund)),
+    });
+  });
 }
