@@ -35,6 +35,7 @@ Tooling scripts keep colocated specs next to `scripts/` (`pnpm run test:scripts`
 3. **HTTP, storage, mapper, port** → `test/contracts/.../*.contract.spec.ts`
 4. **Critical UI journey** → `test/e2e/journeys/*.spec.ts` (+ fixtures/doubles as needed)
 5. **Reusable builders** shared by several layers → `test/support/fixtures` or `test/support/doubles`
+6. **Local stores** → test `create*Store` factories with `createMemoryKeyValueStorage()` (do not import production singletons that pull React Native / SecureStore)
 
 Import production code with `@/` and shared test builders with `@test/` (e.g. `@test/support/fixtures/catalog-fund`).
 

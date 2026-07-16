@@ -43,7 +43,7 @@ Cada ola → **rama + PR** dedicada. Definition of Done: tests nuevos en la carp
 
 ### Ola 2 — Contratos parsers BFF restantes
 
-**Estado:** en curso / entregada en `cursor/testing-climb-wave2-*`  
+**Estado:** entregada (re-landed en `main` vía ola 3 si el merge a la rama intermedia no llegó a `main`)  
 **Rama sugerida:** `cursor/testing-climb-wave2-*`
 
 | Módulo | Capa |
