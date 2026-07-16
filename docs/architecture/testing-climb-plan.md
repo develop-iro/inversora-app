@@ -13,14 +13,12 @@ La pirámide (~50–60 % unit / ~25–30 % integración / ~10–15 % e2e) es **b
 | Contracts | Parcial en API/storage timeout; faltan parsers/mappers y stores |
 | E2E | 8 journeys web útiles; ampliar solo si hay gap de producto |
 
-### Recuento orientativo tras Ola 1
+### Recuento orientativo
 
-| Capa | Casos (`it`/`test`) aprox. |
-|------|----------------------------|
-| Domain | ~106 |
-| Application | ~32 |
-| Contracts | ~32 |
-| E2E | ~8 |
+| Momento | Domain | Application | Contracts | E2E |
+|---------|-------:|------------:|----------:|----:|
+| Tras ola 1 | ~106 | ~32 | ~32 | ~8 |
+| Tras ola 2 | ~106 | ~32 | ~54 | ~8 |
 
 ## Olas (módulo a módulo)
 
@@ -28,7 +26,7 @@ Cada ola → **rama + PR** dedicada. Definition of Done: tests nuevos en la carp
 
 ### Ola 1 — Contratos API catálogo + dominio scoring (ROI máximo)
 
-**Estado:** en curso / entregada en `cursor/testing-climb-wave1-*`  
+**Estado:** entregada (`cursor/testing-climb-wave1-*`)  
 **Rama sugerida:** `cursor/testing-climb-wave1-*`
 
 | Módulo | Capa | Tests objetivo |
@@ -45,6 +43,9 @@ Cada ola → **rama + PR** dedicada. Definition of Done: tests nuevos en la carp
 
 ### Ola 2 — Contratos parsers BFF restantes
 
+**Estado:** entregada (re-landed en `main` vía ola 3 si el merge a la rama intermedia no llegó a `main`)  
+**Rama sugerida:** `cursor/testing-climb-wave2-*`
+
 | Módulo | Capa |
 |--------|------|
 | `parse-fund-detail-response` | contracts |
@@ -53,7 +54,7 @@ Cada ola → **rama + PR** dedicada. Definition of Done: tests nuevos en la carp
 | `parse-investment-news-response` | contracts |
 | `parse-fund-live-market-snapshot` | contracts |
 | `parse-assistant-response` | contracts |
-| `quarter-metadata` | domain |
+| `quarter-metadata` | domain (cubierto en ola 1) |
 
 ### Ola 3 — Storage ports (contratos con doubles)
 

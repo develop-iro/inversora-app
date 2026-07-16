@@ -1,209 +1,25 @@
-import type {
-  EducationalProfile,
-  EducationalProfileVersion,
-  FinancialReadiness,
-  InvestmentHorizon,
-  InvestorStyle,
-  KnowledgeLevel,
-  LearningGoal,
-  RiskOrientation,
-} from '@/core/domain/educational-profile';
-import { AppError } from '@/core/errors/app-error';
-import { EDUCATIONAL_PROFILE_STORAGE_KEY } from '@/core/storage/educational-profile-storage-key';
-import {
-  deleteSecureValue,
-  migrateLegacyAsyncStorageValue,
-  readSecureValue,
-  writeSecureValue,
-} from '@/core/storage/secure-storage';
+import type { EducationalProfile } from '@/core/domain/educational-profile';
+import { createEducationalProfileStore } from '@/core/storage/educational-profile-store.factory';
+import { createSecureKeyValueStoragePort } from '@/core/storage/secure-key-value-storage-port';
 
-type EducationalProfileListener = () => void;
+export {
+  createEducationalProfileStore,
+  parseEducationalProfile,
+} from '@/core/storage/educational-profile-store.factory';
 
-const listeners = new Set<EducationalProfileListener>();
+const defaultEducationalProfileStore = createEducationalProfileStore(
+  createSecureKeyValueStoragePort(),
+);
 
-/** Last profile written in this JS runtime; avoids gate races when SecureStore is slow. */
-let memoryProfile: EducationalProfile | null = null;
-
-const KNOWLEDGE_LEVELS: KnowledgeLevel[] = ['beginner', 'intermediate', 'advanced'];
-const RISK_ORIENTATIONS: RiskOrientation[] = ['conservative', 'moderate', 'dynamic'];
-const INVESTMENT_HORIZONS: InvestmentHorizon[] = ['short', 'medium', 'long'];
-const INVESTOR_STYLES: InvestorStyle[] = ['defensive', 'balanced', 'enterprising'];
-const FINANCIAL_READINESS_LEVELS: FinancialReadiness[] = ['ready', 'caution', 'not-ready'];
-const LEARNING_GOALS: LearningGoal[] = ['learn-basics', 'learn-compare', 'learn-fees-risk'];
-const PROFILE_VERSIONS: EducationalProfileVersion[] = [1, 2];
-
-function notifyListeners() {
-  listeners.forEach((listener) => listener());
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function isKnowledgeLevel(value: unknown): value is KnowledgeLevel {
-  return typeof value === 'string' && KNOWLEDGE_LEVELS.includes(value as KnowledgeLevel);
-}
-
-function isRiskOrientation(value: unknown): value is RiskOrientation {
-  return typeof value === 'string' && RISK_ORIENTATIONS.includes(value as RiskOrientation);
-}
-
-function isInvestmentHorizon(value: unknown): value is InvestmentHorizon {
-  return typeof value === 'string' && INVESTMENT_HORIZONS.includes(value as InvestmentHorizon);
-}
-
-function isInvestorStyle(value: unknown): value is InvestorStyle {
-  return typeof value === 'string' && INVESTOR_STYLES.includes(value as InvestorStyle);
-}
-
-function isFinancialReadiness(value: unknown): value is FinancialReadiness {
-  return (
-    typeof value === 'string' &&
-    FINANCIAL_READINESS_LEVELS.includes(value as FinancialReadiness)
-  );
-}
-
-function isLearningGoal(value: unknown): value is LearningGoal {
-  return typeof value === 'string' && LEARNING_GOALS.includes(value as LearningGoal);
-}
-
-function isProfileVersion(value: unknown): value is EducationalProfileVersion {
-  return typeof value === 'number' && PROFILE_VERSIONS.includes(value as EducationalProfileVersion);
-}
-
-function parseAnswers(value: unknown): Record<string, string> | null {
-  if (!isRecord(value)) {
-    return null;
-  }
-
-  const entries = Object.entries(value);
-
-  if (entries.some(([, answer]) => typeof answer !== 'string')) {
-    return null;
-  }
-
-  const parsed: Record<string, string> = {};
-
-  for (const [key, answer] of entries) {
-    if (typeof answer === 'string') {
-      parsed[key] = answer;
-    }
-  }
-
-  return parsed;
-}
-
-function parseEducationalProfile(value: unknown): EducationalProfile | null {
-  if (!isRecord(value)) {
-    return null;
-  }
-
-  const {
-    knowledgeLevel,
-    riskOrientation,
-    investmentHorizon,
-    investorStyle,
-    financialReadiness,
-    learningGoal,
-    profileVersion,
-    answers,
-    completedAt,
-  } = value;
-
-  const parsedAnswers = parseAnswers(answers);
-
-  if (
-    !isKnowledgeLevel(knowledgeLevel) ||
-    !isRiskOrientation(riskOrientation) ||
-    !isInvestmentHorizon(investmentHorizon) ||
-    !isLearningGoal(learningGoal) ||
-    parsedAnswers === null ||
-    typeof completedAt !== 'string'
-  ) {
-    return null;
-  }
-
-  const resolvedProfileVersion = isProfileVersion(profileVersion) ? profileVersion : 1;
-  const resolvedInvestorStyle = isInvestorStyle(investorStyle) ? investorStyle : 'balanced';
-  const resolvedFinancialReadiness = isFinancialReadiness(financialReadiness)
-    ? financialReadiness
-    : 'caution';
-
-  return {
-    knowledgeLevel,
-    riskOrientation,
-    investmentHorizon,
-    investorStyle: resolvedInvestorStyle,
-    financialReadiness: resolvedFinancialReadiness,
-    learningGoal,
-    profileVersion: resolvedProfileVersion,
-    answers: parsedAnswers,
-    completedAt,
-  };
-}
-
-export function subscribeEducationalProfile(listener: EducationalProfileListener): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+export function subscribeEducationalProfile(
+  listener: Parameters<typeof defaultEducationalProfileStore.subscribe>[0],
+): () => void {
+  return defaultEducationalProfileStore.subscribe(listener);
 }
 
 export const educationalProfileStore = {
-  async getProfile(): Promise<EducationalProfile | null> {
-    if (memoryProfile !== null) {
-      return memoryProfile;
-    }
-
-    try {
-      await migrateLegacyAsyncStorageValue(EDUCATIONAL_PROFILE_STORAGE_KEY);
-      const raw = await readSecureValue(EDUCATIONAL_PROFILE_STORAGE_KEY);
-
-      if (!raw) {
-        return null;
-      }
-
-      const parsed = JSON.parse(raw) as unknown;
-      const profile = parseEducationalProfile(parsed);
-      memoryProfile = profile;
-      return profile;
-    } catch (cause) {
-      throw new AppError(
-        'STORAGE_READ_FAILED',
-        'No se pudo leer el perfil educativo.',
-        cause,
-      );
-    }
-  },
-
-  async saveProfile(profile: EducationalProfile): Promise<void> {
-    memoryProfile = profile;
-    notifyListeners();
-
-    try {
-      await writeSecureValue(
-        EDUCATIONAL_PROFILE_STORAGE_KEY,
-        JSON.stringify(profile),
-      );
-    } catch (cause) {
-      throw new AppError(
-        'STORAGE_WRITE_FAILED',
-        'No se pudo guardar el perfil educativo.',
-        cause,
-      );
-    }
-  },
-
-  async clearProfile(): Promise<void> {
-    memoryProfile = null;
-    notifyListeners();
-
-    try {
-      await deleteSecureValue(EDUCATIONAL_PROFILE_STORAGE_KEY);
-    } catch (cause) {
-      throw new AppError(
-        'STORAGE_WRITE_FAILED',
-        'No se pudo borrar el perfil educativo.',
-        cause,
-      );
-    }
-  },
+  getProfile: () => defaultEducationalProfileStore.getProfile(),
+  saveProfile: (profile: EducationalProfile) =>
+    defaultEducationalProfileStore.saveProfile(profile),
+  clearProfile: () => defaultEducationalProfileStore.clearProfile(),
 };
