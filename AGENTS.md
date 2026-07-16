@@ -102,6 +102,7 @@ Layer rules:
 - Domain services live in `features/*/services`.
 - Cross-cutting infrastructure lives in `core`.
 - Avoid direct imports from one feature into another feature.
+- Follow the nine non-negotiable clean-architecture principles (dependency rule, pure domain, use cases, ports/adapters, explicit composition, DTO≠entity/VO, typed errors, layer tests, observability bridge): [docs/architecture/clean-architecture-principles.md](docs/architecture/clean-architecture-principles.md) and `.cursor/rules/clean-architecture-principles.mdc`.
 
 Target routes:
 

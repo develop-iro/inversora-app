@@ -16,6 +16,7 @@
 | Historias de usuario (HU) y trazabilidad | [product/user-stories-index.md](./product/user-stories-index.md) |
 | Avisos legales y copy obligatorio | [product/legal-and-disclaimers.md](./product/legal-and-disclaimers.md) |
 | Estado del código por feature | [architecture/mvp-feature-map.md](./architecture/mvp-feature-map.md) |
+| Principios no negociables de clean architecture | [architecture/clean-architecture-principles.md](./architecture/clean-architecture-principles.md) · [`.cursor/rules/clean-architecture-principles.mdc`](../.cursor/rules/clean-architecture-principles.mdc) |
 | Límites de dominio (scoring, favoritos, IA) | [architecture/adr-001-domain-boundaries.md](./architecture/adr-001-domain-boundaries.md) |
 | Convención de componentes UI (tabs, texto) | [architecture/adr-003-component-naming.md](./architecture/adr-003-component-naming.md) |
 | Estrategia de tests por capa (clean architecture) | [architecture/testing-strategy.md](./architecture/testing-strategy.md) · [ADR-004](./architecture/adr-004-testing-by-architecture-layer.md) |
@@ -71,6 +72,7 @@ Definiciones que **no deberían cambiar** sin revisar el doc oficial o un ADR:
 
 ## Arquitectura (`docs/architecture/`)
 
+- **clean-architecture-principles:** nueve principios no negociables adaptados a Expo (dependencias, dominio puro, casos de uso, puertos/adaptadores, composición explícita, DTO≠entidad/VO, errores tipados, tests por capa, observabilidad).
 - **ADR-001:** dónde vive el scoring, favoritos y el asistente; reglas de imports entre features.
 - **ADR-004 + testing-strategy:** tests por capa (unitario dominio, integración casos de uso, contrato adaptadores); pirámide como baremo de madurez.
 - **mvp-feature-map:** qué está implementado hoy (se actualiza con el código).
