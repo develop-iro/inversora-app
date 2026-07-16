@@ -6,6 +6,7 @@ Documentación técnica del repositorio Inversora.
 
 | Documento | Contenido |
 |-----------|-----------|
+| [clean-architecture-principles.md](./clean-architecture-principles.md) | Nueve principios no negociables (dependencias, dominio, puertos, composición, DTOs, errores, tests, observabilidad) |
 | [adr-001-domain-boundaries.md](./adr-001-domain-boundaries.md) | Scoring, favoritos, asistente, imports entre features |
 | [adr-003-component-naming.md](./adr-003-component-naming.md) | Nombres y carpetas del design system (`TabHeader`, `TextParagraph`, …) |
 | [adr-004-testing-by-architecture-layer.md](./adr-004-testing-by-architecture-layer.md) | Tests por capa (dominio / caso de uso / adaptador); pirámide como baremo |
@@ -35,6 +36,8 @@ features  → shared, core
 features  ↛ features   (evitar; ver excepción en ADR-001)
 core      ↛ features, shared/components
 ```
+
+Detalle de los nueve principios (incl. composición explícita, DTO≠entidad, errores tipados y observabilidad): [clean-architecture-principles.md](./clean-architecture-principles.md). Regla Cursor: `.cursor/rules/clean-architecture-principles.mdc`.
 
 ## ADRs
 

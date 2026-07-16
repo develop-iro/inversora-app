@@ -1,0 +1,114 @@
+---
+description: Nine non-negotiable clean-architecture principles adapted to Inversora (Expo feature-first)
+alwaysApply: true
+---
+
+# Clean architecture — 9 non-negotiable principles (Inversora)
+
+Feature-first layout inspired by Clean / Hexagonal Architecture. These nine principles are **non-negotiable** for new code. Full narrative: `docs/architecture/clean-architecture-principles.md`. Related: ADR-001, ADR-004, `.cursor/rules/testing-strategy.mdc`, `.cursor/rules/screen-reactivity-and-practices.mdc`.
+
+## Layout (dependency arrows inward)
+
+```text
+app (composition / Expo Router) → features (use cases + UI) → shared / core
+core (domain + ports + adapters) ↛ features, shared/components
+features ↛ features   (unless documented in ADR-001)
+```
+
+Domain and pure rules sit at the center (`core/domain`, `core/scoring`, pure `features/*/utils|models`). I/O and frameworks live in adapters (`core/api`, `core/storage`, `core/analytics`, `core/observability`).
+
+## The nine principles
+
+### 1. Dependency rule
+
+Dependencies point **inward**. Outer layers may import inner ones; never the reverse.
+
+- `app` → `features`, `shared`
+- `features` → `shared`, `core`
+- `core` must not import `features` or `shared/components`
+- No feature → feature imports unless ADR-001 documents an exception
+
+### 2. Pure domain
+
+Domain logic has invariants and no I/O or UI frameworks.
+
+- Put pure rules in `core/domain`, `core/scoring`, or pure `features/*/utils|models`
+- No React, Expo Router, AsyncStorage, `fetch`, or analytics inside domain calculators
+- Zod schemas for **domain shapes** may live next to domain types; HTTP/transport Zod stays in adapters
+
+### 3. Use cases orchestrate
+
+Use cases coordinate ports and domain; they do not own UI or transport details.
+
+- Prefer `features/*/services` (and domain hooks that only orchestrate) for flows
+- Screens compose hooks; they do not inline HTTP or storage
+- Inputs/outputs at the use-case boundary are explicit types (often Zod-inferred); keep error codes stable (`AppError` / `AppErrorCode`)
+
+### 4. Ports and adapters
+
+Ports express **needs**; adapters express **technology**.
+
+- Ports: storage contracts, API client surfaces, clock/analytics interfaces used by services
+- Adapters: `core/api`, `core/storage`, mappers HTTP↔domain, `core/analytics`, Sentry
+- Integration tests fake ports; adapter contract tests assert Zod/DTO shapes, error mapping, and port fulfillment (see `testing-strategy.mdc`)
+
+### 5. Explicit composition (Expo)
+
+Wire the app in the composition root — **no magic** DI scan / autoload of use cases.
+
+- Compose providers and init in `src/app/_layout.tsx` and `AppProviders` (and thin route files under `src/app`)
+- Prefer explicit imports and constructor/factory wiring over hidden global registries
+- Do not add Nest-style module scanning or “auto-discover all services” patterns on the client
+
+### 6. Never treat DTOs as entities / VOs
+
+Transport and read-model DTOs are **not** domain entities or value objects.
+
+- Map at adapter boundaries (`core/api` parsers/mappers); do not leak raw API payloads into screens as “the domain”
+- Domain types live in `core/domain` (and pure feature models); scoring/application read models (e.g. `FundWithScore`) stay typed outputs — do not pretend they are persistence entities
+- Do not put UI-only fields on domain types to “save a DTO”
+
+### 7. Errors as typed contracts
+
+Prefer stable, typed application errors; reserve unstructured throws for true invariant breaks in pure domain.
+
+- Cross boundary failures: `AppError` + `AppErrorCode` from `core/errors/app-error`
+- Adapters map HTTP/storage failures into those codes (contract tests must cover mapping)
+- Domain pure functions may throw on broken invariants; do not catch-and-ignore or replace with empty UI state without an explicit code/message path
+
+### 8. Tests by layer
+
+Choose the test from the layer you change (names differ from some hex training slides; Inversora mapping is authoritative):
+
+| Layer | Test |
+|-------|------|
+| Domain | Unit `*.spec.ts` |
+| Use case | Integration `*.integration.spec.ts` + fake ports |
+| Adapter | Contract `*.contract.spec.ts` (~100% of touched public surface) |
+| Critical UI journey | Few e2e `e2e/*.spec.ts` |
+
+Do not call a pure-function spec an “integration” test. Details: `.cursor/rules/testing-strategy.mdc`, ADR-004.
+
+### 9. Observability as a bridge
+
+Observability crosses layers through **adapters**, not by coupling domain to vendors.
+
+- Product/funnel: `core/analytics` (`trackEvent` / perf marks) → `inversora-api` (see `docs/architecture/analytics.md`)
+- Technical health: `core/observability` (Sentry) initialized from the composition root
+- Domain and use cases must not import Sentry SDKs or Grafana; metrics/dashboards stay outside the client
+- Privacy: anonymous, minimal events only — no PII, no free-text questionnaire/assistant content
+
+## Do / Do not (quick)
+
+**Do**
+
+- Keep `src/app` thin; put screens under `features/*/screens`
+- Fake ports in use-case tests; contract-test adapters you touch
+- Map API ↔ domain at the edge with Zod
+
+**Do not**
+
+- Import `features/*` from `core` or another feature
+- Call network/storage from pure scoring or catalog draft filters
+- Pass raw API DTOs through the UI as if they were domain models
+- Add hidden service autoloading or vendor SDKs inside domain modules
