@@ -169,9 +169,11 @@ test.describe('Inversora web smoke', () => {
 
     await mockFundsApi(page);
     await mockFundDetailApi(page);
-    await gotoRoute(page, '/funds');
+    // Toggle from the detail surface: CI uses staging API hosts, and the catalog
+    // grid may not expose the mock ISIN until list mocks are applied.
+    await gotoRoute(page, `/funds/${fund.isin}`);
 
-    await expectPageToContain(page, 'Catalogo de fondos');
+    await expectPageToContain(page, fund.name);
     await page.getByRole('button', { name: new RegExp(`Guardar en favoritos, ${fund.isin}`, 'i') }).click();
     await expect(
       page.getByRole('button', { name: new RegExp(`Quitar de favoritos, ${fund.isin}`, 'i') }),

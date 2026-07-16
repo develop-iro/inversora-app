@@ -9,14 +9,19 @@ import {
 } from '../fixtures/catalog-funds';
 import { toFundDetailPayload } from '../fixtures/fund-detail';
 
+/** Playwright web-server port; never intercept the Expo app itself. */
+const E2E_APP_PORT = String(process.env.E2E_PORT ?? 8099);
+
 /**
  * Intercepts catalog HTTP calls with in-memory fixtures (Playwright route double).
+ *
+ * Matches any API host (local, staging, etc.). Skips only the Expo web server port.
  */
 export async function mockFundsApi(page: Page, funds: MockApiFund[] = MOCK_CATALOG_FUNDS) {
   await page.route('**/funds**', async (route) => {
     const requestUrl = new URL(route.request().url());
 
-    if (requestUrl.port !== '3000') {
+    if (requestUrl.port === E2E_APP_PORT) {
       await route.continue();
       return;
     }
@@ -138,7 +143,7 @@ export async function mockRankingsApi(page: Page) {
   await page.route('**/rankings**', async (route) => {
     const requestUrl = new URL(route.request().url());
 
-    if (requestUrl.port === '8099') {
+    if (requestUrl.port === E2E_APP_PORT) {
       await route.continue();
       return;
     }
@@ -201,7 +206,7 @@ export async function mockFundDetailApi(
   await page.route('**/funds/*', async (route) => {
     const requestUrl = new URL(route.request().url());
 
-    if (requestUrl.port === '8099') {
+    if (requestUrl.port === E2E_APP_PORT) {
       await route.continue();
       return;
     }
