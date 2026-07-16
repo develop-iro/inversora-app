@@ -1,0 +1,12 @@
+name: Preview build (Android)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build_android_preview:
+    name: Build Android preview
+    type: build
+    params:
+      platform: android
+      profile: preview

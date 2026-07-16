@@ -1,4 +1,4 @@
-name: Main deployments (Android preview + web)
+name: Main deployments (web)
 
 on:
   push:
@@ -6,13 +6,6 @@ on:
       - main
 
 jobs:
-  build_android_preview:
-    name: Build Android preview
-    type: build
-    params:
-      platform: android
-      profile: preview
-
   deploy_web_pro:
     name: Deploy web to EAS Hosting
     environment: production
