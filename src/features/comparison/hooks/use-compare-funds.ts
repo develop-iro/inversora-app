@@ -2,9 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { FundDetail } from '@/core/domain/catalog';
 import type { CompareFundEntry } from '@/features/comparison/models/compare-fund-entry';
+import { createCompareFundsService } from '@/features/comparison/services/load-compare-funds.factory';
 import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
 
-const LOAD_ERROR_MESSAGE = 'No se pudo cargar la ficha de este fondo.';
+const compareFundsService = createCompareFundsService({
+  getFundByIsin,
+});
 
 export type UseCompareFundsResult = {
   readonly entries: readonly CompareFundEntry[];
@@ -15,74 +18,6 @@ export type UseCompareFundsResult = {
   readonly reloadToken: number;
   readonly refetch: () => void;
 };
-
-/**
- * Merges the current selection into previously loaded compare entries.
- *
- * @param selectedIsins - ISINs selected for comparison, in display order.
- * @param currentEntries - Previously hydrated compare entries.
- */
-function mergeCompareEntries(
-  selectedIsins: readonly string[],
-  currentEntries: readonly CompareFundEntry[],
-): CompareFundEntry[] {
-  return selectedIsins.map((isin) => {
-    const existing = currentEntries.find((entry) => entry.isin === isin);
-
-    return existing ?? { isin, detail: null, errorMessage: null };
-  });
-}
-
-/**
- * Returns ISINs that still need a network fetch.
- *
- * @param entries - Merged compare entries for the current selection.
- * @param forceFailed - When true, retries entries that previously failed.
- */
-function resolveIsinsToFetch(
-  entries: readonly CompareFundEntry[],
-  forceFailed: boolean,
-): string[] {
-  return entries
-    .filter((entry) => {
-      if (entry.detail !== null) {
-        return false;
-      }
-
-      if (entry.errorMessage === null) {
-        return true;
-      }
-
-      return forceFailed;
-    })
-    .map((entry) => entry.isin);
-}
-
-async function loadCompareFundEntry(isin: string): Promise<CompareFundEntry> {
-  try {
-    const detail = await getFundByIsin(isin);
-
-    if (detail === null) {
-      return {
-        isin,
-        detail: null,
-        errorMessage: LOAD_ERROR_MESSAGE,
-      } satisfies CompareFundEntry;
-    }
-
-    return {
-      isin,
-      detail,
-      errorMessage: null,
-    } satisfies CompareFundEntry;
-  } catch {
-    return {
-      isin,
-      detail: null,
-      errorMessage: LOAD_ERROR_MESSAGE,
-    } satisfies CompareFundEntry;
-  }
-}
 
 /**
  * Loads fund detail payloads for the current comparison selection.
@@ -113,45 +48,33 @@ export function useCompareFunds(selectedIsins: readonly string[]): UseCompareFun
         return;
       }
 
-      const mergedEntries = mergeCompareEntries(selectedIsins, entriesRef.current).map(
-        (entry) => {
-          if (!forceFailed || entry.detail !== null || entry.errorMessage === null) {
-            return entry;
-          }
-
-          return { ...entry, errorMessage: null };
-        },
-      );
-      const isinsToFetch = resolveIsinsToFetch(mergedEntries, forceFailed);
-
-      if (!cancelled) {
-        setEntries(mergedEntries);
-      }
-
-      if (isinsToFetch.length === 0) {
-        if (!cancelled) {
-          setIsLoading(false);
+      const previousEntries = entriesRef.current;
+      const needsFetch = selectedIsins.some((isin) => {
+        const existing = previousEntries.find((entry) => entry.isin === isin);
+        if (existing?.detail !== null && existing !== undefined) {
+          return false;
         }
-        return;
-      }
+        if (existing?.errorMessage !== null && existing !== undefined && !forceFailed) {
+          return false;
+        }
+        return true;
+      });
 
       if (!cancelled) {
-        setIsLoading(true);
+        setIsLoading(needsFetch);
       }
 
-      const fetchedEntries = await Promise.all(
-        isinsToFetch.map((isin) => loadCompareFundEntry(isin)),
+      const nextEntries = await compareFundsService.loadCompareFunds(
+        selectedIsins,
+        previousEntries,
+        { forceFailed },
       );
 
       if (cancelled) {
         return;
       }
 
-      const fetchedByIsin = new Map(
-        fetchedEntries.map((entry) => [entry.isin, entry] as const),
-      );
-
-      setEntries(mergedEntries.map((entry) => fetchedByIsin.get(entry.isin) ?? entry));
+      setEntries(nextEntries);
       setIsLoading(false);
     })();
 
