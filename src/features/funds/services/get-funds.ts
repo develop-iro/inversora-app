@@ -22,10 +22,13 @@ import {
   invalidateCache,
 } from '@/core/query/query-cache';
 import type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
+import { applyClientOnlyCatalogFilters } from '@/features/funds/utils/apply-client-only-catalog-filters';
 import { filterCatalogVisible } from '@/features/funds/utils/catalog-visibility';
 import { filterCatalogFunds } from '@/features/funds/utils/filter-catalog-funds';
 import { CATALOG_SUGGESTIONS_LIMIT } from '@/features/funds/utils/fund-search';
 import { formatRankingThemeLabel } from '@/features/onboarding/utils/build-ranking-theme-options';
+
+export { applyClientOnlyCatalogFilters } from '@/features/funds/utils/apply-client-only-catalog-filters';
 
 export type { FundCatalogFilters } from '@/features/funds/types/fund-catalog-filters';
 
@@ -102,30 +105,6 @@ function toFundsFetchError(error: unknown): AppError {
   return error instanceof AppError
     ? error
     : new AppError('FUNDS_FETCH_FAILED', 'No se pudo cargar el catálogo de fondos.', error);
-}
-
-/**
- * Returns true when the active sort is return-based.
- */
-function isReturnBasedCatalogSort(filters?: FundCatalogFilters): boolean {
-  return filters?.sortBy === 'return1y';
-}
-
-/**
- * Applies post-fetch catalog shaping that the API does not perform.
- *
- * @param funds - Funds returned by the API.
- * @param filters - Active catalog filters.
- */
-export function applyClientOnlyCatalogFilters(
-  funds: CatalogFund[],
-  filters?: FundCatalogFilters,
-): CatalogFund[] {
-  if (isReturnBasedCatalogSort(filters) || filters?.minReturnPercent != null) {
-    return [...funds];
-  }
-
-  return [...funds].sort((left, right) => right.inversoraScore - left.inversoraScore);
 }
 
 function getMockCatalogFunds(filters?: FundCatalogFilters): CatalogFund[] {

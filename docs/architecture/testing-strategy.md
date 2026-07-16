@@ -47,6 +47,8 @@ Importa producción con `@/…` y builders de test con `@test/…` (alias a `tes
 3. Mantener unitarios de dominio
 4. E2E solo para journeys de riesgo
 
+Plan módulo a módulo (olas + ramas): [testing-climb-plan.md](./testing-climb-plan.md).
+
 ## Comandos
 
 | Comando | Scope |

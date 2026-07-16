@@ -19,7 +19,7 @@
 | Principios no negociables de clean architecture | [architecture/clean-architecture-principles.md](./architecture/clean-architecture-principles.md) · [`.cursor/rules/clean-architecture-principles.mdc`](../.cursor/rules/clean-architecture-principles.mdc) |
 | Límites de dominio (scoring, favoritos, IA) | [architecture/adr-001-domain-boundaries.md](./architecture/adr-001-domain-boundaries.md) |
 | Convención de componentes UI (tabs, texto) | [architecture/adr-003-component-naming.md](./architecture/adr-003-component-naming.md) |
-| Estrategia y layout de tests (`test/`) | [architecture/testing-strategy.md](./architecture/testing-strategy.md) · [ADR-004](./architecture/adr-004-testing-by-architecture-layer.md) · [test/README.md](../test/README.md) |
+| Estrategia y layout de tests (`test/`) | [architecture/testing-strategy.md](./architecture/testing-strategy.md) · [ADR-004](./architecture/adr-004-testing-by-architecture-layer.md) · [plan de olas](./architecture/testing-climb-plan.md) · [test/README.md](../test/README.md) |
 | Stack elegido vs alternativas del doc oficial | [architecture/stack-decisions.md](./architecture/stack-decisions.md) |
 | Conectar app a API local en dev (HU-07 filtros, CORS, LAN) | [development-api.md](./development-api.md) |
 | Analytics anónimos, funnel learn y dashboards SQL | [architecture/analytics.md](./architecture/analytics.md) |

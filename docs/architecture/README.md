@@ -11,6 +11,7 @@ Documentación técnica del repositorio Inversora.
 | [adr-003-component-naming.md](./adr-003-component-naming.md) | Nombres y carpetas del design system (`TabHeader`, `TextParagraph`, …) |
 | [adr-004-testing-by-architecture-layer.md](./adr-004-testing-by-architecture-layer.md) | Tests por capa; árbol `test/`; pirámide como baremo |
 | [testing-strategy.md](./testing-strategy.md) | Guía operativa de tests, naming y plan de madurez |
+| [testing-climb-plan.md](./testing-climb-plan.md) | Olas módulo a módulo hacia el baremo |
 | [mvp-feature-map.md](./mvp-feature-map.md) | Estado de implementación por feature y ruta |
 | [catalog-client-side-filtering.md](./catalog-client-side-filtering.md) | Filtros de catálogo en memoria (sin HTTP por toggle) |
 | [front-final-quality-audit.md](./front-final-quality-audit.md) | Auditoria final de calidad, rendimiento y riesgos del front |
