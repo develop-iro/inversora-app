@@ -21,6 +21,9 @@ type EducationalProfileListener = () => void;
 
 const listeners = new Set<EducationalProfileListener>();
 
+/** Last profile written in this JS runtime; avoids gate races when SecureStore is slow. */
+let memoryProfile: EducationalProfile | null = null;
+
 const KNOWLEDGE_LEVELS: KnowledgeLevel[] = ['beginner', 'intermediate', 'advanced'];
 const RISK_ORIENTATIONS: RiskOrientation[] = ['conservative', 'moderate', 'dynamic'];
 const INVESTMENT_HORIZONS: InvestmentHorizon[] = ['short', 'medium', 'long'];
@@ -146,6 +149,10 @@ export function subscribeEducationalProfile(listener: EducationalProfileListener
 
 export const educationalProfileStore = {
   async getProfile(): Promise<EducationalProfile | null> {
+    if (memoryProfile !== null) {
+      return memoryProfile;
+    }
+
     try {
       await migrateLegacyAsyncStorageValue(EDUCATIONAL_PROFILE_STORAGE_KEY);
       const raw = await readSecureValue(EDUCATIONAL_PROFILE_STORAGE_KEY);
@@ -155,7 +162,9 @@ export const educationalProfileStore = {
       }
 
       const parsed = JSON.parse(raw) as unknown;
-      return parseEducationalProfile(parsed);
+      const profile = parseEducationalProfile(parsed);
+      memoryProfile = profile;
+      return profile;
     } catch (cause) {
       throw new AppError(
         'STORAGE_READ_FAILED',
@@ -166,12 +175,14 @@ export const educationalProfileStore = {
   },
 
   async saveProfile(profile: EducationalProfile): Promise<void> {
+    memoryProfile = profile;
+    notifyListeners();
+
     try {
       await writeSecureValue(
         EDUCATIONAL_PROFILE_STORAGE_KEY,
         JSON.stringify(profile),
       );
-      notifyListeners();
     } catch (cause) {
       throw new AppError(
         'STORAGE_WRITE_FAILED',
@@ -182,9 +193,11 @@ export const educationalProfileStore = {
   },
 
   async clearProfile(): Promise<void> {
+    memoryProfile = null;
+    notifyListeners();
+
     try {
       await deleteSecureValue(EDUCATIONAL_PROFILE_STORAGE_KEY);
-      notifyListeners();
     } catch (cause) {
       throw new AppError(
         'STORAGE_WRITE_FAILED',

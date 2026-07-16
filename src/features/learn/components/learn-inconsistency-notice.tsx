@@ -63,8 +63,7 @@ export function LearnInconsistencyNotice({ inconsistencies }: LearnInconsistency
 
         <TextParagraph variant="secondary" themeColor="textSecondary" className="text-[17px] leading-7">
           No has respondido mal. Tus respuestas son válidas y nos ayudan a orientarte. Hemos
-          detectado una combinación que suele pedir más prudencia: te lo explicamos antes de
-          mostrarte tu perfil.
+          detectado una combinación que suele pedir más prudencia.
         </TextParagraph>
       </View>
 
@@ -93,13 +92,13 @@ export function LearnInconsistencyNotice({ inconsistencies }: LearnInconsistency
 
       <View className="gap-md rounded-card border border-border-subtle bg-surface px-md py-md shadow-card">
         <TextLabel variant="meta" themeColor="deepOcean">
-          Si continúas ahora
+          Al ir al inicio
         </TextLabel>
         <TextParagraph variant="emphasis" className="text-[17px] leading-6">
-          Puedes guardar el perfil e ir al inicio, o ver un resumen antes de continuar
+          Guardamos este perfil orientativo en el dispositivo con ese contexto de prudencia
         </TextParagraph>
         <View className="gap-sm">
-          <GuidancePoint text="Tu perfil se calculará con prudencia; no es un fallo del cuestionario." />
+          <GuidancePoint text="Tu perfil se calcula con prudencia; no es un fallo del cuestionario." />
           <GuidancePoint text="Inversora priorizará explicaciones y filtros acordes a tu holgura financiera." />
           <GuidancePoint text="Puedes ajustar respuestas más tarde si tu situación cambia." />
         </View>

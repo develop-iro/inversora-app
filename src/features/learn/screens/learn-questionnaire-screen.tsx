@@ -6,6 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EducationalProfile } from '@/core/domain/educational-profile';
 import { modal } from '@/core/overlay/modal';
 import { initialProfileOnboardingStore } from '@/core/storage/initial-profile-onboarding-store';
+import {
+  STORAGE_READ_TIMEOUT_MS,
+  withStorageTimeout,
+} from '@/core/storage/with-storage-timeout';
 import { LearnInconsistencyNotice } from '@/features/learn/components/learn-inconsistency-notice';
 import { LearnProfileResult } from '@/features/learn/components/learn-profile-result';
 import { LearnProgressHeader } from '@/features/learn/components/learn-progress-header';
@@ -234,12 +238,21 @@ export default function LearnQuestionnaireScreen() {
       options?: { readonly goHome?: boolean },
     ) => {
       setIsSaving(true);
+      const graduatedProfile = applyQuestionnaireGraduation(result.profile);
 
       try {
-        const graduatedProfile = applyQuestionnaireGraduation(result.profile);
-        await saveProfile(graduatedProfile);
+        // Never block the finish CTA on SecureStore hangs (common on first iOS launch).
+        await withStorageTimeout(
+          saveProfile(graduatedProfile).catch(() => undefined),
+          STORAGE_READ_TIMEOUT_MS,
+          undefined,
+        );
         void syncEducationalProfileToServer(graduatedProfile);
-        await initialProfileOnboardingStore.clearDismissed();
+        void withStorageTimeout(
+          initialProfileOnboardingStore.clearDismissed().catch(() => undefined),
+          STORAGE_READ_TIMEOUT_MS,
+          undefined,
+        );
         trackLearnCompleted(
           graduatedProfile.riskOrientation,
           graduatedProfile.profileVersion,
@@ -287,17 +300,14 @@ export default function LearnQuestionnaireScreen() {
     await finalizeProfile(result);
   }, [analyticsMode, answers, canContinue, currentStep, finalizeProfile, isLastQuestionnaireStep, isWelcomeStep]);
 
-  const handleAcceptInconsistency = useCallback(
-    async (destination: 'result' | 'home' = 'result') => {
-      if (!profileResult) {
-        return;
-      }
+  const handleAcceptInconsistency = useCallback(async () => {
+    if (!profileResult) {
+      return;
+    }
 
-      trackLearnInconsistencyResolved('accept', analyticsMode);
-      await finalizeProfile(profileResult, { goHome: destination === 'home' });
-    },
-    [analyticsMode, finalizeProfile, profileResult],
-  );
+    trackLearnInconsistencyResolved('accept', analyticsMode);
+    await finalizeProfile(profileResult, { goHome: true });
+  }, [analyticsMode, finalizeProfile, profileResult]);
 
   const handleReviseAnswers = useCallback(() => {
     trackLearnInconsistencyResolved('revise', analyticsMode);
@@ -333,7 +343,7 @@ export default function LearnQuestionnaireScreen() {
     }
 
     if (phase === 'inconsistency') {
-      await handleAcceptInconsistency('home');
+      await handleAcceptInconsistency();
       return;
     }
 
@@ -458,25 +468,13 @@ export default function LearnQuestionnaireScreen() {
         >
           <View className="w-full max-w-full gap-sm self-center">
             {phase === 'inconsistency' ? (
-              <>
-                <Button
-                  variant="ghost"
-                  label="Ajustar alguna respuesta"
-                  accessibilityLabel="Volver al cuestionario para ajustar alguna respuesta"
-                  onPress={handleReviseAnswers}
-                  fullWidth
-                />
-                <Button
-                  variant="secondary"
-                  label="Ver resumen del perfil"
-                  accessibilityLabel="Guardar y ver el resumen del perfil orientativo"
-                  onPress={() => {
-                    void handleAcceptInconsistency('result');
-                  }}
-                  loading={isSaving}
-                  fullWidth
-                />
-              </>
+              <Button
+                variant="ghost"
+                label="Ajustar alguna respuesta"
+                accessibilityLabel="Volver al cuestionario para ajustar alguna respuesta"
+                onPress={handleReviseAnswers}
+                fullWidth
+              />
             ) : null}
 
             {showPreviousStep ? (
