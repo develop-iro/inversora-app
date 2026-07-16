@@ -4,7 +4,10 @@ import { shouldUseInitialProfileGateForPlatform } from '@/core/storage/initial-p
 import type { CatalogFund } from '@/core/domain/catalog';
 import type { FeaturedFund } from '@/core/domain/fund';
 import type { RankedFund, ScoringStatus } from '@/core/scoring/types';
-import type { HomeRankingEntry, HomeSearchResult } from '@/features/onboarding/services/resolve-home-search';
+import type {
+  HomeRankingEntry,
+  HomeSearchResult,
+} from '@/features/onboarding/services/resolve-home-search.factory';
 
 /** Minimum Inversora Score for beginner-oriented surfaces (HU-16). */
 export const BEGINNER_MIN_SCORE = 30;

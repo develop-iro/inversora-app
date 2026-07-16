@@ -15,10 +15,14 @@ La pirámide (~50–60 % unit / ~25–30 % integración / ~10–15 % e2e) es **b
 
 ### Recuento orientativo
 
-| Momento | Domain | Application | Contracts | E2E |
-|---------|-------:|------------:|----------:|----:|
-| Tras ola 1 | ~106 | ~32 | ~32 | ~8 |
-| Tras ola 2 | ~106 | ~32 | ~54 | ~8 |
+| Momento | Domain | Application | Contracts | E2E | Total unit* |
+|---------|-------:|------------:|----------:|----:|------------:|
+| Tras ola 1 | ~106 | ~32 | ~32 | ~8 | ~167 |
+| Tras ola 2 | ~106 | ~32 | ~54 | ~8 | ~189 |
+| Tras ola 3 | ~106 | ~32 | ~72 | ~8 | ~207 |
+| Tras ola 4 | ~103 | ~52 | ~72 | ~8 | ~227 |
+
+\* `pnpm run test:unit` (domain + application + contracts).
 
 ## Olas (módulo a módulo)
 
@@ -58,7 +62,10 @@ Cada ola → **rama + PR** dedicada. Definition of Done: tests nuevos en la carp
 
 ### Ola 3 — Storage ports (contratos con doubles)
 
-Requiere **double in-memory** de secure/async storage (`test/support/doubles/`) y, si hace falta, inyección mínima o `mock.module` documentado.
+**Estado:** entregada (`cursor/testing-climb-wave3-*`)  
+**Rama sugerida:** `cursor/testing-climb-wave3-*`
+
+Introduce `KeyValueStoragePort` + `createMemoryKeyValueStorage` y factories `create*Store(storage)` (sin React Native) para contratos en `node:test`. Los singletons de producción siguen en `*.ts` con el adaptador secure.
 
 | Módulo | Capa |
 |--------|------|
@@ -71,15 +78,20 @@ Requiere **double in-memory** de secure/async storage (`test/support/doubles/`) 
 
 ### Ola 4 — Casos de uso funds / rankings / home
 
+**Estado:** en curso / entregada en `cursor/testing-climb-wave4-*`  
+**Rama sugerida:** `cursor/testing-climb-wave4-*`
+
+Introduce `HttpGetPort` + `createMemoryHttpGet` y factories `create*Service(deps)` (sin React Native) para integración en `node:test`. Los singletons de producción siguen cableando `apiGet` real.
+
 | Módulo | Capa | Enfoque |
 |--------|------|---------|
-| `get-funds` (mock path + shaping) | application | mock data + filters; fake `apiGet` si se introduce puerto |
-| `get-rankings` | application | |
-| `get-fund-by-isin` | application | |
-| `get-featured-funds` | application | |
-| `get-investment-news` | application | |
-| `resolve-home-search` | application | |
-| `load-compare-picker-funds` | application | |
+| `get-funds` (mock path + shaping) | application | mock data + filters; fake `apiGet` vía puerto |
+| `get-rankings` | application | mock + API parse/cache |
+| `get-fund-by-isin` | application | parse detail + 404 fallback |
+| `get-featured-funds` | application | carousel eligibility + fallback |
+| `get-investment-news` | application | bundled vs API + fallback |
+| `resolve-home-search` | application | default / fund-match / assistant answer |
+| `load-compare-picker-funds` | application | mock sort + API search |
 
 ### Ola 5 — Favoritos, comparación, calculadora, feedback
 
@@ -123,7 +135,7 @@ Tras cada ola, actualizar esta tabla en el PR:
 | Domain | Reglas nuevas/tocadas con `*.spec.ts` |
 | Pirámide | Recuento `it/test` por carpeta vs baremo (informativo) |
 
-Meta intermedia tras olas 1–3: **contratos de frontera del catálogo y storage locales** cubiertos; application de funds empezada.
+Meta intermedia tras olas 1–4: **contratos de frontera del catálogo y storage locales** cubiertos; **application de funds/home/rankings** cubierta con factories + HTTP double.
 
 ## Anti-objetivos
 
