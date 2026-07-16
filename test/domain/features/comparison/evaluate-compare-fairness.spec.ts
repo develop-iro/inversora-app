@@ -61,4 +61,33 @@ describe('evaluateCompareFairness', () => {
     assert.equal(result.isFair, false);
     assert.ok(result.warnings.some((warning) => warning.includes('benchmarks')));
   });
+
+  it('warns when currencies differ', () => {
+    const result = evaluateCompareFairness([
+      buildDetail('IE00A', 'MSCI World', 'EUR', 'ETF'),
+      buildDetail('IE00B', 'MSCI World', 'USD', 'ETF'),
+    ]);
+
+    assert.equal(result.isFair, false);
+    assert.ok(result.warnings.some((warning) => warning.includes('divisas')));
+  });
+
+  it('warns when investment vehicles differ', () => {
+    const result = evaluateCompareFairness([
+      buildDetail('IE00A', 'MSCI World', 'EUR', 'ETF'),
+      buildDetail('IE00B', 'MSCI World', 'EUR', 'Fondo'),
+    ]);
+
+    assert.equal(result.isFair, false);
+    assert.ok(result.warnings.some((warning) => warning.includes('vehículos')));
+  });
+
+  it('returns fair for a single fund', () => {
+    const result = evaluateCompareFairness([
+      buildDetail('IE00A', 'MSCI World', 'EUR', 'ETF'),
+    ]);
+
+    assert.equal(result.isFair, true);
+    assert.deepEqual(result.warnings, []);
+  });
 });

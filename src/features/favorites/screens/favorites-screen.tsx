@@ -6,8 +6,7 @@ import type { CatalogFund } from '@/core/domain/catalog';
 import { MIN_COMPARE_FUNDS } from '@/core/storage/compare-selection-storage-key';
 import { FundListRow } from '@/features/funds/components/fund-list-row';
 import { useFavoritesList } from '@/features/funds/hooks/use-favorites-list';
-import { getFundByIsin } from '@/features/funds/services/get-fund-by-isin';
-import { mapFundDetailToCatalogFund } from '@/features/funds/utils/map-fund-detail-to-catalog';
+import { loadFavoriteCatalogFunds } from '@/features/funds/services/load-favorite-catalog-funds';
 import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { ScreenQuickAction, ScreenQuickActionsRow, TabScreenScroll } from '@/shared/components/layout';
 import { TextHeading, TextParagraph } from '@/shared/components/text';
@@ -32,23 +31,11 @@ export default function FavoritesScreen() {
       setIsCatalogLoading(true);
 
       try {
-        const details = await Promise.all(
-          isins.map(async (isin) => {
-            try {
-              return await getFundByIsin(isin);
-            } catch {
-              return null;
-            }
-          }),
-        );
+        const favoriteFunds = await loadFavoriteCatalogFunds(isins);
 
         if (cancelled) {
           return;
         }
-
-        const favoriteFunds = details
-          .filter((detail) => detail !== null)
-          .map((detail) => mapFundDetailToCatalogFund(detail));
 
         setFunds(favoriteFunds);
       } finally {

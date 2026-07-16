@@ -21,6 +21,7 @@ La pirámide (~50–60 % unit / ~25–30 % integración / ~10–15 % e2e) es **b
 | Tras ola 2 | ~106 | ~32 | ~54 | ~8 | ~189 |
 | Tras ola 3 | ~106 | ~32 | ~72 | ~8 | ~207 |
 | Tras ola 4 | ~103 | ~52 | ~72 | ~8 | ~227 |
+| Tras ola 5 | ~116 | ~58 | ~72 | ~8 | ~246 |
 
 \* `pnpm run test:unit` (domain + application + contracts).
 
@@ -78,7 +79,7 @@ Introduce `KeyValueStoragePort` + `createMemoryKeyValueStorage` y factories `cre
 
 ### Ola 4 — Casos de uso funds / rankings / home
 
-**Estado:** en curso / entregada en `cursor/testing-climb-wave4-*`  
+**Estado:** entregada (`cursor/testing-climb-wave4-*`)  
 **Rama sugerida:** `cursor/testing-climb-wave4-*`
 
 Introduce `HttpGetPort` + `createMemoryHttpGet` y factories `create*Service(deps)` (sin React Native) para integración en `node:test`. Los singletons de producción siguen cableando `apiGet` real.
@@ -95,12 +96,17 @@ Introduce `HttpGetPort` + `createMemoryHttpGet` y factories `create*Service(deps
 
 ### Ola 5 — Favoritos, comparación, calculadora, feedback
 
+**Estado:** en curso / entregada en `cursor/testing-climb-wave5-*`  
+**Rama sugerida:** `cursor/testing-climb-wave5-*`
+
+Introduce `HttpPostPort` + `createMemoryHttpPost` y factories para hydrate de favoritos, carga de compare funds y submit de feedback. Toggle/selection de storage siguen en contratos de ola 3.
+
 | Módulo | Capa |
 |--------|------|
-| Favoritos toggle/list orchestration | application |
-| Compare selection + fairness wiring | application |
-| Calculator export CSV / scenarios | domain + application |
-| `submit-product-feedback` | application/contracts |
+| Favoritos list hydration (`loadFavoriteCatalogFunds`) | application |
+| Compare funds load + fairness/table/prompts | application + domain |
+| Calculator export CSV / scenarios | domain |
+| `submit-product-feedback` | application |
 | Assistant output already covered; client parse in ola 2 | — |
 
 ### Ola 6 — E2E selectivo
@@ -135,7 +141,7 @@ Tras cada ola, actualizar esta tabla en el PR:
 | Domain | Reglas nuevas/tocadas con `*.spec.ts` |
 | Pirámide | Recuento `it/test` por carpeta vs baremo (informativo) |
 
-Meta intermedia tras olas 1–4: **contratos de frontera del catálogo y storage locales** cubiertos; **application de funds/home/rankings** cubierta con factories + HTTP double.
+Meta intermedia tras olas 1–5: contratos de frontera + application de funds/home/compare/favorites/feedback; calculator CSV/scenarios en domain. Queda ola 6 (e2e selectivo).
 
 ## Anti-objetivos
 
