@@ -19,7 +19,7 @@ Qué usa **este repositorio** frente a opciones mencionadas en el documento ofic
 | IA | OpenAI o Vercel AI SDK en **backend** | Nunca API key en cliente |
 | Persistencia local | `core/storage` con **SecureStore** en iOS/Android y AsyncStorage en web | Migración automática desde AsyncStorage |
 | Transporte API | HTTPS + hardening nativo de transporte en builds `pro` | El plugin legacy `with-ssl-pinning` aplica ATS en iOS, bloquea cleartext en Android y valida allowlist de hosts; no implementa pinning SPKI real |
-| CI / despliegue | GitHub Actions (calidad) + **EAS Workflows** (build/deploy) | Push a `main` → `.eas/workflows/main-deployments.yml` (Android preview + web `alias: inversora`); iOS preview manual |
+| CI / despliegue | GitHub Actions (calidad) + **EAS Workflows** (build/deploy) | Push a `main` → `.eas/workflows/main-deployments.yml` (solo web `alias: inversora`); Android/iOS preview manual (sin build EAS en cada push) |
 
 ## No adoptado (por ahora)
 

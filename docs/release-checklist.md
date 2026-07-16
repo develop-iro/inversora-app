@@ -46,8 +46,8 @@ Use this checklist before tagging a preview or production mobile build.
 
 ## EAS workflows (push to `main`)
 
-- [ ] Workflow **Main deployments** passes (`.eas/workflows/main-deployments.yml`): Android preview build + web deploy to `https://inversora--inversora.expo.app`
-- [ ] Or run manually: `pnpm run build:preview:android`, `pnpm run deploy:web:pro`
+- [ ] Workflow **Main deployments** passes (`.eas/workflows/main-deployments.yml`): web deploy to `https://inversora--inversora.expo.app` (no Android build on push — avoids EAS Build credits)
+- [ ] Android preview when needed: Expo dashboard → run **Preview build (Android)** (`.eas/workflows/preview-android.yml`) or `pnpm run build:preview:android`
 - [ ] iOS preview: `pnpm run build:preview:ios` (manual — not automated on `main`)
 - [ ] Install preview APK/IPA on physical device and repeat smoke test
 - [ ] Privacy policy URL live after web deploy: `https://inversora--inversora.expo.app/privacidad.html` (automated on `main`; manual fallback: `pnpm run deploy:web:pro`)
