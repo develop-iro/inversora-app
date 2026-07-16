@@ -76,7 +76,7 @@
     "test:env": "node --test scripts/load-env.spec.mjs",
     "test:theme": "node --test scripts/generate-global-css.spec.mjs scripts/generate-tailwind-config.spec.mjs",
     "test:scripts": "pnpm run test:env && pnpm run test:theme",
-    "test:unit": "npx tsx --test src/**/*.spec.ts",
+    "test:unit": "bash -c 'shopt -s globstar nullglob && npx tsx --test test/domain/**/*.spec.ts test/application/**/*.spec.ts test/contracts/**/*.spec.ts'",
     "e2e:install": "playwright install --with-deps chromium",
     "e2e:web:serve": "node scripts/run-expo-env.mjs local start --web",
     "test:e2e": "playwright test",

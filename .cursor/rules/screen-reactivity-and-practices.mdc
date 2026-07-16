@@ -27,4 +27,4 @@ Pre-merge checklist:
 - **Pure services** in `features/*/services` or `core/`; screens compose hooks, not inline HTTP logic.
 - **Zod at boundaries** (forms, API responses); infer types from schemas.
 - **Minimal scope:** do not refactor or abstract beyond the ticket; smallest diff that solves the problem.
-- **Meaningful tests:** choose type by layer (domain unit, use-case integration, adapter contract, selective e2e) — see `.cursor/rules/testing-strategy.mdc`. Not trivial render snapshots.
+- **Meaningful tests:** place under `test/{domain,application,contracts,e2e}` by layer (domain unit, use-case integration, adapter contract, selective e2e) — see `.cursor/rules/testing-strategy.mdc`. Not trivial render snapshots.

@@ -19,7 +19,7 @@
 | Principios no negociables de clean architecture | [architecture/clean-architecture-principles.md](./architecture/clean-architecture-principles.md) · [`.cursor/rules/clean-architecture-principles.mdc`](../.cursor/rules/clean-architecture-principles.mdc) |
 | Límites de dominio (scoring, favoritos, IA) | [architecture/adr-001-domain-boundaries.md](./architecture/adr-001-domain-boundaries.md) |
 | Convención de componentes UI (tabs, texto) | [architecture/adr-003-component-naming.md](./architecture/adr-003-component-naming.md) |
-| Estrategia de tests por capa (clean architecture) | [architecture/testing-strategy.md](./architecture/testing-strategy.md) · [ADR-004](./architecture/adr-004-testing-by-architecture-layer.md) |
+| Estrategia y layout de tests (`test/`) | [architecture/testing-strategy.md](./architecture/testing-strategy.md) · [ADR-004](./architecture/adr-004-testing-by-architecture-layer.md) · [test/README.md](../test/README.md) |
 | Stack elegido vs alternativas del doc oficial | [architecture/stack-decisions.md](./architecture/stack-decisions.md) |
 | Conectar app a API local en dev (HU-07 filtros, CORS, LAN) | [development-api.md](./development-api.md) |
 | Analytics anónimos, funnel learn y dashboards SQL | [architecture/analytics.md](./architecture/analytics.md) |
@@ -74,7 +74,7 @@ Definiciones que **no deberían cambiar** sin revisar el doc oficial o un ADR:
 
 - **clean-architecture-principles:** nueve principios no negociables adaptados a Expo (dependencias, dominio puro, casos de uso, puertos/adaptadores, composición explícita, DTO≠entidad/VO, errores tipados, tests por capa, observabilidad).
 - **ADR-001:** dónde vive el scoring, favoritos y el asistente; reglas de imports entre features.
-- **ADR-004 + testing-strategy:** tests por capa (unitario dominio, integración casos de uso, contrato adaptadores); pirámide como baremo de madurez.
+- **ADR-004 + testing-strategy + `test/`:** tests por capa (domain / application / contracts / e2e) con fixtures y doubles; pirámide como baremo de madurez.
 - **mvp-feature-map:** qué está implementado hoy (se actualiza con el código).
 - **stack-decisions:** Expo, theme propio, backend **inversora-api** (NestJS + PostgreSQL).
 
