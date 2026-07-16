@@ -102,6 +102,7 @@ Layer rules:
 - Domain services live in `features/*/services`.
 - Cross-cutting infrastructure lives in `core`.
 - Avoid direct imports from one feature into another feature.
+- Follow the nine non-negotiable clean-architecture principles (dependency rule, pure domain, use cases, ports/adapters, explicit composition, DTO≠entity/VO, typed errors, layer tests, observability bridge): [docs/architecture/clean-architecture-principles.md](docs/architecture/clean-architecture-principles.md) and `.cursor/rules/clean-architecture-principles.mdc`.
 
 Target routes:
 
@@ -120,7 +121,7 @@ Target routes:
 - Use `docs/README.md` for product and architecture docs; `README.md` and `package.json` for quick onboarding and scripts.
 - Verification step for changes: run `pnpm run test:ci` before considering work complete (also enforced by the Husky pre-push hook after `pnpm install`).
 - `pnpm run quality` is an alias for `pnpm run test:ci` (typecheck, lint with zero warnings, unit tests, script tests, Expo config).
-- Tests live under `test/` by layer: `domain` (unit), `application` (integration), `contracts` (adapter), `e2e` (Playwright + fixtures/doubles). Do not add new `*.spec.ts` under `src/`. See [test/README.md](test/README.md), [docs/architecture/testing-strategy.md](docs/architecture/testing-strategy.md), and `.cursor/rules/testing-strategy.mdc`.
+- Testing follows clean-architecture layers (pyramid as maturity baremo): **domain → unit**, **use cases → integration**, **adapters → contract (~100% of touched public surface)**, **critical journeys → few e2e**. Specs live under `test/{domain,application,contracts,e2e}` — do not add new `*.spec.ts` under `src/`. See [test/README.md](test/README.md), [docs/architecture/testing-strategy.md](docs/architecture/testing-strategy.md), [ADR-004](docs/architecture/adr-004-testing-by-architecture-layer.md), and `.cursor/rules/testing-strategy.mdc`.
 - Pre-commit runs ESLint with `--fix` on staged files via lint-staged.
 - Commit-msg runs commitlint ([Conventional Commits](https://www.conventionalcommits.org/)) via Husky after `pnpm install`.
 - CI also runs `build:web:ci` and `verify:prebuild`. On push to `main`, EAS Workflow `.eas/workflows/main-deployments.yml` builds Android preview and deploys web (`alias: inversora`). iOS preview remains manual (`pnpm run build:preview:ios`).

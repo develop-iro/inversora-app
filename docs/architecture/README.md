@@ -6,10 +6,11 @@ Documentación técnica del repositorio Inversora.
 
 | Documento | Contenido |
 |-----------|-----------|
+| [clean-architecture-principles.md](./clean-architecture-principles.md) | Nueve principios no negociables (dependencias, dominio, puertos, composición, DTOs, errores, tests, observabilidad) |
 | [adr-001-domain-boundaries.md](./adr-001-domain-boundaries.md) | Scoring, favoritos, asistente, imports entre features |
 | [adr-003-component-naming.md](./adr-003-component-naming.md) | Nombres y carpetas del design system (`TabHeader`, `TextParagraph`, …) |
 | [adr-004-testing-by-architecture-layer.md](./adr-004-testing-by-architecture-layer.md) | Tests por capa; árbol `test/`; pirámide como baremo |
-| [testing-strategy.md](./testing-strategy.md) | Guía operativa de tests y naming |
+| [testing-strategy.md](./testing-strategy.md) | Guía operativa de tests, naming y plan de madurez |
 | [mvp-feature-map.md](./mvp-feature-map.md) | Estado de implementación por feature y ruta |
 | [catalog-client-side-filtering.md](./catalog-client-side-filtering.md) | Filtros de catálogo en memoria (sin HTTP por toggle) |
 | [front-final-quality-audit.md](./front-final-quality-audit.md) | Auditoria final de calidad, rendimiento y riesgos del front |
@@ -41,6 +42,8 @@ features  → shared, core
 features  ↛ features   (evitar; ver excepción en ADR-001)
 core      ↛ features, shared/components
 ```
+
+Detalle de los nueve principios (incl. composición explícita, DTO≠entidad, errores tipados y observabilidad): [clean-architecture-principles.md](./clean-architecture-principles.md). Regla Cursor: `.cursor/rules/clean-architecture-principles.mdc`.
 
 ## ADRs
 

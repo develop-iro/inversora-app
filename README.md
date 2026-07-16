@@ -87,6 +87,7 @@ Practical rules:
 - `shared/*` contains reusable building blocks without feature-specific business knowledge.
 - `core/*` contains cross-cutting infrastructure and should not depend on UI.
 - Avoid direct dependencies between features unless they go through shared contracts or `core` services.
+- Nine non-negotiable principles (dependencies, pure domain, use cases, ports/adapters, composition, DTOs, errors, tests, observability): [docs/architecture/clean-architecture-principles.md](docs/architecture/clean-architecture-principles.md).
 
 ## Inversora Assistant
 

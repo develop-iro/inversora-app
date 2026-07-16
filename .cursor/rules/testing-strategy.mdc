@@ -23,8 +23,9 @@ Do **not** add new `*.spec.ts` next to production files under `src/`.
 ## Do
 
 - Import production code with `@/` and shared test helpers with `@test/` (maps to `test/`).
+- Prefer fixing behavior with the **lowest** useful layer (domain unit before e2e).
 - Fake ports in application tests; no real network/device storage.
-- When touching an adapter, add/update a contract in `test/contracts`.
+- When touching an adapter, add/update a contract in `test/contracts` (~100% of the public surface touched).
 - Put ready data in `fixtures/`, route/API fakes in `doubles/`.
 - Climb toward the baremo incrementally — add missing layers; do not delete useful domain units to “fix” percentages.
 
@@ -34,6 +35,14 @@ Do **not** add new `*.spec.ts` next to production files under `src/`.
 - Do not mock the domain under test in its own unit test.
 - Do not add trivial UI render snapshots without a business/contract assertion.
 - Do not require e2e for every component change.
+- Do not skip adapter contract tests without an explicit PR note (e.g. pure rename).
+
+## PR checklist (when code changes)
+
+- [ ] Domain touched → unit covers the rule (+ edge/warning if relevant)
+- [ ] Use case touched → integration with fakes
+- [ ] Adapter touched → contract for the public API changed
+- [ ] Critical journey touched → e2e considered / updated if needed
 
 ## Commands
 
