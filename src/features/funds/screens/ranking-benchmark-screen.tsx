@@ -191,7 +191,13 @@ export default function RankingBenchmarkScreen() {
             </View>
           ) : null}
 
-          <LegalNotice title="Ranking educativo" body={DISCLAIMER_RANKING_EDUCATIONAL} />
+          <LegalNotice
+            title="Ranking educativo"
+            body={DISCLAIMER_RANKING_EDUCATIONAL}
+            onLearnMorePress={() => {
+              router.push(routes.legal);
+            }}
+          />
         </ScrollView>
       }
     />

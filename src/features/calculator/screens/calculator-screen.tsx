@@ -1,4 +1,4 @@
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { ScrollView, View, type View as ViewType } from 'react-native';
 
@@ -14,6 +14,7 @@ import { LegalNotice } from '@/shared/components/legal/legal-notice';
 import { TabScreenScroll } from '@/shared/components/layout';
 import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { TabHeader } from '@/shared/components/ui';
+import { routes } from '@/shared/navigation/routes';
 import { Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
 
 function parseIsinParam(value: string | string[] | undefined): string | undefined {
@@ -49,6 +50,7 @@ function scrollToSection(
 }
 
 export default function CalculatorScreen() {
+  const router = useRouter();
   const params = useLocalSearchParams<{ isin?: string | string[] }>();
   const initialIsin = parseIsinParam(params.isin);
   const [isPickerVisible, setIsPickerVisible] = useState(false);
@@ -227,6 +229,9 @@ export default function CalculatorScreen() {
           <LegalNotice
             title="Simulación educativa"
             body="Los resultados usan un tipo de interés constante y no reflejan volatilidad, impuestos, comisiones de custodia ni costes de compraventa. El rendimiento pasado no garantiza resultados futuros."
+            onLearnMorePress={() => {
+              router.push(routes.legal);
+            }}
           />
         </View>
       </TabScreenScroll>

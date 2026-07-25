@@ -19,6 +19,7 @@ const ACTION_ICON: Record<HeaderActionId, HeaderActionIconName> = {
   back: 'arrow-left',
   close: 'close',
   learn: 'book-open-page-variant-outline',
+  legal: 'scale-balance',
   sora: 'robot-outline',
 };
 
@@ -26,6 +27,7 @@ const ACTION_CAPTION: Record<HeaderActionId, string> = {
   back: 'Atrás',
   close: 'Cerrar',
   learn: 'Aprender',
+  legal: 'Legal',
   sora: 'SORA',
 };
 
@@ -33,6 +35,7 @@ const ACTION_A11Y_LABEL: Record<HeaderActionId, string> = {
   back: 'Volver',
   close: 'Cerrar',
   learn: 'Aprender',
+  legal: 'Abrir información legal',
   sora: 'Abrir asistente SORA',
 };
 
@@ -46,7 +49,7 @@ export type HeaderActionProps = {
 };
 
 /**
- * Single operational header action (back, close, learn, SORA).
+ * Single operational header action (back, close, learn, legal, SORA).
  */
 export function HeaderAction({
   action,
@@ -61,9 +64,11 @@ export function HeaderAction({
   const hint =
     action === 'learn'
       ? 'Inicia el cuestionario para aprender sobre fondos indexados'
-      : action === 'sora'
-        ? 'Abre el asistente educativo SORA'
-        : undefined;
+      : action === 'legal'
+        ? 'Abre avisos legales, privacidad y eliminación de datos'
+        : action === 'sora'
+          ? 'Abre el asistente educativo SORA'
+          : undefined;
 
   if (presentation === 'caption') {
     return (

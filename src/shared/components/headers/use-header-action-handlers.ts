@@ -9,7 +9,7 @@ import { routes } from '@/shared/navigation/routes';
  */
 export function useHeaderActionHandlers(
   overrides?: HeaderActionHandlers,
-): Required<Pick<HeaderActionHandlers, 'back' | 'learn'>> & HeaderActionHandlers {
+): Required<Pick<HeaderActionHandlers, 'back' | 'learn' | 'legal'>> & HeaderActionHandlers {
   const router = useRouter();
 
   return useMemo(
@@ -19,6 +19,9 @@ export function useHeaderActionHandlers(
       },
       learn: () => {
         router.push(routes.learn);
+      },
+      legal: () => {
+        router.push(routes.legal);
       },
       ...overrides,
     }),

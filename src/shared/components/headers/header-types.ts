@@ -6,7 +6,7 @@ export type HeaderLayout = 'app' | 'screen' | 'modal';
 /**
  * Built-in operational actions available on header toolbars.
  */
-export type HeaderActionId = 'back' | 'close' | 'learn' | 'sora';
+export type HeaderActionId = 'back' | 'close' | 'learn' | 'legal' | 'sora';
 
 /**
  * Declarative action entry: shorthand id or object with overrides.

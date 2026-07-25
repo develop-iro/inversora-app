@@ -17,7 +17,7 @@ export type LegalNoticeProps = {
 export function LegalNotice({
   title = 'Información educativa',
   body,
-  learnMoreLabel = 'Más información legal',
+  learnMoreLabel = 'Ir a Información legal',
   onLearnMorePress,
   className,
   style,
