@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 
@@ -27,6 +27,7 @@ import { TextHeading, TextParagraph } from '@/shared/components/text';
 import { SlowRequestReloadState } from '@/shared/components/ui';
 import { useMobileLayout } from '@/shared/hooks/use-mobile-layout';
 import { useSlowRequestNotice } from '@/shared/hooks/use-slow-request-notice';
+import { routes } from '@/shared/navigation/routes';
 import { Layout, MaxContentWidth, Spacing } from '@/shared/theme/theme';
 
 function parseIsinsParam(value: string | string[] | undefined): string[] {
@@ -45,6 +46,7 @@ function parseIsinsParam(value: string | string[] | undefined): string[] {
 }
 
 export default function ComparisonScreen() {
+  const router = useRouter();
   const { contentWidth } = useMobileLayout();
   const params = useLocalSearchParams<{ isins?: string | string[] }>();
   const {
@@ -219,6 +221,9 @@ export default function ComparisonScreen() {
           className="mt-md py-md"
           title="Aviso educativo"
           body="Esta comparación es orientativa. SORA no recomienda comprar ni vender productos y no modifica rankings ni scores."
+          onLearnMorePress={() => {
+            router.push(routes.legal);
+          }}
         />
 
         <CompareFundPickerModal

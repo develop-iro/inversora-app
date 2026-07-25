@@ -419,6 +419,9 @@ export default function FundsScreen() {
 
         <LegalNotice
           body="Guardar o comparar fondos no implica una recomendación de inversión. Revisa siempre comisiones, riesgo y horizonte temporal."
+          onLearnMorePress={() => {
+            router.push(routes.legal);
+          }}
         />
       </View>
 
