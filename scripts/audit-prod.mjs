@@ -12,13 +12,15 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const PNPM_AUDIT_VERSION = '11.13.0';
+const PNPM_AUDIT_VERSION = '11.13.1';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
+    // Windows resolves `.cmd` shims only when the shell is used.
+    shell: process.platform === 'win32',
     ...options,
   });
 
