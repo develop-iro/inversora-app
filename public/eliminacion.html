@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Cómo solicitar la eliminación de datos en Inversora (Google Play Data Safety / RGPD)."
+    />
+    <title>Eliminación de datos — Inversora</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7f8;
+        --surface: #ffffff;
+        --text: #0b2e36;
+        --text-secondary: #4a5f66;
+        --border: #d7e2e6;
+        --accent: #0b6e7c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      main {
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 3rem;
+      }
+
+      header {
+        margin-bottom: 2rem;
+      }
+
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.75rem;
+        line-height: 1.25;
+      }
+
+      .meta {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      article {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+      }
+
+      h2 {
+        margin: 1.75rem 0 0.5rem;
+        font-size: 1.125rem;
+        line-height: 1.35;
+      }
+
+      h2:first-child {
+        margin-top: 0;
+      }
+
+      p,
+      li {
+        color: var(--text-secondary);
+      }
+
+      ol,
+      ul {
+        padding-left: 1.25rem;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.75rem 0 1rem;
+        font-size: 0.92rem;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 0.5rem 0.65rem;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #eef4f6;
+        color: var(--text);
+      }
+
+      footer {
+        margin-top: 1.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Eliminación de datos</h1>
+        <p class="meta">
+          Inversora — aplicación informativa y educativa sobre fondos indexados.<br />
+          Última actualización: 25 de julio de 2026.
+        </p>
+      </header>
+
+      <article>
+        <h2>1. Resumen</h2>
+        <p>
+          Inversora no crea cuentas personales. Los datos asociados a tu uso viven en el
+          dispositivo y, de forma anónima, en nuestros servidores (perfil educativo derivado,
+          analytics, feedback y conversaciones del asistente SORA).
+        </p>
+        <p>
+          Puedes solicitar el borrado desde la propia app. También puedes escribirnos por
+          correo si no tienes acceso al dispositivo.
+        </p>
+
+        <h2>2. Cómo eliminar tus datos desde la app (recomendado)</h2>
+        <ol>
+          <li>Abre Inversora en el mismo dispositivo donde usas la app.</li>
+          <li>Ve a <strong>Información legal</strong>.</li>
+          <li>Pulsa <strong>Eliminar mis datos</strong> y confirma.</li>
+          <li>
+            La app llama a nuestros servidores con el token anónimo de la instalación y, si
+            la petición tiene éxito, borra también los datos locales del dispositivo.
+          </li>
+        </ol>
+        <p>
+          Tras el borrado puedes seguir usando la app: se creará una identidad anónima nueva
+          si es necesario.
+        </p>
+
+        <h2>3. Qué se elimina</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Ámbito</th>
+              <th>Datos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Servidor (Inversora)</td>
+              <td>
+                Dispositivo anónimo, perfil educativo derivado, eventos de analytics ligados
+                al dispositivo, feedback de producto ligado al dispositivo y conversaciones /
+                mensajes SORA vinculados a esa instalación.
+              </td>
+            </tr>
+            <tr>
+              <td>Dispositivo</td>
+              <td>
+                Favoritos, perfil educativo local, selección de comparación, progreso del
+                currículo, estado de onboarding, sesión de analytics y token / id de
+                dispositivo.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>4. Qué no podemos borrar por completo</h2>
+        <ul>
+          <li>
+            Copias ya procesadas por proveedores de IA (por ejemplo OpenAI) pueden quedar
+            sujetas a su política de retención.
+          </li>
+          <li>
+            Informes técnicos de errores (Sentry), si estaban configurados, siguen la
+            retención del proveedor.
+          </li>
+          <li>
+            Datos de mercado de fondos (catálogo) no son datos personales tuyos y no se
+            eliminan.
+          </li>
+        </ul>
+
+        <h2>5. Alternativa por correo</h2>
+        <p>
+          Si no puedes usar el botón de la app, escribe a
+          <a href="mailto:iro.developer@hotmail.com">iro.developer@hotmail.com</a>
+          con el asunto «Eliminación de datos Inversora». Indica, si lo conoces, el
+          identificador anónimo de dispositivo o cualquier detalle técnico que ayude a
+          localizar la instalación. Responderemos con el resultado de la solicitud.
+        </p>
+
+        <h2>6. Política de privacidad</h2>
+        <p>
+          El detalle completo del tratamiento está en la
+          <a href="./privacidad.html">política de privacidad</a>.
+        </p>
+      </article>
+
+      <footer>
+        <p>
+          © 2026 Inversora. Uso informativo y educativo. Esta página describe el derecho de
+          supresión / solicitud de borrado para Google Play Data Safety y el RGPD.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

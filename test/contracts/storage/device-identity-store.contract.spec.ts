@@ -56,4 +56,28 @@ describe('deviceIdentityStore contract', () => {
     assert.equal(await store.getDeviceToken(), 'token-new');
     assert.equal(await store.getDeviceId(), 'device-new');
   });
+
+  it('clears device credentials and resets registration state', async () => {
+    const storage = createMemoryKeyValueStorage({
+      [DEVICE_TOKEN_STORAGE_KEY]: 'token-1',
+      [DEVICE_ID_STORAGE_KEY]: 'device-1',
+    });
+    let registerCalls = 0;
+    const store = createDeviceIdentityStore({
+      storage,
+      platformOs: 'ios',
+      registerDevice: async () => {
+        registerCalls += 1;
+        return { deviceToken: 'token-2', deviceId: 'device-2' };
+      },
+    });
+
+    await store.clearDeviceIdentity();
+    assert.equal(await store.getDeviceToken(), null);
+    assert.equal(await store.getDeviceId(), null);
+
+    await store.ensureDeviceRegistered();
+    assert.equal(registerCalls, 1);
+    assert.equal(await store.getDeviceToken(), 'token-2');
+  });
 });

@@ -44,4 +44,15 @@ describe('favoritesStore contract', () => {
 
     assert.equal(notifications, 1);
   });
+
+  it('clears all favorites from storage', async () => {
+    const storage = createMemoryKeyValueStorage();
+    const store = createFavoritesStore(storage);
+
+    await store.toggleFavorite('IE00B4L5Y983');
+    await store.clearFavorites();
+
+    assert.deepEqual(await store.listFavoriteIsins(), []);
+    assert.equal(await storage.read(FAVORITES_STORAGE_KEY), null);
+  });
 });

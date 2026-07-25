@@ -62,7 +62,7 @@ async function buildJsonHeaders(
 }
 
 async function requestJson<T>(
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH',
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   options: ApiRequestOptions,
   body?: unknown,
 ): Promise<T> {
@@ -158,4 +158,13 @@ export async function apiPatch<TResponse, TBody>(
   options: ApiPatchOptions<TBody>,
 ): Promise<TResponse> {
   return requestJson<TResponse>('PATCH', { ...options, withDeviceToken: true }, options.body);
+}
+
+/**
+ * Performs a JSON DELETE request against the Inversora API.
+ *
+ * @param options - Request path and optional query parameters.
+ */
+export async function apiDelete<TResponse>(options: ApiRequestOptions): Promise<TResponse> {
+  return requestJson<TResponse>('DELETE', options);
 }
