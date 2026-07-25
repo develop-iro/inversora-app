@@ -1,11 +1,14 @@
 import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { modal } from '@/core/overlay/modal';
 import { openSafeExternalUrl } from '@/core/security/open-safe-external-url';
+import { getDataDeletionUrl } from '@/features/legal/constants/data-deletion-url';
 import { LEGAL_SECTIONS } from '@/features/legal/constants/legal-sections';
 import { getPrivacyPolicyUrl } from '@/features/legal/constants/privacy-policy-url';
+import { requestDataDeletion } from '@/features/legal/services/request-data-deletion';
 import { CollapsibleSection } from '@/shared/components/layout';
 import { ScreenShell } from '@/shared/components/layout/screen-shell';
 import { Header } from '@/shared/components/headers';
@@ -23,13 +26,55 @@ export default function LegalScreen() {
   const insets = useSafeAreaInsets();
   const { contentWidth } = useMobileLayout();
   const privacyPolicyUrl = getPrivacyPolicyUrl();
+  const dataDeletionUrl = getDataDeletionUrl();
+  const [isDeletingData, setIsDeletingData] = useState(false);
 
   const handleOpenPrivacyPolicy = useCallback(() => {
     void openSafeExternalUrl(privacyPolicyUrl);
   }, [privacyPolicyUrl]);
 
+  const handleOpenDataDeletionPage = useCallback(() => {
+    void openSafeExternalUrl(dataDeletionUrl);
+  }, [dataDeletionUrl]);
+
   const handleOpenFeedback = useCallback(() => {
     router.push(routes.feedback);
+  }, [router]);
+
+  const handleRequestDataDeletion = useCallback(() => {
+    void (async () => {
+      const confirmed = await modal.confirm(
+        'Eliminar mis datos',
+        'Se borrarán el perfil educativo, favoritos, analytics anónimos y conversaciones SORA ligadas a esta instalación. Esta acción no se puede deshacer.',
+        {
+          confirmLabel: 'Eliminar datos',
+          cancelLabel: 'Cancelar',
+          destructive: true,
+        },
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      setIsDeletingData(true);
+
+      try {
+        await requestDataDeletion();
+        modal.alert(
+          'Datos eliminados',
+          'Hemos borrado los datos de esta instalación en el servidor y en el dispositivo. Puedes seguir usando la app; se creará una identidad anónima nueva si es necesario.',
+        );
+        router.replace(routes.home);
+      } catch {
+        modal.alert(
+          'No se pudieron eliminar los datos',
+          'Comprueba la conexión e inténtalo de nuevo. No hemos borrado los datos locales para evitar dejar el servidor desincronizado.',
+        );
+      } finally {
+        setIsDeletingData(false);
+      }
+    })();
   }, [router]);
 
   return (
@@ -84,6 +129,14 @@ export default function LegalScreen() {
               accessibilityLabel="Abrir formulario de opinión anónima"
             />
 
+            <Button
+              label="Eliminar mis datos"
+              variant="outline"
+              onPress={handleRequestDataDeletion}
+              loading={isDeletingData}
+              accessibilityLabel="Solicitar eliminación de datos de esta instalación"
+            />
+
             <Pressable
               accessibilityRole="link"
               accessibilityLabel="Abrir política de privacidad completa"
@@ -92,6 +145,17 @@ export default function LegalScreen() {
             >
               <TextLegal themeColor="primary" className="underline">
                 Política de privacidad completa
+              </TextLegal>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel="Abrir instrucciones de eliminación de datos"
+              onPress={handleOpenDataDeletionPage}
+              className="self-start active:opacity-75"
+            >
+              <TextLegal themeColor="primary" className="underline">
+                Cómo eliminar tus datos
               </TextLegal>
             </Pressable>
 

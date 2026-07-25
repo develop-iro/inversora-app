@@ -45,10 +45,18 @@ export async function ensureDeviceRegistered(): Promise<void> {
   return defaultDeviceIdentityStore.ensureDeviceRegistered();
 }
 
+/**
+ * Clears the anonymous device token and server device id from local storage.
+ */
+export async function clearDeviceIdentity(): Promise<void> {
+  return defaultDeviceIdentityStore.clearDeviceIdentity();
+}
+
 export { createDeviceIdentityStore } from '@/core/storage/device-identity-store.factory';
 
 export const deviceIdentityStore = {
   getDeviceToken,
   getDeviceId,
   ensureDeviceRegistered,
+  clearDeviceIdentity,
 };

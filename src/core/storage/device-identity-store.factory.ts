@@ -86,9 +86,16 @@ export function createDeviceIdentityStore(options: DeviceIdentityStoreOptions) {
     await ensureRegistrationPromise;
   }
 
+  async function clearDeviceIdentity(): Promise<void> {
+    ensureRegistrationPromise = null;
+    await storage.remove(DEVICE_TOKEN_STORAGE_KEY);
+    await storage.remove(DEVICE_ID_STORAGE_KEY);
+  }
+
   return {
     getDeviceToken,
     getDeviceId,
     ensureDeviceRegistered,
+    clearDeviceIdentity,
   };
 }

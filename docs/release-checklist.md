@@ -51,4 +51,5 @@ Use this checklist before tagging a preview or production mobile build.
 - [ ] iOS preview: `pnpm run build:preview:ios` (manual — not automated on `main`)
 - [ ] Install preview APK/IPA on physical device and repeat smoke test
 - [ ] Privacy policy URL live after web deploy: `https://inversora--inversora.expo.app/privacidad.html` (automated on `main`; manual fallback: `pnpm run deploy:web:pro`)
+- [ ] Data deletion URL live after web deploy: `https://inversora--inversora.expo.app/eliminacion.html` (use this in Google Play Data Safety)
 - [ ] **Production only:** set `SENTRY_AUTH_TOKEN` (and org/project in app config) in EAS secrets so source maps upload; preview/dev builds skip upload via `SENTRY_DISABLE_AUTO_UPLOAD`

@@ -76,5 +76,13 @@ export function createFavoritesStore(storage: KeyValueStoragePort) {
         throw new AppError('STORAGE_WRITE_FAILED', 'No se pudo actualizar el favorito.', cause);
       }
     },
+    async clearFavorites(): Promise<void> {
+      try {
+        await storage.remove(FAVORITES_STORAGE_KEY);
+        notifyListeners();
+      } catch (cause) {
+        throw new AppError('STORAGE_WRITE_FAILED', 'No se pudieron borrar los favoritos.', cause);
+      }
+    },
   };
 }

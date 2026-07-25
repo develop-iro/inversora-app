@@ -128,6 +128,7 @@ La app **no expone** ninguna de las funcionalidades excluidas del documento ofic
 - Sin datos personales identificables en backend.
 - Favoritos: **almacenamiento local** del dispositivo.
 - Perfil educativo: **local-first**; el cliente puede sincronizar una **copia anónima resumida** (dimensiones derivadas, sin respuestas del cuestionario) vía `POST /anonymous-devices/register` + `PUT /anonymous-devices/me/educational-profile`.
+- Eliminación self-service: desde **Información legal → Eliminar mis datos** (`DELETE /anonymous-devices/me`) y página pública `eliminacion.html` para Google Play Data Safety.
 - Analytics: solo **anónimos** y mínimos (HU-41), con `sessionId` de funnel y `deviceId` opcional para cruzar eventos con la instalación.
 - Backend oficial: **inversora-api** (NestJS + PostgreSQL) — fondos, métricas, scores, validaciones DQ, explicaciones cacheadas del asistente, dispositivos anónimos.
 

@@ -15,4 +15,5 @@ export const favoritesStore = {
   listFavoriteIsins: () => defaultFavoritesStore.listFavoriteIsins(),
   isFavorite: (isin: string) => defaultFavoritesStore.isFavorite(isin),
   toggleFavorite: (isin: string) => defaultFavoritesStore.toggleFavorite(isin),
+  clearFavorites: () => defaultFavoritesStore.clearFavorites(),
 };

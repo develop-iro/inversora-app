@@ -74,7 +74,8 @@ export const LEGAL_SECTIONS: readonly LegalSection[] = [
       'educativo y preferencias se guardan principalmente en tu dispositivo. La app puede ' +
       'enviar analytics anónimos, un perfil educativo derivado (sin las respuestas literales ' +
       'del cuestionario) y los mensajes que escribas al asistente SORA a los servidores de ' +
-      'Inversora para operar el servicio y mejorar la experiencia educativa. Consulta la ' +
-      'política de privacidad completa desde el enlace al final de esta pantalla.',
+      'Inversora para operar el servicio y mejorar la experiencia educativa. Puedes pedir el ' +
+      'borrado desde Información legal → Eliminar mis datos. Consulta la política de ' +
+      'privacidad completa desde el enlace al final de esta pantalla.',
   },
 ];
