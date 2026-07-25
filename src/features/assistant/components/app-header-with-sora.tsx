@@ -16,10 +16,10 @@ export function AppHeaderWithSora() {
 
   const trailingActions = useMemo(() => {
     if (preferLearnTabEntry) {
-      return ['sora'] as const;
+      return ['legal', 'sora'] as const;
     }
 
-    return ['learn', 'sora'] as const;
+    return ['legal', 'learn', 'sora'] as const;
   }, [preferLearnTabEntry]);
 
   return (
