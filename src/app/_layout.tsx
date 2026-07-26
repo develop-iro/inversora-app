@@ -5,33 +5,51 @@ import { DMSans_400Regular, DMSans_700Bold } from '@expo-google-fonts/dm-sans';
 import { useFonts } from 'expo-font';
 import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import {
+  initObserve,
+  markAppInteractive,
+  wrapWithObserveRoot,
+} from '@/core/observability/expo-observe';
 import { initSentry } from '@/core/observability/sentry';
 
 import { AppLaunchSplash } from '@/shared/components/brand/app-launch-splash';
 import { AppProviders } from '@/shared/components/overlay';
 import { useAppLaunchSplash } from '@/shared/hooks/use-app-launch-splash';
 import { useNavigationTheme } from '@/shared/hooks/use-navigation-theme';
-import { ROOT_FLOW_SCREEN_OPTIONS, ROOT_STACK_SCREEN_OPTIONS } from '@/shared/navigation/stack-screen-options';
+import {
+  ROOT_FLOW_SCREEN_OPTIONS,
+  ROOT_STACK_SCREEN_OPTIONS,
+} from '@/shared/navigation/stack-screen-options';
 
 const IS_SERVER_RENDER = typeof window === 'undefined';
 
 initSentry();
+initObserve();
 
 SplashScreen.preventAutoHideAsync();
 
 /**
  * Root native stack: tab shell plus push routes (learn, legal) with platform transitions.
  */
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded] = useFonts({
     DMSans_400Regular,
     DMSans_700Bold,
   });
   const { isLaunchSplashVisible, launchSplashOpacity } = useAppLaunchSplash(fontsLoaded);
   const navigationTheme = useNavigationTheme();
+
+  useEffect(() => {
+    if (!fontsLoaded || isLaunchSplashVisible || IS_SERVER_RENDER) {
+      return;
+    }
+
+    markAppInteractive();
+  }, [fontsLoaded, isLaunchSplashVisible]);
 
   if (!fontsLoaded && !IS_SERVER_RENDER) {
     return null;
@@ -51,11 +69,11 @@ export default function RootLayout() {
             <Stack.Screen name="feedback" options={ROOT_FLOW_SCREEN_OPTIONS} />
             <Stack.Screen name="rankings" options={ROOT_FLOW_SCREEN_OPTIONS} />
           </Stack>
-          {showLaunchSplash ? (
-            <AppLaunchSplash opacity={launchSplashOpacity} />
-          ) : null}
+          {showLaunchSplash ? <AppLaunchSplash opacity={launchSplashOpacity} /> : null}
         </AppProviders>
       </ThemeProvider>
     </SafeAreaProvider>
   );
 }
+
+export default wrapWithObserveRoot(RootLayout);
